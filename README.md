@@ -6,6 +6,7 @@ Only actually tested on the [moe archives](https://archive.moe) so the rest are 
 (This builds off of the original FoolX script which can be downloaded at: https://dl.dropbox.com/s/5fxjiuig4vnkgte/FoolX.user.js)
 
 ### [Click to Install](https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js)
+Or if you don't want automatic updates use [this version](https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX-noupdate.user.js).
 ### Firefox:
 Install [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/), then click the link above to install SpookyX. If you're using a fork of Firefox (e.g. Pale Moon), you may need to use [Greasemonkey 1.15](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/versions/#version-1.15) instead of the most recent version. No idea if SpookyX works on an old version of Greasemonkey though.
 ### Chrome:
