@@ -28,7 +28,7 @@
 // @include       http://*not4plebs.org/*
 
 // @grant         none
-// @updateURL     https://github.com/Fiddlekins/SpookyX/blob/master/SpookyX.meta.js
-// @downloadURL   https://github.com/Fiddlekins/SpookyX/blob/master/SpookyX.user.js
+// @updateURL     https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.meta.js
+// @downloadURL   https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js
 // @icon          http://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
