@@ -28,10 +28,11 @@
 // @include       http://*not4plebs.org/*
 
 // @grant         none
-// @updateURL     https://github.com/Fiddlekins/SpookyX/blob/master/SpookyX.meta.js
-// @downloadURL   https://github.com/Fiddlekins/SpookyX/blob/master/SpookyX.user.js
+// @updateURL     https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.meta.js
+// @downloadURL   https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js
 // @icon          http://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
+
  
 /* USER OPTIONS START */
 var imgSites = "puu.sh|i.imgur.com|i.4cdn.org|data.archive.moe|i0.kym-cdn.com|[\\S]*.deviantart.net|a.pomf.se|a.uguu.se|[0-9]{2}.media.tumblr.com"; // Sites to embed images from
