@@ -1,6 +1,11 @@
 The changelog becomes progressively more comprehensive as I became progressively more committed to keeping it orderly. As such the changes for the earliest versions are not documented and some of these link to pastebins.
 
-**v24.8:** *(2015-04-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js)
+The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
+
+**v24.9:** *(2015-04-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v24.9/SpookyX-noupdate.user.js)
+- Set GitHub up such that I can link to manual update past versions
+
+**v24.8:** *(2015-04-13)* - No archive
 - New Feature: Pressing 'G' will bring up a gallery view of all images and videos in the thread. Use left and right arrow keys to cycle through them.
  
 **v24.7:** *(2015-04-08)* - [Pastebin](http://pastebin.com/PP4WjJVb)
