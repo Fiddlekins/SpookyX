@@ -1,6 +1,7 @@
 # SpookyX
 Extend functionality on FoolFuuka imageboards.
 Only actually tested on the [moe archives](https://archive.moe) so the rest are theoretical.
+#### [Changelog](https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md)
 
 (This builds off of the original FoolX script which can be downloaded at: https://dl.dropbox.com/s/5fxjiuig4vnkgte/FoolX.user.js)
 
