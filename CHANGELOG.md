@@ -2,7 +2,16 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
-**v24.9:** *(2015-04-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v24.9/SpookyX-noupdate.user.js)
+**v25:** *(2015-04-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v25/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v25/README.md)
+- New Feature: Recursive Hiding. Manually hiding a post will hide all replies to it
+ - Unhiding a post will recursively show all replies to it
+- updated the way media links are embedded.
+ - It now checks the links for a relevant file extension rather than a recognised media site
+ - Links to videos wrapped in spoiler tags are now actually spoilered
+ - Media resolution displayed below media
+- fixed bug where imgur galleries were embedded in reverse order
+
+**v24.9:** *(2015-04-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v24.9/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v24.9/README.md)
 - Set GitHub up such that I can link to manual update past versions
 
 **v24.8:** *(2015-04-13)* - No archive
