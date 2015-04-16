@@ -1,16 +1,16 @@
 // ==UserScript==
 // Displayable Name of your script
 // @name          SpookyX
- 
+
 // Brief description
-// @description   Enhances functionality of FoolFuuka boards. Devloped further for more comfortable ghost-posting on the moe archives.
- 
+// @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
+
 // Your name, copyright  
 // @author        Fiddlekins
- 
+
 // Version Number
-// @version       24.9
- 
+// @version       25
+
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -31,9 +31,8 @@
 // @icon          http://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
 
- 
+
 /* USER OPTIONS START */
-var imgSites = "puu.sh|i.imgur.com|i.4cdn.org|data.archive.moe|i0.kym-cdn.com|[\\S]*.deviantart.net|a.pomf.se|a.uguu.se|[0-9]{2}.media.tumblr.com"; // Sites to embed images from
 var imgNumMaster = 1; // Max number of images to embed
 var autoplayVids = false; // Make embedded videos play automatically (they start muted, expanding unmutes)
 var hideQROptions = true; // Make the reply options hidden by default in the quick reply
@@ -44,20 +43,21 @@ var favicon = {
     "alertOverlay":"http://i.imgur.com/6EfJyYA.png" // The favicon overlay that indicates unread replies. Default is "http://i.imgur.com/6EfJyYA.png"
 };
 var features = {
-    "postCounter":false,   // Add a post counter to the reply box
-    "inlineImages":true,   // Load full-size images in the thread, enable click to expand
-    "hidePosts":false,     // Allow user to hide posts manually
-    "newPosts":true,       // Reflect new posts in the tab name
-    "embedImages":true,    // Embed image links in thread
-    "embedGalleries":true, // Embed imgur galleries into a single post for ease of image dumps
-    "inlineReplies":true,  // Click replies to expand them inline
-    "postQuote":true,      // Clicking the post number will insert highlighted text into the reply box
-    "filter":false,          // Hide undesirable posts from view
-    "labelYourPosts":true, // Add '(You)' to your posts and links that point to them
-    "favicon":true,        // Switch to a dynamic favicon that indicates unread posts and unread replies
-    "imageHover":true,     // Hovering over images with the mouse brings a full or window scaled version in view
-    "videoHover":true,     // Hovering over videos with the mouse brings a full or window scaled version in view
-    "gallery":true         // Pressing G will bring up a view that displays all the images in a thread
+    "postCounter":false,     // Add a post counter to the reply box
+    "inlineImages":true,     // Load full-size images in the thread, enable click to expand
+    "hidePosts":true,        // Allow user to hide posts manually
+    "recursiveHiding":true,  // Hide replies to hidden posts
+    "newPosts":true,         // Reflect new posts in the tab name
+    "embedImages":true,      // Embed image links in thread
+    "embedGalleries":true,   // Embed imgur galleries into a single post for ease of image dumps
+    "inlineReplies":true,    // Click replies to expand them inline
+    "postQuote":true,        // Clicking the post number will insert highlighted text into the reply box
+    "filter":false,           // Hide undesirable posts from view
+    "labelYourPosts":true,   // Add '(You)' to your posts and links that point to them
+    "favicon":true,          // Switch to a dynamic favicon that indicates unread posts and unread replies
+    "imageHover":true,       // Hovering over images with the mouse brings a full or window scaled version in view
+    "videoHover":true,       // Hovering over videos with the mouse brings a full or window scaled version in view
+    "gallery":true           // Pressing G will bring up a view that displays all the images in a thread
 };
 var filterCharThreshold = 100; // Filter posts with less than this number of characters
 var filteredStringsT0 = [    // List of Tier 0 strings to filter for. Capitalisation sensitive
@@ -83,27 +83,28 @@ var filteredStringsT2 = [    // List of Tier 2 strings to filter for
     "tsukaima"
 ];
 var filteredTrips = [       // List of tripcodes to filter for
-    "!!/90sanF9F3Z"
+    "!!/90sanF9F3Z",
+    "!!T2TCnNZDvZu"
 ];
 var filteredNames = [       // List of names to filter for
     "久保島のミズゴロウ"
 ];
 /* USER OPTIONS END */
- 
+
 var newPostCount = 0;
 var DocumentTitle = document.title;
 var ignoreInline = ['v'];
 var rulesBox = $(".rules_box").html();
 if(autoplayVids){var autoplayVid = "autoplay";}else{var autoplayVid="";}
 var queuedYouLabels = [];
- 
+
 var pattThreadAndID = new RegExp("thread\/[0-9]+\/");
 var pattThreadID = new RegExp("[0-9]+");
 var threadID; // Returns undefined if there's no thread
 if (pattThreadAndID.exec(document.URL) !== null){
     threadID = pattThreadID.exec(pattThreadAndID.exec(document.URL))[0];
 }
- 
+
 function ThreadUpdate(features) {
     if (features.postCounter){postCounter();}  
     if (features.inlineImages){inlineImages();}
@@ -114,7 +115,7 @@ function ThreadUpdate(features) {
     if (features.postQuote){postQuote();}
     if (features.filter){filter();}
 }
- 
+
 switch(favicon.lit) {
     case 0: favicon.lit = "http://i.imgur.com/7iTgtjy.png"; favicon.alert = "http://i.imgur.com/QrkQSo0.png"; break;
     case 1: favicon.lit = "http://i.imgur.com/AWVjxfw.png"; favicon.alert = "http://i.imgur.com/KXIPcD9.png"; break;
@@ -123,7 +124,7 @@ switch(favicon.lit) {
     case 4: favicon.lit = "http://i.imgur.com/3bRaVUl.png"; favicon.alert = "http://i.imgur.com/5Bv27Co.png"; break;
     default: break;
 }
- 
+
 $.fn.elemText = function() {
     var text = '';
     this.each(function() {
@@ -134,9 +135,9 @@ $.fn.elemText = function() {
     });
     return text;
 };
- 
+
 var escapeRegExp;
- 
+
 $.fn.isOnScreen = function(){
     var win = $(window);
     var viewport = {
@@ -145,14 +146,14 @@ $.fn.isOnScreen = function(){
     };
     viewport.right = viewport.left + win.width();
     viewport.bottom = viewport.top + win.height() - 200;
- 
+
     var bounds = this.offset();
     bounds.right = bounds.left + this.outerWidth();
     bounds.bottom = bounds.top + this.outerHeight();
- 
+
     return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
 };
- 
+
 (function () {
     // Referring to the table here:
     // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/regexp
@@ -163,7 +164,7 @@ $.fn.isOnScreen = function(){
     // without any adverse effects (to the best of my knowledge and casual testing)
     // : ! , =
     // my test "~!@#$%^&*(){}[]`/=?+\|-_;:'\",<.>".match(/[\#]/g)
- 
+
     var specials = [
         // order matters for these
         "-"
@@ -184,7 +185,7 @@ $.fn.isOnScreen = function(){
         , "$"
         , "|"
     ]
- 
+
     // I choose to escape every character with '\'
     // even though only some strictly require it when inside of []
     , regex = RegExp('[' + specials.join('\\') + ']', 'g')
@@ -192,10 +193,10 @@ $.fn.isOnScreen = function(){
     escapeRegExp = function (str) {
         return str.replace(regex, "\\$&");
     };
- 
+
     // test escapeRegExp("/path/to/res?search=this.that")
 }());
- 
+
 shortcut = {
     'all_shortcuts':{},//All the shortcuts are stored in this array
     'add': function(shortcut_combination,callback,opt) {
@@ -213,37 +214,37 @@ shortcut = {
                 if(typeof opt[dfo] == 'undefined') opt[dfo] = default_options[dfo];
             }
         }
- 
+
         var ele = opt.target;
         if(typeof opt.target == 'string') ele = document.getElementById(opt.target);
         var ths = this;
         shortcut_combination = shortcut_combination.toLowerCase();
- 
+
         //The function to be called at keypress
         var func = function(e) {
             e = e || window.event;
- 
+
             if(opt['disable_in_input']) { //Don't enable shortcut keys in Input, Textarea fields
                 var element;
                 if(e.target) element=e.target;
                 else if(e.srcElement) element=e.srcElement;
                 if(element.nodeType==3) element=element.parentNode;
- 
+
                 if(element.tagName == 'INPUT' || element.tagName == 'TEXTAREA') return;
             }
- 
+
             //Find Which key is pressed
             if (e.keyCode) code = e.keyCode;
             else if (e.which) code = e.which;
             var character = String.fromCharCode(code).toLowerCase();
- 
+
             if(code == 188) character=","; //If the user presses , when the type is onkeydown
             if(code == 190) character="."; //If the user presses , when the type is onkeydown
- 
+
             var keys = shortcut_combination.split("+");
             //Key Pressed - counts the number of valid keypresses - if it is same as the number of keys, the shortcut function is invoked
             var kp = 0;
- 
+
             //Work around for stupid Shift key bug created by using lowercase - as a result the shift+num combination was broken
             var shift_nums = {
                 "`":"~",
@@ -275,7 +276,7 @@ shortcut = {
                 'return':13,
                 'enter':13,
                 'backspace':8,
- 
+
                 'scrolllock':145,
                 'scroll_lock':145,
                 'scroll':145,
@@ -285,28 +286,28 @@ shortcut = {
                 'numlock':144,
                 'num_lock':144,
                 'num':144,
- 
+
                 'pause':19,
                 'break':19,
- 
+
                 'insert':45,
                 'home':36,
                 'delete':46,
                 'end':35,
- 
+
                 'pageup':33,
                 'page_up':33,
                 'pu':33,
- 
+
                 'pagedown':34,
                 'page_down':34,
                 'pd':34,
- 
+
                 'left':37,
                 'up':38,
                 'right':39,
                 'down':40,
- 
+
                 'f1':112,
                 'f2':113,
                 'f3':114,
@@ -320,29 +321,29 @@ shortcut = {
                 'f11':122,
                 'f12':123
             };
- 
+
             var modifiers = {
                 shift: { wanted:false, pressed:false},
                 ctrl : { wanted:false, pressed:false},
                 alt  : { wanted:false, pressed:false},
                 meta : { wanted:false, pressed:false} //Meta is Mac specific
             };
- 
+
             if(e.ctrlKey) modifiers.ctrl.pressed = true;
             if(e.shiftKey)  modifiers.shift.pressed = true;
             if(e.altKey)  modifiers.alt.pressed = true;
             if(e.metaKey)   modifiers.meta.pressed = true;
- 
+
             for(var i=0; k=keys[i],i<keys.length; i++) {
                 //Modifiers
                 if(k == 'ctrl' || k == 'control') {
                     kp++;
                     modifiers.ctrl.wanted = true;
- 
+
                 } else if(k == 'shift') {
                     kp++;
                     modifiers.shift.wanted = true;
- 
+
                 } else if(k == 'alt') {
                     kp++;
                     modifiers.alt.wanted = true;
@@ -351,10 +352,10 @@ shortcut = {
                     modifiers.meta.wanted = true;
                 } else if(k.length > 1) { //If it is a special key
                     if(special_keys[k] == code) kp++;
- 
+
                 } else if(opt['keycode']) {
                     if(opt['keycode'] == code) kp++;
- 
+
                 } else { //The special keys did not match
                     if(character == k) kp++;
                     else {
@@ -365,19 +366,19 @@ shortcut = {
                     }
                 }
             }
- 
+
             if(kp == keys.length &&
                modifiers.ctrl.pressed == modifiers.ctrl.wanted &&
                modifiers.shift.pressed == modifiers.shift.wanted &&
                modifiers.alt.pressed == modifiers.alt.wanted &&
                modifiers.meta.pressed == modifiers.meta.wanted) {
                 callback(e);
- 
+
                 if(!opt['propagate']) { //Stop the event
                     //e.cancelBubble is supported by IE - this will kill the bubbling process.
                     e.cancelBubble = true;
                     e.returnValue = false;
- 
+
                     //e.stopPropagation works in Firefox.
                     if (e.stopPropagation) {
                         e.stopPropagation();
@@ -397,7 +398,7 @@ shortcut = {
         else if(ele.attachEvent) ele.attachEvent('on'+opt['type'], func);
         else ele['on'+opt['type']] = func;
     },
- 
+
     //Remove the shortcut - just specify the shortcut and I will remove the binding
     'remove':function(shortcut_combination) {
         shortcut_combination = shortcut_combination.toLowerCase();
@@ -407,35 +408,28 @@ shortcut = {
         var type = binding['event'];
         var ele = binding['target'];
         var callback = binding['callback'];
- 
+
         if(ele.detachEvent) ele.detachEvent('on'+type, callback);
         else if(ele.removeEventListener) ele.removeEventListener(type, callback, false);
         else ele['on'+type] = false;
     }
 };
- 
-var getBoard = function() {
+
+var getBoard = function(){
     var URL = document.URL;
     return URL.split("/")[3];
 };
- 
+
 var inlineImages = function()
 {
-    // I Believe because I'm setting the src of the thumbnail to the full image right away,
-    // it also causes the images to be prefetched
-    $('.thread_image_box').each(function(index,currentImage) {
+    $('.thread_image_box').each(function(index,currentImage){
         if ($(currentImage).data("inline") != "true"){
-            //$(currentImage).find('a').each(function() {
-            $(currentImage).find('>a').each(function() {
+            $(currentImage).find('>a').each(function(){
                 var fullImage = $(this).attr('href');
-                //    if (!fullImage.match(/thumb(-[23])?/)){
-                //        if (!fullImage.match(/search(-[23])?/)){
-                //            if (!fullImage.match(/redirect?/)){
-                //                if (!fullImage.match(/download/)){
                 if (fullImage.match(/\.webm$/)){ // Handle post webms
                     $(currentImage).html('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
                 }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
-                    $(currentImage).find('img').each(function()  {
+                    $(currentImage).find('img').each(function(){
                         var thumbImage = $(this).attr('src');
                         $(this).attr('src',fullImage);
                         $(this).error(function(e){ // Handle images that won't load
@@ -452,7 +446,7 @@ var inlineImages = function()
                                 $(this).click(function(e){
                                     if (!e.originalEvent.ctrlKey && e.which == 1){
                                         e.preventDefault();
-                                        $($(this)["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
+                                        $($(this).parent()["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
                                         $(this).toggleClass("smallImageOP");
                                         $(this).toggleClass("bigImage");
                                         $('#hoverUI').html('');
@@ -464,7 +458,7 @@ var inlineImages = function()
                                 $(this).click(function(e){
                                     if (!e.originalEvent.ctrlKey && e.which == 1){
                                         e.preventDefault();
-                                        $($(this)["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
+                                        $($(this).parent()["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
                                         $(this).toggleClass("smallImage");
                                         $(this).toggleClass("bigImage");
                                         $('#hoverUI').html('');
@@ -475,20 +469,18 @@ var inlineImages = function()
                         }
                     });
                 }
-                //              }
-                //          }    
-                //      }
-                //  }
             });
             if(features.imageHover){imageHover();}
             $(currentImage).data("inline","true");
         }
     });
- 
+
     $('#main video').each(function(index,currentVideo) {
         if ($(currentVideo).data("inline") != "true"){
             $(this).click(function(e){
                 //e.preventDefault();
+                $(this).toggleClass("bigImage"); // Make it full opacity to override spoilering
+                $($(this)["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
                 if ($(this).hasClass("fullVideo")){
                     this.pause();
                     this.muted=true;
@@ -510,7 +502,7 @@ var inlineImages = function()
         }
     });
 };
- 
+
 var inlineReplies = function(){
     $('article.post').each(function(index,currentPost) {
         if ($(currentPost).data("inline") != "true"){
@@ -579,7 +571,7 @@ var inlineReplies = function(){
         }
     });
 };
- 
+
 function getSelectionText() {
     var text = "";
     if (window.getSelection) {
@@ -589,7 +581,7 @@ function getSelectionText() {
     }
     return text;
 }
- 
+
 var postQuote = function(){
     $('.post_data > [data-function=quote]').each(function(index,currentPost) {
         if ($(currentPost).data("quotable") != "true"){
@@ -599,14 +591,14 @@ var postQuote = function(){
                     e.preventDefault();
                     var postnum = $(this)["0"].innerHTML;
                     var input = document.getElementById('reply_chennodiscursus');
- 
+
                     if (input.selectionStart !== undefined)
                     {
                         var startPos = input.selectionStart;
                         var endPos = input.selectionEnd;
                         var startText = input.value.substring(0, startPos);
                         var endText = input.value.substring(startPos);
- 
+
                         var originalText = input.value;
                         var selectedText = getSelectionText();
                         var newText;
@@ -623,22 +615,71 @@ var postQuote = function(){
         }
     });
 };
- 
+
+function togglePost(postID, docID, mode){
+    if (!docID){
+        var docID = $('article#'+postID).find('.pull-left > button').attr("data-doc-id");
+    }
+    if (mode == "hide"){
+        $('.doc_id_'+docID).hide();
+        $('.stub_doc_id_'+docID).show();
+    }else if (mode == "show"){
+        $('.doc_id_'+docID).show();
+        $('.stub_doc_id_'+docID).hide();
+    }else{
+        $('.doc_id_'+docID).toggle();
+        $('.stub_doc_id_'+docID).toggle();
+    }
+}
+function recursiveToggle(postID, mode){
+    var replies = [postID];
+    while(replies.length){
+        var repliesNew = [];
+        $.each(replies, function(i, reply){
+            $('article.post[id='+reply+']').find('.backlink_list a').each(function(i,backlink){
+                togglePost($(backlink).attr('data-post'), false, mode);
+                repliesNew.push($(backlink).attr('data-post'));
+            });
+        });
+        replies = repliesNew;
+    }
+}
+var firstTime = true;
 var hidePosts = function(){
     $('.pull-left').each(function(index, currentPost){
         if ($(currentPost).hasClass('stub')) {
             $(currentPost).removeClass('stub');
         }
     });
+    if (features.recursiveHiding){
+        if (firstTime){
+            $('article.post:hidden').each(function(i, post){
+                recursiveToggle($(post).attr('id'));
+            });
+            firstTime = false;
+        }
+        $('.btn-toggle-post').each(function(index, currentButton){
+            if ($(currentButton).data("hideClickListener") != "true"){
+                $(currentButton).data("hideClickListener","true");
+                $(currentButton).on("click", function(e){
+                    if(e.currentTarget.attributes["data-function"].value == "showPost"){
+                        recursiveToggle($('article.doc_id_'+e.currentTarget.attributes["data-doc-id"].value).attr('id'), "show");
+                    }else if(e.currentTarget.attributes["data-function"].value == "hidePost"){
+                        recursiveToggle($('article.doc_id_'+e.currentTarget.attributes["data-doc-id"].value).attr('id'), "hide");
+                    }
+                });
+            }
+        });
+    }
 };
- 
+
 var filter = function(){
     var sieveStrT0 = new RegExp("\\b("+filteredStringsT0.join("|")+")\\b"); // \b or (^|\s) works
     var sieveStrT1 = new RegExp("\\b("+filteredStringsT1.join("|")+")\\b","i"); // \b or (^|\s) works
     var sieveStrT2 = new RegExp("(^|\\s)("+filteredStringsT2.join("|")+")($|\\s)","i");
     var sieveTrip = new RegExp("("+filteredTrips.join("|")+")");
     var sieveName = new RegExp("("+filteredNames.join("|")+")");
- 
+
     $('article.post').each(function(index,currentPost){
         if ($(currentPost).data("filtered") != "true"){
             $(currentPost).data("filtered","true");
@@ -660,7 +701,7 @@ var filter = function(){
         }
     });
 };
- 
+
 function shitpostT0(post, postText){
     $(post).addClass("shitpost");
 }
@@ -674,46 +715,69 @@ function shitpostT2(post, postText){
     $('.doc_id_'+docID).hide();
     $('.stub_doc_id_'+docID).show();
 }
- 
+
 var embedImages = function() {
     $('.posts article').each(function(index, currentArticle){
         if ($(currentArticle).data('imgEmbed') != 'true'){
-            var patt = new RegExp("http[s]?://("+imgSites+")/[^\"]*");
+            var imageFiletypes = new RegExp(".(jpg|png|gif)$");
+            var videoFiletypes = new RegExp(".(webm|gifv|mp4)$");
             var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
             var imgNum = imgNumMaster - $(currentArticle).find('.thread_image_box').length;
-            $(currentArticle).find(".text > a, .text > .spoiler, .text > strong").each(function(index, currentLink){
-                if (imgNum === 0) {
+            $(currentArticle).find(".text a").each(function(index, currentLink){
+                if (imgNum === 0){
                     return false;
                 }
-                var imglink = patt.exec($(this).html());
-                if (imglink !== null){
+                var mediaType = "notMedia";
+                var mediaLink = $(this).html();
+                //console.log(mediaLink);
+                if (imageFiletypes.test(mediaLink)){
+                    mediaType = "image";
+                }else if (videoFiletypes.test(mediaLink)){
+                    mediaType = "video";
+                }
+                if (mediaType == "image" || mediaType == "video"){
                     imgNum--;
-                    // var patt2 = new RegExp(escapeRegExp(imglink["0"]), 'g'); Can't see what this does, uncomment if things break again
-                    imglink["0"] = imglink["0"].replace(/.gifv/g, ".webm"); // Only tested to work with Imgur
-                    var filename = '<div class="post_file embedded_post_file"><a href="'+imglink["0"]+'" class="post_file_filename" rel="tooltip" title="'+imglink["0"]+'">'+imglink["0"].match(/[^\/]*/g)[imglink["0"].match(/[^\/]*/g).length -2]+'</a></div>';
-                    var filestats = ""; //'<br><span class="post_file_metadata"> 937KiB, '+imglink["0"].naturalWidth+'x'+imglink["0"].naturalHeight+'</span>';
-                    if ((/.webm/g).test(imglink["0"]) || (/.mp4/g).test(imglink["0"])){
-                        $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box"></div>');
-                        $(currentArticle).find(".thread_image_box:first-child").html(filename+'<video width="125" style="float:left" name="media" loop muted '+autoplayVid+'><source src="'+imglink["0"]+'" type="video/webm"></video>'+filestats);
-                    }else if ($(this).hasClass("spoiler")){
-                        $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box">'+filename+'<a href="'+imglink["0"]+'" target="_blank" rel="noreferrer" class="thread_image_link"><div class="spoilerText">Spoiler</div><img src="'+imglink["0"]+'" class="lazyload post_image spoilerImage smallImage"></a>'+filestats+'</div>');
-                    }else{
-                        $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box">'+filename+'<a href="'+imglink["0"]+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+imglink["0"]+'" class="lazyload post_image smallImage"></a>'+filestats+'</div>');
+                    var filename = '<div class="post_file embedded_post_file"><a href="'+mediaLink+'" class="post_file_filename" rel="tooltip" title="'+mediaLink+'">'+mediaLink.match(/[^\/]*/g)[mediaLink.match(/[^\/]*/g).length -2]+'</a></div>';
+                    var spoiler = "";
+                    //console.log(mediaType);
+                    $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box">'+filename+'</div>');
+                    if($(this).parents('.spoiler').length){
+                        spoiler = "spoilerImage ";
+                        $(currentArticle).find(".thread_image_box:first-child").append('<div class="spoilerText">Spoiler</div>');
                     }
-                    $(this).remove();
-                } else if (features.embedGalleries && pattImgGal.exec($(this).html()) !== null){
+                    if (mediaType == "image"){
+                        $(currentArticle).find(".thread_image_box:first-child").append('<a href="'+mediaLink+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+mediaLink+'" class="lazyload post_image '+spoiler+'smallImage"></a>');
+                        $(this).remove();
+                        $(currentArticle).find(".thread_image_box:first-child img").on("load", function(e){
+                            $(currentArticle).find(".thread_image_box:first-child .spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
+                            $(currentArticle).find(".thread_image_box:first-child").append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
+                        });
+                    }else if (mediaType == "video"){
+                        mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
+                        $(currentArticle).find(".thread_image_box:first-child").append('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
+                        $(this).remove();
+                        $(currentArticle).find(".thread_image_box:first-child video")[0].onloadedmetadata = function(e){
+                            $(currentArticle).find(".thread_image_box:first-child .spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
+                            $(currentArticle).find(".thread_image_box:first-child").append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
+                        }
+                    }
+                }else if (features.embedGalleries && pattImgGal.exec($(this).html()) !== null){
                     var link = pattImgGal.exec($(this).html());
                     var individualImages = link[0].match(/[A-z0-9]{7}/g);
-                    $.each(individualImages, function(i,imgID){
+                    $.each(individualImages.reverse(), function(i,imgID){
                         $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box"><a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>');
                     });
+                }else{
+                    if(!(/&gt;&gt;/).test(mediaLink)){
+                        //console.log(mediaLink);
+                    }
                 }
             });
             $(currentArticle).data('imgEmbed', 'true');
         }
     });
 };
- 
+
 function imageHover(){
     $('img').off("mouseenter");
     $('img').off("mousemove");
@@ -746,14 +810,14 @@ function imageHover(){
         $('#hoverUI').html('');
     });
 }
- 
+
 function videoHover(){
     $('video').off("mouseenter");
     $('video').off("mousemove");
     $('video').off("mouseout");
     $('video').on("mouseenter", function(e){
         if(!$(this).hasClass("fullVideo")){
-            $(this).clone().addClass("fullVideo hoverImage").appendTo('#hoverUI');
+            $(this).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
             $('#hoverUI > video').removeAttr('width');
             $('#hoverUI > video')[0].oncanplay = function(){
                 if ($('#hoverUI > video').length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
@@ -783,7 +847,7 @@ function videoHover(){
         $('#hoverUI').html('');
     });
 }
- 
+
 var lastSeenPost;
 var unseenPosts = [];
 var seenPosts = function(){
@@ -796,7 +860,7 @@ var seenPosts = function(){
     $('article.backlink_container').removeAttr('id'); // Remove id again
     $('#'+unseenPosts[0]).addClass("unseenPost");
 };
- 
+
 var unseenReplies = [];
 var newPosts = function(){
     if (features.favicon){
@@ -828,29 +892,29 @@ var newPosts = function(){
             $('#favicon').attr("href", favicon.alert);
         }else if (newPostCount > 0){
             $('#favicon').attr("href", favicon.lit);
-        }else{
+        }else if ($('#favicon').attr("href") !== favicon.unlit){
             $('#favicon').attr("href", favicon.unlit);
         }
     }else{ // Original newpost counter code
         $('article').each(function(index, currentArticle){
             if ($(currentArticle).data('seen') != 'true')
             {
-                $(currentArticle).data('seen', 'true')
-                newPostCount +=1
+                $(currentArticle).data('seen', 'true');
+                newPostCount +=1;
             }
         });
-        if (windowFocus == true){newPostCount = 0;}
+        if (windowFocus === true){newPostCount = 0;}
     }
     document.title = "(" + newPostCount + ") " + DocumentTitle;
 };
- 
+
 var postCounter = function() {$(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/400 <br> Images: " + $(".thread_image_box").length + "/250</h6>" + rulesBox);};
- 
+
 var bindShortcuts = function()
 {
- 
+
 };
- 
+
 var pokemon = ["bulbasaur","ivysaur","venusaur","charmander","charmeleon","charizard","squirtle","wartortle","blastoise","caterpie","metapod","butterfree","weedle","kakuna","beedrill","pidgey","pidgeotto","pidgeot","rattata","raticate","spearow","fearow","ekans","arbok","pikachu","raichu","sandshrew","sandslash","nidoran♀","nidorina","nidoqueen","nidoran♂","nidorino","nidoking","clefairy","clefable","vulpix","ninetales","jigglypuff","wigglytuff","zubat","golbat","oddish","gloom","vileplume","paras","parasect","venonat","venomoth","diglett","dugtrio","meowth","persian","psyduck","golduck","mankey","primeape","growlithe","arcanine","poliwag","poliwhirl","poliwrath","abra","kadabra","alakazam","machop","machoke","machamp","bellsprout","weepinbell","victreebel","tentacool","tentacruel","geodude","graveler","golem","ponyta","rapidash","slowpoke","slowbro","magnemite","magneton","farfetch'd","doduo","dodrio","seel","dewgong","grimer","muk","shellder","cloyster","gastly","haunter","gengar","onix","drowzee","hypno","krabby","kingler","voltorb","electrode","exeggcute","exeggutor","cubone","marowak","hitmonlee","hitmonchan","lickitung","koffing","weezing","rhyhorn","rhydon","chansey","tangela","kangaskhan","horsea","seadra","goldeen","seaking","staryu","starmie","mr. mime","scyther","jynx","electabuzz","magmar","pinsir","tauros","magikarp","gyarados","lapras","ditto","eevee","vaporeon","jolteon","flareon","porygon","omanyte","omastar","kabuto","kabutops","aerodactyl","snorlax","articuno","zapdos","moltres","dratini","dragonair","dragonite","mewtwo","mew","chikorita","bayleef","meganium","cyndaquil","quilava","typhlosion","totodile","croconaw","feraligatr","sentret","furret","hoothoot","noctowl","ledyba","ledian","spinarak","ariados","crobat","chinchou","lanturn","pichu","cleffa","igglybuff","togepi","togetic","natu","xatu","mareep","flaaffy","ampharos","bellossom","marill","azumarill","sudowoodo","politoed","hoppip","skiploom","jumpluff","aipom","sunkern","sunflora","yanma","wooper","quagsire","espeon","umbreon","murkrow","slowking","misdreavus","unown","wobbuffet","girafarig","pineco","forretress","dunsparce","gligar","steelix","snubbull","granbull","qwilfish","scizor","shuckle","heracross","sneasel","teddiursa","ursaring","slugma","magcargo","swinub","piloswine","corsola","remoraid","octillery","delibird","mantine","skarmory","houndour","houndoom","kingdra","phanpy","donphan","porygon2","stantler","smeargle","tyrogue","hitmontop","smoochum","elekid","magby","miltank","blissey","raikou","entei","suicune","larvitar","pupitar","tyranitar","lugia","ho-oh","celebi","treecko","grovyle","sceptile","torchic","combusken","blaziken","mudkip","marshtomp","swampert","poochyena","mightyena","zigzagoon","linoone","wurmple","silcoon","beautifly","cascoon","dustox","lotad","lombre","ludicolo","seedot","nuzleaf","shiftry","taillow","swellow","wingull","pelipper","ralts","kirlia","gardevoir","surskit","masquerain","shroomish","breloom","slakoth","vigoroth","slaking","nincada","ninjask","shedinja","whismur","loudred","exploud","makuhita","hariyama","azurill","nosepass","skitty","delcatty","sableye","mawile","aron","lairon","aggron","meditite","medicham","electrike","manectric","plusle","minun","volbeat","illumise","roselia","gulpin","swalot","carvanha","sharpedo","wailmer","wailord","numel","camerupt","torkoal","spoink","grumpig","spinda","trapinch","vibrava","flygon","cacnea","cacturne","swablu","altaria","zangoose","seviper","lunatone","solrock","barboach","whiscash","corphish","crawdaunt","baltoy","claydol","lileep","cradily","anorith","armaldo","feebas","milotic","castform","kecleon","shuppet","banette","duskull","dusclops","tropius","chimecho","absol","wynaut","snorunt","glalie","spheal","sealeo","walrein","clamperl","huntail","gorebyss","relicanth","luvdisc","bagon","shelgon","salamence","beldum","metang","metagross","regirock","regice","registeel","latias","latios","kyogre","groudon","rayquaza","jirachi","deoxys","turtwig","grotle","torterra","chimchar","monferno","infernape","piplup","prinplup","empoleon","starly","staravia","staraptor","bidoof","bibarel","kricketot","kricketune","shinx","luxio","luxray","budew","roserade","cranidos","rampardos","shieldon","bastiodon","burmy","wormadam","mothim","combee","vespiquen","pachirisu","buizel","floatzel","cherubi","cherrim","shellos","gastrodon","ambipom","drifloon","drifblim","buneary","lopunny","mismagius","honchkrow","glameow","purugly","chingling","stunky","skuntank","bronzor","bronzong","bonsly","mime jr.","happiny","chatot","spiritomb","gible","gabite","garchomp","munchlax","riolu","lucario","hippopotas","hippowdon","skorupi","drapion","croagunk","toxicroak","carnivine","finneon","lumineon","mantyke","snover","abomasnow","weavile","magnezone","lickilicky","rhyperior","tangrowth","electivire","magmortar","togekiss","yanmega","leafeon","glaceon","gliscor","mamoswine","porygon-z","gallade","probopass","dusknoir","froslass","rotom","uxie","mesprit","azelf","dialga","palkia","heatran","regigigas","giratina","cresselia","phione","manaphy","darkrai","shaymin","arceus","victini","snivy","servine","serperior","tepig","pignite","emboar","oshawott","dewott","samurott","patrat","watchog","lillipup","herdier","stoutland","purrloin","liepard","pansage","simisage","pansear","simisear","panpour","simipour","munna","musharna","pidove","tranquill","unfezant","blitzle","zebstrika","roggenrola","boldore","gigalith","woobat","swoobat","drilbur","excadrill","audino","timburr","gurdurr","conkeldurr","tympole","palpitoad","seismitoad","throh","sawk","sewaddle","swadloon","leavanny","venipede","whirlipede","scolipede","cottonee","whimsicott","petilil","lilligant","basculin","sandile","krokorok","krookodile","darumaka","darmanitan","maractus","dwebble","crustle","scraggy","scrafty","sigilyph","yamask","cofagrigus","tirtouga","carracosta","archen","archeops","trubbish","garbodor","zorua","zoroark","minccino","cinccino","gothita","gothorita","gothitelle","solosis","duosion","reuniclus","ducklett","swanna","vanillite","vanillish","vanilluxe","deerling","sawsbuck","emolga","karrablast","escavalier","foongus","amoonguss","frillish","jellicent","alomomola","joltik","galvantula","ferroseed","ferrothorn","klink","klang","klinklang","tynamo","eelektrik","eelektross","elgyem","beheeyem","litwick","lampent","chandelure","axew","fraxure","haxorus","cubchoo","beartic","cryogonal","shelmet","accelgor","stunfisk","mienfoo","mienshao","druddigon","golett","golurk","pawniard","bisharp","bouffalant","rufflet","braviary","vullaby","mandibuzz","heatmor","durant","deino","zweilous","hydreigon","larvesta","volcarona","cobalion","terrakion","virizion","tornadus","thundurus","reshiram","zekrom","landorus","kyurem","keldeo","meloetta","genesect","chespin","quilladin","chesnaught","fennekin","braixen","delphox","froakie","frogadier","greninja","bunnelby","diggersby","fletchling","fletchinder","talonflame","scatterbug","spewpa","vivillon","litleo","pyroar","flabébé","floette","florges","skiddo","gogoat","pancham","pangoro","furfrou","espurr","meowstic","honedge","doublade","aegislash","spritzee","aromatisse","swirlix","slurpuff","inkay","malamar","binacle","barbaracle","skrelp","dragalge","clauncher","clawitzer","helioptile","heliolisk","tyrunt","tyrantrum","amaura","aurorus","sylveon","hawlucha","dedenne","carbink","goomy","sliggoo","goodra","klefki","phantump","trevenant","pumpkaboo","gourgeist","bergmite","avalugg","noibat","noivern","xerneas","yveltal","zygarde","diancie","hoopa","volcanion"];
 function notifyMe(title, image, body){
     //console.log("notifyMe called");
@@ -858,7 +922,7 @@ function notifyMe(title, image, body){
         alert('Please us a modern version of Chrome, Firefox, Opera or Firefox.');
         return;
     }
- 
+
     if (Notification.permission !== "granted")
         Notification.requestPermission();
     var icon = image;
@@ -868,12 +932,12 @@ function notifyMe(title, image, body){
         icon = "http://img.pokemondb.net/sprites/black-white/shiny/"+pokemon[ND]+".png";
         timeFade = false;
     }
- 
+
     var notification = new Notification(title, {
         icon: icon,
         body: body
     });
- 
+
     if (timeFade){
         notification.onshow = function (){
             setTimeout(notification.close.bind(notification), 5000);
@@ -883,7 +947,7 @@ function notifyMe(title, image, body){
         window.focus();
     };
 }
- 
+
 if (features.labelYourPosts){
     var yourPosts = localStorage.yourPosts;
     if (yourPosts === undefined){
@@ -925,18 +989,18 @@ window.addEventListener("beforeunload", function (e) { // After user leaves the 
         }
     }
     //var confirmationMessage = "\o/";
- 
+
     //(e || window.event).returnValue = confirmationMessage; //Gecko + IE
     //return confirmationMessage;                            //Webkit, Safari, Chrome
 });
- 
- 
+
+
 function labelYourPosts(firstcall){
     $.each(queuedYouLabels, function(i, v){ // Parse all names on pageload and with each post submission
         $('#'+v+' .post_author').after('<span> (You)</span>');
     });
     queuedYouLabels = [];
- 
+
     if (firstcall){ // Parse all backlinks present on pageload
         $.each(yourPosts[threadID], function(i,v){
             $('.backlink[data-post='+v+']').each(function(){
@@ -948,7 +1012,7 @@ function labelYourPosts(firstcall){
         });
     }
 }
- 
+
 function labelNewPosts(response){
     var newPosts = Object.keys(response[threadID]["posts"]);
     $.each(newPosts, function(i,postID){ // For each post returned by update
@@ -974,7 +1038,7 @@ function labelNewPosts(response){
         unseenPosts.push(postID); // add postID to list of unseen posts
     });
 }
- 
+
 var lastSubmittedContent;
 function postSubmitEvent(){
     if ($('#reply [type=submit]').length){
@@ -990,7 +1054,7 @@ function postSubmitEvent(){
         observer.observe(target, config);
     }
 }
- 
+
 $(document).ready(function(){
     $('head').after('<script src="https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js"></script>'); // Pull in selection plugin (http://madapaja.github.io/jquery.selection/)
     $('head').after('<style type="text/css" id="FoolX-css">#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
@@ -999,7 +1063,7 @@ $(document).ready(function(){
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
     $('body').append('<div id="hoverUI"></div>');
- 
+
     windowFocus = true;
     $(window).focus(function(){windowFocus = true; ThreadUpdate(features);});
     $(window).blur(function(){windowFocus = false;});
@@ -1021,7 +1085,7 @@ $(document).ready(function(){
         }
         //console.log(yourPosts);
         postSubmitEvent();
- 
+
         $(document).ajaxComplete(function(event, request, settings) {
             //console.log(event);
             //console.log(request);
@@ -1066,10 +1130,10 @@ $(document).ready(function(){
     if(features.imageHover){imageHover();}
     if(features.videoHover){videoHover();}
 });
- 
+
 var executeShortcut = function(shortcut) {
     var input = document.getElementById('reply_chennodiscursus');
- 
+
     if (input.selectionStart !== undefined){
         $('#reply_chennodiscursus').selection('insert', {
             text: "["+shortcut+"]",
@@ -1081,7 +1145,7 @@ var executeShortcut = function(shortcut) {
         });
     }
 };
- 
+
 function quickReply(){
     $('#reply').toggleClass("quickReply");
     $('#reply fieldset > div:nth-child(1)').css("width","");
@@ -1089,17 +1153,17 @@ function quickReply(){
         $('#reply fieldset > div:nth-child(3)').toggle();
     }
 }
- 
+
 function quickReplyOptions(){
     $('#reply').toggleClass("showQROptions");
     $('#reply.quickReply fieldset > div:nth-child(3)').toggle();
 }
- 
+
 var favican = document.createElement("IMG");
 favican.src=favicon.lit;
 var exclam = document.createElement("IMG");
 exclam.src=favicon.alertOverlay;
- 
+
 function canfav(){
     $('#myCanvas').toggle();
     $('#myCanvas')["0"].getContext("2d").drawImage(favican, 0, 0);
@@ -1119,7 +1183,7 @@ function galleryToggle(){
         lowestVisiblePostID = parseInt(lowestVisiblePostID.replace(/_/g, ""));
         var imgList = $('.thread_image_box');
         imgIndex = imgList.length -1;
- 
+
         $.each(imgList, function(i,imageBox){
             var postID = $(imageBox).parents('article.post').attr("id");
             if (postID === undefined){
@@ -1135,7 +1199,7 @@ function galleryToggle(){
         galleryUpdate();
     }
 }
- 
+
 function galleryChange(direction){
     if (direction == "left"){
         if (imgIndex == 0 ){
@@ -1154,7 +1218,7 @@ function galleryChange(direction){
     }
     galleryUpdate();
 }
- 
+
 function galleryUpdate(){
     if ($('#gallery').length){    
         var imgList = $('.thread_image_box');
@@ -1165,7 +1229,7 @@ function galleryUpdate(){
         }
     }
 }
- 
+
 $(function(){
     shortcut.add("ctrl+s", function(){ executeShortcut("spoiler");});
     shortcut.add("ctrl+i", function(){ executeShortcut("i");});
@@ -1177,7 +1241,7 @@ $(function(){
     if (features.gallery){shortcut.add("g", function(){galleryToggle();}, {"disable_in_input":true});}
     shortcut.add("left", function(){galleryChange("left");}, {"disable_in_input":true});
     shortcut.add("right", function(){galleryChange("right");}, {"disable_in_input":true});
- 
+
     seenPosts();
     ThreadUpdate(features);
     getBoard();
