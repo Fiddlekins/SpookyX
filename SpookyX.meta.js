@@ -1,16 +1,16 @@
 // ==UserScript==
 // Displayable Name of your script
 // @name          SpookyX
- 
+
 // Brief description
-// @description   Enhances functionality of FoolFuuka boards. Devloped further for more comfortable ghost-posting on the moe archives.
- 
+// @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
+
 // Your name, copyright  
 // @author        Fiddlekins
- 
+
 // Version Number
-// @version       24.9
- 
+// @version       25
+
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
