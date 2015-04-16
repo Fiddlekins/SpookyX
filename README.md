@@ -14,12 +14,19 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
 
  
 ## Added Features:
-#### Embedding linked images into the post to imitate imageboard use in the Spooky real
-- Works for imgur, puu.sh etc. More sites can be added by the user by editing the script, see below
-- Supports .webm, .mp4 (and .gifv)
-- An image link that is enclosed in spoiler tags will be embedded in spoilered mode
+#### Embedding linked images (and other media) into the post to imitate imageboard use in the Spooky realm
+- Hyperlinks in posts will be checked for known file extensions and embedded accordingly
+- A media link that is enclosed in spoiler tags will be embedded in spoilered mode
 - Middle click and ctrl+leftclick open images in a new tab rather than toggle size
 - More than a single image can be embedded by editing the script, see below
+
+#### Hovering over images or videos 
+- Show full version of media or one shrunk to fit in view if it's too large
+- You can turn off images or turn off videos independently. See the user options below
+
+#### Gallery Mode that lets you browse through all thread images and videos.
+- Press 'G' to bring it up, press it again to hide it once more.
+- Left and right arrow keys are used to cycle through the images.
 
 #### Pressing Q (Outside of text entry fields) will toggle quick reply mode
 - This moves the reply box to the top right of the screen and it stays where it when you scroll
@@ -33,14 +40,6 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
 #### Highlighting text and clicking a post number will insert both into the reply field
 - The text is not post specific, nor is it constrained to posts
 
-#### Post content will be filtered against 'shitpost flags'
-- There are three tiers of shitpost:
-    - T0 isn't bound by a character limit and outright removes posts. Capitalisation sensitive
-    - T1 which is considered worthy of outright removal but is constrained only to posts shorter than the character limit. Not capitalisation sensitive
-    - T2 which is considered potentially worth seeing and is thus collapsed instead, allowing you to show/hide toggle it. Not capitalisation sensitive
-- Also filter by tripcode or name
-- The 'shitpost flags' can be edited manually to customise your filter
-
 #### Your posts and links pointing to them will be designated by appending '(You)'
 - Receive desktop notifications when someone replies to you
 - Clicking the notification will take you to the relevant tab
@@ -50,13 +49,17 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
 - Activating this feature will also turn on the more advanced seen post counter which will keep track of the last post you saw in a thread and persist between sessions
 - The cut off point between seen and unseen posts is designated with a horizontal red line
 
-#### Hovering over images or videos 
-- Show full version of media or one shrunk to fit in view if it's too large
-- You can turn off images or turn off videos independently. See the user options below
+#### Recursive post hiding
+- Hiding a post will hide all posts that reply to it
+- Likewise, unhiding a post will show all posts that reply to it
 
-#### Gallery Mode that lets you browse through all thread images and videos.
-- Press 'G' to bring it up, press it again to hide it once more.
-- Left and right arrow keys are used to cycle through the images.
+#### Post content will be filtered against 'shitpost flags'
+- There are three tiers of shitpost:
+ - T0 isn't bound by a character limit and outright removes posts. Capitalisation sensitive
+ - T1 which is considered worthy of outright removal but is constrained only to posts shorter than the character limit. Not capitalisation sensitive
+ - T2 which is considered potentially worth seeing and is thus collapsed instead, allowing you to show/hide toggle it. Not capitalisation sensitive
+- Also filter by tripcode or name
+- The 'shitpost flags' can be edited manually to customise your filter
 
 #### Fixed bugs present in the original FoolX:
 - Using keyboard shortcuts to wrap highlighted text in tags no longer wraps the first instance if there are multiple instances of the highlighted text in the reply box.
@@ -64,10 +67,6 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
  
 ## User Options:
 At the start of the script is a section titled "/\* User Options \*/" which contains several variables that you can change.
-- imgSites: This is the list of websites that the image embed feature will embed from
-    - To add another website add the domain to the list, seperated by a "|"
-    - Make sure you use the domain of a typical image rather than the website that hosts them.
-        - For example, imgur will link to you a gallery at "http://imgur.com/gallery/E8iYihC" and the image itself at "http://i.imgur.com/E8iYihC.gifv"
 - imgNumMaster: This is how many images each post can have embedded
     - Simply replace with whatever number you desire
 - autoplayVids: Make embedded videos play automatically (they start muted, expanding unmutes)
@@ -95,6 +94,7 @@ At the start of the script is a section titled "/\* User Options \*/" which cont
         - postCounter: Add a post counter to the reply box
         - inlineImages: Load full-size images in the thread, enable click to expand
         - hidePosts: Allow user to hide posts manually
+        - recursiveHiding: Hide replies to hidden posts
         - newPosts: Reflect new posts in the tab name
         - embedImages: Embed image links in thread
         - embedGalleries: Embed imgur galleries into a single post for ease of image dumps
