@@ -2,6 +2,13 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v26:** *(2015-04-18)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v26/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v26/README.md)
+- New feature: relative post times
+- fixed bug where thread IDs weren't board specific which meant that the script considers the Xth thread on one board the same as the Xth thread on another board. This unfortunately requires manual adjustment of locally stored data for previous records to be accessed, see [here](https://github.com/Fiddlekins/SpookyX/blob/v26/ManualFixForv26.md) for instructions
+- fixed bug where if the archive has scrubbed a 4chan native posted image's thumbnail it would perpetually try to reload it
+- fixed bug where the last seen post ID was being compared to the list of unseen posts lexicographically
+- fixed bug where it would try to embed invalid imgur gallery links
+
 **v25:** *(2015-04-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v25/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v25/README.md)
 - New Feature: Recursive Hiding. Manually hiding a post will hide all replies to it
  - Unhiding a post will recursively show all replies to it
