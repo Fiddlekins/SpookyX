@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       25
+// @version       26
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -43,21 +43,22 @@ var favicon = {
     "alertOverlay":"http://i.imgur.com/6EfJyYA.png" // The favicon overlay that indicates unread replies. Default is "http://i.imgur.com/6EfJyYA.png"
 };
 var features = {
-    "postCounter":false,     // Add a post counter to the reply box
-    "inlineImages":true,     // Load full-size images in the thread, enable click to expand
-    "hidePosts":true,        // Allow user to hide posts manually
-    "recursiveHiding":true,  // Hide replies to hidden posts
-    "newPosts":true,         // Reflect new posts in the tab name
-    "embedImages":true,      // Embed image links in thread
-    "embedGalleries":true,   // Embed imgur galleries into a single post for ease of image dumps
-    "inlineReplies":true,    // Click replies to expand them inline
-    "postQuote":true,        // Clicking the post number will insert highlighted text into the reply box
-    "filter":false,           // Hide undesirable posts from view
-    "labelYourPosts":true,   // Add '(You)' to your posts and links that point to them
-    "favicon":true,          // Switch to a dynamic favicon that indicates unread posts and unread replies
-    "imageHover":true,       // Hovering over images with the mouse brings a full or window scaled version in view
-    "videoHover":true,       // Hovering over videos with the mouse brings a full or window scaled version in view
-    "gallery":true           // Pressing G will bring up a view that displays all the images in a thread
+    "postCounter":false,       // Add a post counter to the reply box
+    "inlineImages":true,       // Load full-size images in the thread, enable click to expand
+    "hidePosts":false,          // Allow user to hide posts manually
+    "recursiveHiding":true,    // Hide replies to hidden posts
+    "newPosts":true,           // Reflect new posts in the tab name
+    "embedImages":true,        // Embed image links in thread
+    "embedGalleries":true,     // Embed imgur galleries into a single post for ease of image dumps
+    "inlineReplies":true,      // Click replies to expand them inline
+    "postQuote":true,          // Clicking the post number will insert highlighted text into the reply box
+    "filter":false,             // Hide undesirable posts from view
+    "labelYourPosts":true,     // Add '(You)' to your posts and links that point to them
+    "favicon":true,            // Switch to a dynamic favicon that indicates unread posts and unread replies
+    "imageHover":true,         // Hovering over images with the mouse brings a full or window scaled version in view
+    "videoHover":true,         // Hovering over videos with the mouse brings a full or window scaled version in view
+    "gallery":true,            // Pressing G will bring up a view that displays all the images in a thread
+    "relativeTimestamps":true  // Timestamps will be replaced by elapsed time since post
 };
 var filterCharThreshold = 100; // Filter posts with less than this number of characters
 var filteredStringsT0 = [    // List of Tier 0 strings to filter for. Capitalisation sensitive
@@ -98,12 +99,18 @@ var rulesBox = $(".rules_box").html();
 if(autoplayVids){var autoplayVid = "autoplay";}else{var autoplayVid="";}
 var queuedYouLabels = [];
 
-var pattThreadAndID = new RegExp("thread\/[0-9]+\/");
+var pattThreadAndID = new RegExp("thread\/[0-9]+($|\/)");
 var pattThreadID = new RegExp("[0-9]+");
 var threadID; // Returns undefined if there's no thread
 if (pattThreadAndID.exec(document.URL) !== null){
     threadID = pattThreadID.exec(pattThreadAndID.exec(document.URL))[0];
 }
+
+var getBoard = function(){
+    var URL = document.URL;
+    return URL.split("/")[3];
+};
+var board = getBoard();
 
 function ThreadUpdate(features) {
     if (features.postCounter){postCounter();}  
@@ -114,6 +121,7 @@ function ThreadUpdate(features) {
     if (features.inlineReplies){inlineReplies();}
     if (features.postQuote){postQuote();}
     if (features.filter){filter();}
+    if (features.relativeTimestamps){relativeTimestamps();}
 }
 
 switch(favicon.lit) {
@@ -415,11 +423,6 @@ shortcut = {
     }
 };
 
-var getBoard = function(){
-    var URL = document.URL;
-    return URL.split("/")[3];
-};
-
 var inlineImages = function()
 {
     $('.thread_image_box').each(function(index,currentImage){
@@ -433,8 +436,11 @@ var inlineImages = function()
                         var thumbImage = $(this).attr('src');
                         $(this).attr('src',fullImage);
                         $(this).error(function(e){ // Handle images that won't load
-                            if (fullImage !== thumbImage){ // If the image has a thumbnail aka was 4chan native then use that
-                                $(this).attr('src',thumbImage);
+                            if ($(this).data("triedThumb") !== true){
+                                $(this).data("triedThumb", true);
+                                if (fullImage !== thumbImage){ // If the image has a thumbnail aka was 4chan native then use that
+                                    $(this).attr('src',thumbImage);
+                                }
                             }
                         });
                         $(this).removeAttr('width');
@@ -762,11 +768,14 @@ var embedImages = function() {
                         }
                     }
                 }else if (features.embedGalleries && pattImgGal.exec($(this).html()) !== null){
-                    var link = pattImgGal.exec($(this).html());
-                    var individualImages = link[0].match(/[A-z0-9]{7}/g);
-                    $.each(individualImages.reverse(), function(i,imgID){
-                        $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box"><a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>');
-                    });
+                    var imgurLinkFragments = $(this).html().split('\/');
+                    if (imgurLinkFragments[3] !== "a"){
+                        var link = pattImgGal.exec($(this).html());
+                        var individualImages = link[0].match(/[A-z0-9]{7}/g);
+                        $.each(individualImages.reverse(), function(i,imgID){
+                            $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box"><a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>');
+                        });
+                    }
                 }else{
                     if(!(/&gt;&gt;/).test(mediaLink)){
                         //console.log(mediaLink);
@@ -848,6 +857,84 @@ function videoHover(){
     });
 }
 
+function relativeTimestamps(){
+    $('time').each(function(index, timeElement){
+        if ($(timeElement).data('relativeTime') !== true){
+            $(timeElement).data('relativeTime', true);
+            //var postTimestamp = Date.parse($(timeElement).attr('datetime'));
+            //changeTimestamp(postTimestamp);
+            changeTimestamp(timeElement, Date.parse($(timeElement).attr('datetime')));
+        }
+    });
+}
+
+function convertMS(ms){
+    var d, h, m, s;
+    s = Math.floor(ms / 1000);
+    m = Math.floor(s / 60);
+    s = s % 60;
+    h = Math.floor(m / 60);
+    m = m % 60;
+    d = Math.floor(h / 24);
+    h = h % 24;
+    y = Math.floor(d / 365.25);
+    d = Math.floor(d % 365.25);
+    return { y: y, d: d, h: h, m: m, s: s };
+};
+
+function changeTimestamp(timeElement, postTimestamp){
+    var currentTimestamp = Date.now();
+    var diffMS = currentTimestamp - postTimestamp;
+    if (diffMS < 0){diffMS = 0;} // Handle the issue where mismatched local and server time could end up with negative difference
+    var diff = convertMS(diffMS);
+    var years = "years";
+    var days = "days";
+    var hours = "hours";
+    var minutes = "minutes";
+    var seconds = "seconds";
+    if (diff.y == 1){years = "year";}
+    if (diff.d == 1){days = "day";}
+    if (diff.h == 1){hours = "hour";}
+    if (diff.m == 1){minutes = "minute";}
+    if (diff.s == 1){seconds = "second";}
+    if (diff.y){
+        $(timeElement).html(diff.y+' '+years+' and '+diff.d+' '+days+' ago');
+        setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 365.25*24*60*60*1000);        
+    }else if (diff.d){
+        if (diff.d >= 2){
+            $(timeElement).html(diff.d+' '+days+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 24*60*60*1000);
+        }else{
+            $(timeElement).html(diff.d+' '+days+' and '+diff.h+' '+hours+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 60*60*1000);
+        }
+    }else if (diff.h){
+        if (diff.h >= 2){
+            $(timeElement).html(diff.h+' '+hours+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, (60 - diff.m)*60*1000);
+        }else{
+            $(timeElement).html(diff.h+' '+hours+' and '+diff.m+' '+minutes+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 10*60*1000);
+        }
+    }else if (diff.m){
+        if (diff.m >= 10){
+            $(timeElement).html(diff.m+' '+minutes+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 5*60*1000);
+        }else{
+            $(timeElement).html(diff.m+' '+minutes+' and '+diff.s+' '+seconds+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 1*60*1000);
+        }
+    }else{
+        if (diff.s >= 20){
+            $(timeElement).html(diff.s+' '+seconds+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 20*1000);
+        }else{
+            $(timeElement).html(diff.s+' '+seconds+' ago');
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 9*1000);
+        }
+    }
+}
+
 var lastSeenPost;
 var unseenPosts = [];
 var seenPosts = function(){
@@ -878,12 +965,12 @@ var newPosts = function(){
                 }
             });
             $.each(unseenPosts.filter(function(el){
-                return el.replace(/_/g, "") <= lastSeenPost;
+                return parseInt(el.replace(/_/g, "")) <= parseInt(lastSeenPost);
             }),function(i,postID){
                 $('#'+postID).removeClass("unseenPost"); // Remove unseen class from all posts with lower ID than the last seen one
             });
             unseenPosts = unseenPosts.filter(function(el){
-                return el.replace(/_/g, "") > lastSeenPost; // Remove posts from list of unseen ones if their ID is lower than the last seen one
+                return parseInt(el.replace(/_/g, "")) > parseInt(lastSeenPost); // Remove posts from list of unseen ones if their ID is lower than the last seen one
             });
             $('#'+unseenPosts[0]).addClass("unseenPost"); // Add the unseen class to the first of the unseen posts
         }
@@ -953,7 +1040,7 @@ if (features.labelYourPosts){
     if (yourPosts === undefined){
         yourPosts = {};
         console.log("Created post archive for the first time");
-    } else {
+    }else{
         yourPosts = JSON.parse(localStorage.yourPosts);
     }
 }
@@ -962,30 +1049,35 @@ if (features.favicon){
     if (lastSeenPosts === undefined){
         lastSeenPosts = {};
         console.log("Created unseen replies archive for the first time");
-    } else {
+    }else{
         lastSeenPosts = JSON.parse(localStorage.lastSeenPosts);
     }
     lastSeenPost = lastSeenPosts[threadID];
 }
-window.addEventListener("beforeunload", function (e) { // After user leaves the page
+window.addEventListener("beforeunload", function (e){ // After user leaves the page
     if (features.labelYourPosts){ // Save the your posts object
-        if (localStorage.yourPosts === undefined){
-            localStorage.yourPosts = JSON.stringify(yourPosts);
-        } else {
-            localStorage.yourPosts = JSON.stringify($.extend(true, yourPosts, JSON.parse(localStorage.yourPosts)));
+        if (yourPosts[board][threadID].length){ // If you posted during the thread. Prevents saving of empty arrays
+            if (localStorage.yourPosts === undefined){
+                localStorage.yourPosts = JSON.stringify(yourPosts);
+            }else{
+                localStorage.yourPosts = JSON.stringify($.extend(true, yourPosts, JSON.parse(localStorage.yourPosts)));
+            }
         }
     }
     if (features.favicon){ // Save the last read posts object
-        lastSeenPosts[threadID] = lastSeenPost;
+        lastSeenPosts[board][threadID] = lastSeenPost;
         if (localStorage.lastSeenPosts === undefined){
             localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts);
-        } else {
+        }else{
             latestLastSeenPosts = JSON.parse(localStorage.lastSeenPosts); // Get the most recent version of the stored object
-            if (latestLastSeenPosts[threadID] > lastSeenPosts[threadID]){
-                localStorage.lastSeenPosts = JSON.stringify(latestLastSeenPosts); // Save it again
-            }else{
-                localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts); // Save it again
+            //console.log(latestLastSeenPosts[board][threadID]);
+            //console.log(lastSeenPosts[board][threadID]);
+            if (latestLastSeenPosts[board][threadID] !== undefined){
+                if (parseInt(latestLastSeenPosts[board][threadID].replace(/_/g, "")) > parseInt(lastSeenPosts[board][threadID].replace(/_/g, ""))){
+                    lastSeenPosts[board][threadID] = latestLastSeenPosts[board][threadID];
+                }
             }
+            localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts); // Save it again
         }
     }
     //var confirmationMessage = "\o/";
@@ -1002,7 +1094,7 @@ function labelYourPosts(firstcall){
     queuedYouLabels = [];
 
     if (firstcall){ // Parse all backlinks present on pageload
-        $.each(yourPosts[threadID], function(i,v){
+        $.each(yourPosts[board][threadID], function(i,v){
             $('.backlink[data-post='+v+']').each(function(){
                 if ($(this).data('linkedYou') != 'true'){
                     this.textContent += ' (You)';
@@ -1019,7 +1111,7 @@ function labelNewPosts(response){
         var notificationTriggered = false;
         $('#'+postID+' .greentext > a').each(function(i, link){ // For each post content backlink
             var linkID = $(link).attr('data-post');
-            if ($.inArray(linkID, yourPosts[threadID])+1){ // If the link points to your post
+            if ($.inArray(linkID, yourPosts[board][threadID])+1){ // If the link points to your post
                 if (!notificationTriggered){
                     notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",$('#'+postID+' .text').text().trim());
                     unseenReplies.push(postID); // add postID to list of unseen replies
@@ -1027,7 +1119,7 @@ function labelNewPosts(response){
                 }
                 link.textContent += ' (You)'; // Designate the link as such
             }
-            if ($.inArray(postID, yourPosts[threadID])+1){ // If the post is your own
+            if ($.inArray(postID, yourPosts[board][threadID])+1){ // If the post is your own
                 var backlink = $('#'+linkID+' .post_backlink [data-post='+postID+']');
                 if (backlink.data('linkedYou') != 'true'){
                     backlink[0].textContent += ' (You)'; // Find your post's new reply backlink and designate it too
@@ -1071,19 +1163,25 @@ $(document).ready(function(){
         $('#reply').toggleClass("showQROptions"); // Make options hidden in QR by default
     }
     if (features.favicon){
-        if (lastSeenPosts[threadID] === undefined){
-            lastSeenPosts[threadID] = threadID;
+        if (lastSeenPosts[board] === undefined){
+            lastSeenPosts[board] = {};
         }
-        lastSeenPost = lastSeenPosts[threadID];
+        if (lastSeenPosts[board][threadID] === undefined){
+            lastSeenPosts[board][threadID] = threadID;
+        }
+        lastSeenPost = lastSeenPosts[board][threadID];
     }
     if (features.labelYourPosts){
-        if (yourPosts[threadID] === undefined){
-            yourPosts[threadID] = [];
+        if (yourPosts[board] === undefined){
+            yourPosts[board] = {};
+        }
+        if (yourPosts[board][threadID] === undefined){
+            yourPosts[board][threadID] = [];
         } else {
-            queuedYouLabels = yourPosts[threadID].slice(0);
+            queuedYouLabels = yourPosts[board][threadID].slice(0);
             //console.log(queuedYouLabels);
         }
-        //console.log(yourPosts);
+        console.log(yourPosts);
         postSubmitEvent();
 
         $(document).ajaxComplete(function(event, request, settings) {
@@ -1104,10 +1202,8 @@ $(document).ready(function(){
                         for (var post in response[threadID]["posts"]) {
                             //console.log(lastSubmittedContent);                    
                             if(response[threadID]["posts"][post]["comment"].replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
-                                yourPosts[threadID].push(post);
+                                yourPosts[board][threadID].push(post);
                                 queuedYouLabels.push(post);
-                                //console.log(yourPosts);
-                                //console.log(queuedYouLabels);
                                 labelYourPosts();
                                 break;
                             }
