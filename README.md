@@ -53,6 +53,9 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
 - Hiding a post will hide all posts that reply to it
 - Likewise, unhiding a post will show all posts that reply to it
 
+#### Relative timestamps
+- Hovering over them will show the 4chan timestamp for the post
+
 #### Post content will be filtered against 'shitpost flags'
 - There are three tiers of shitpost:
  - T0 isn't bound by a character limit and outright removes posts. Capitalisation sensitive
@@ -106,6 +109,7 @@ At the start of the script is a section titled "/\* User Options \*/" which cont
         - imageHover: Hovering over images with the mouse brings a full or window scaled version in view
         - videoHover: Hovering over videos with the mouse brings a full or window scaled version in view
         - gallery: Pressing G will bring up a view that displays all the images in a thread. Left and right arrow keys cycle through them
+        - relativeTimestamps: Timestamps will be replaced by elapsed time since post
 - filterCharThreshold: the number of characters that a post must be over to be exempt from shitpost filtering
 - filteredStringsT0: List of Tier 0 strings to filter for. Tier 0 get's removed
     - These are actually in regex form, a handy reference can be found here: http://www.w3schools.com/jsref/jsref_obj_regexp.asp
