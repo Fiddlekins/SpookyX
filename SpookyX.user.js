@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       26
+// @version       26.1
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -727,8 +727,8 @@ function shitpostT2(post, postText){
 var embedImages = function() {
     $('.posts article').each(function(index, currentArticle){
         if ($(currentArticle).data('imgEmbed') != 'true'){
-            var imageFiletypes = new RegExp(".(jpg|png|gif)$");
-            var videoFiletypes = new RegExp(".(webm|gifv|mp4)$");
+            var imageFiletypes = new RegExp("\.(jpg|png|gif)($|\\?[\\S]+$)");
+            var videoFiletypes = new RegExp("\.(webm|gifv|mp4)($|\\?[\\S]+$)");
             var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
             var imgNum = imgNumMaster - $(currentArticle).find('.thread_image_box').length;
             $(currentArticle).find(".text a").each(function(index, currentLink){
@@ -771,7 +771,7 @@ var embedImages = function() {
                     }
                 }else if (features.embedGalleries && pattImgGal.exec($(this).html()) !== null){
                     var imgurLinkFragments = $(this).html().split('\/');
-                    if (imgurLinkFragments[3] !== "a"){
+                    if (imgurLinkFragments[3] !== "a" && imgurLinkFragments[3] !== "gallery" ){
                         var link = pattImgGal.exec($(this).html());
                         var individualImages = link[0].match(/[A-z0-9]{7}/g);
                         $.each(individualImages.reverse(), function(i,imgID){
