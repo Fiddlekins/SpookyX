@@ -14,19 +14,23 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
 
  
 ## Added Features:
+#### Settings Menu
+- This can be opened using the 'Settings' link in the top right of the window or by pressing 'O'
+
 #### Embedding linked images (and other media) into the post to imitate imageboard use in the Spooky realm
 - Hyperlinks in posts will be checked for known file extensions and embedded accordingly
 - A media link that is enclosed in spoiler tags will be embedded in spoilered mode
 - Middle click and ctrl+leftclick open images in a new tab rather than toggle size
-- More than a single image can be embedded by editing the script, see below
+- More than a single image can be embedded by editing the script by changing the 'Embed Count' setting
 
 #### Hovering over images or videos 
 - Show full version of media or one shrunk to fit in view if it's too large
-- You can turn off images or turn off videos independently. See the user options below
+- You can turn off images or turn off videos independently via the settings menu
 
 #### Gallery Mode that lets you browse through all thread images and videos.
 - Press 'G' to bring it up, press it again to hide it once more.
 - Left and right arrow keys are used to cycle through the images.
+- Scrolls to the currently viewed image
 
 #### Pressing Q (Outside of text entry fields) will toggle quick reply mode
 - This moves the reply box to the top right of the screen and it stays where it when you scroll
@@ -70,46 +74,7 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
  
 ## User Options:
 At the start of the script is a section titled "/\* User Options \*/" which contains several variables that you can change.
-- imgNumMaster: This is how many images each post can have embedded
-    - Simply replace with whatever number you desire
-- autoplayVids: Make embedded videos play automatically (they start muted, expanding unmutes)
-    - "true" or "false" as appropriate
-- hideQROptions: Make the reply options hidden by default in the quick reply
-    - Simply use "true" or "false" depending on you preference
-- favicon: Choose which favicon is used to indicate there are unread posts.
-    - The list of options is as follows:
-        - unlit: A url to the image you wish to use as the favicon that displays when there are no new posts
-        - lit: A url to the image you wish to use as the favicon that displays when there are new posts that aren't replies to yours
-            - There are 5 preset options. Rather than giving a url here you can use the numbers 0-4 to choose which one
-        - alert: A url to the image you wish to use as the favicon that displays when there are new posts of which some are replies to yours
-        - alertOverlay: A url to the image you wish to use as an overlay on a custom lit favicon
-            - Use a png for transparency
-    - Unfortunately due to security policy it cannot automatically overlay the images and set that as the favicon. Instead:
-        - you will need to set your custom lit or custom alertOverlay (or both)
-        - reload a moe page with the script running and a reply box present (such as in a thread)
-        - hit 'F' to bring up by the reply box a image with the output alert image
-        - right click and save this image
-        - upload it somewhere
-        - set the alert option in the script to equal that url
-- features: This is a list of the feature names
-    - Set them to "true" or "false", making sure the comma remains at the end
-    - The list of features is as follows:
-        - postCounter: Add a post counter to the reply box
-        - inlineImages: Load full-size images in the thread, enable click to expand
-        - hidePosts: Allow user to hide posts manually
-        - recursiveHiding: Hide replies to hidden posts
-        - newPosts: Reflect new posts in the tab name
-        - embedImages: Embed image links in thread
-        - embedGalleries: Embed imgur galleries into a single post for ease of image dumps
-        - inlineReplies: Click replies to expand them inline
-        - postQuote: Clicking the post number will insert highlighted text into the reply box
-        - filter: Hide undesirable posts from view
-        - labelYourPosts: Add '(You)' to your posts and links that point to them
-        - favicon: Switch to a dynamic favicon that indicates unread posts and unread replies
-        - imageHover: Hovering over images with the mouse brings a full or window scaled version in view
-        - videoHover: Hovering over videos with the mouse brings a full or window scaled version in view
-        - gallery: Pressing G will bring up a view that displays all the images in a thread. Left and right arrow keys cycle through them
-        - relativeTimestamps: Timestamps will be replaced by elapsed time since post
+
 - filterCharThreshold: the number of characters that a post must be over to be exempt from shitpost filtering
 - filteredStringsT0: List of Tier 0 strings to filter for. Tier 0 get's removed
     - These are actually in regex form, a handy reference can be found here: http://www.w3schools.com/jsref/jsref_obj_regexp.asp
@@ -127,3 +92,16 @@ At the start of the script is a section titled "/\* User Options \*/" which cont
 - filteredNames: List of names to filter for. These get collapsed.
     - Works the same as filteredStringsT0
     - This is capitalisation specific
+
+## Customising the favicons:
+You can use custom favicons by changing the URLs in the settings menu.
+
+The Alert Overlay is a URL to the image you wish to use as an overlay on a custom lit favicon.
+
+Unfortunately due to security policy it cannot automatically overlay the images and set that as the favicon. Instead:
+- you will need to set your custom lit or custom alertOverlay (or both)
+- reload a moe page with the script running and a reply box present (such as in a thread)
+- hit 'F' to bring up by the reply box a image with the output alert image
+- right click and save this image
+- upload it somewhere
+- set the alert option in the script to equal that URL
