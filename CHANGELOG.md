@@ -2,6 +2,11 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v27:** *(2015-04-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27/README.md)
+- New Feature: Settings menu. Hit 'O' or click on the 'Settings' link in the top right to bring up the menu. Settings are saved as they are changed, refresh the page for the changes to fully take effect
+- Gallery mode scrolls the page to the viewed image
+- The last seen post line updates when the tab leaves focus. This should mimic the behaviour of the 4chanX extension and is less distracting than having it update as you read the thread
+
 **v26.1:** *(2015-04-23)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v26.1/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v26.1/README.md)
 - Adjusted the media link detection so that the file-extension doesn't strictly have to be at the end of the URL. If the extension is followed by a question mark and then other characters it will be detected, an example of a newly detected link is https://cdn.artstation.com/p/assets/images/images/000/643/001/large/benedick-bana-blood-blades2.jpg?1429603884
 
