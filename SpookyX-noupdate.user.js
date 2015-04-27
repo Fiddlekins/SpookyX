@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       26.1
+// @version       27
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -31,35 +31,7 @@
 // @icon          http://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
 
-
 /* USER OPTIONS START */
-var imgNumMaster = 1; // Max number of images to embed
-var autoplayVids = false; // Make embedded videos play automatically (they start muted, expanding unmutes)
-var hideQROptions = true; // Make the reply options hidden by default in the quick reply
-var favicon = {
-    "unlit": "http://i.imgur.com/xuadeJ2.png", // Choose which favicon is used normally. Default is "http://i.imgur.com/xuadeJ2.png"
-    "lit": 2, // Choose which favicon is used to indicate there are unread posts. Preset numbers are 0-4, replace with link to custom image if you desire such as: "http://i.imgur.com/XGsrewo.png"
-    "alert":"", // The favicon that indicates unread replies to your posts. Value is ignored if using a preset faviconLit
-    "alertOverlay":"http://i.imgur.com/6EfJyYA.png" // The favicon overlay that indicates unread replies. Default is "http://i.imgur.com/6EfJyYA.png"
-};
-var features = {
-    "postCounter":false,       // Add a post counter to the reply box
-    "inlineImages":true,       // Load full-size images in the thread, enable click to expand
-    "hidePosts":false,          // Allow user to hide posts manually
-    "recursiveHiding":true,    // Hide replies to hidden posts
-    "newPosts":true,           // Reflect new posts in the tab name
-    "embedImages":true,        // Embed image links in thread
-    "embedGalleries":true,     // Embed imgur galleries into a single post for ease of image dumps
-    "inlineReplies":true,      // Click replies to expand them inline
-    "postQuote":true,          // Clicking the post number will insert highlighted text into the reply box
-    "filter":false,             // Hide undesirable posts from view
-    "labelYourPosts":true,     // Add '(You)' to your posts and links that point to them
-    "favicon":true,            // Switch to a dynamic favicon that indicates unread posts and unread replies
-    "imageHover":true,         // Hovering over images with the mouse brings a full or window scaled version in view
-    "videoHover":true,         // Hovering over videos with the mouse brings a full or window scaled version in view
-    "gallery":true,            // Pressing G will bring up a view that displays all the images in a thread
-    "relativeTimestamps":true  // Timestamps will be replaced by elapsed time since post
-};
 var filterCharThreshold = 100; // Filter posts with less than this number of characters
 var filteredStringsT0 = [    // List of Tier 0 strings to filter for. Capitalisation sensitive
     //"[\\S]*(a{4,}|b{4,}|c{4,}|d{4,}|e{4,}|f{4,}|g{4,}|h{4,}|i{4,}|j{4,}|k{4,}|l{4,}|m{4,}|n{4,}|o{4,}|p{4,}|q{4,}|r{4,}|s{4,}|t{4,}|u{4,}|v{4,}|w{4,}|x{4,}|y{4,}|z{4,})[\\S]*",
@@ -76,7 +48,8 @@ var filteredStringsT1 = [    // List of Tier 1 strings to filter for
     "tale[\\S]*[^( of witches)]",
     "ree+[\\S]*",
     "boogeyman",
-    "normies"
+    "normies",
+    "(Fuck[^A-z]*off|Eat.*dick)[^A-z]*Tartarus"
 ];
 var filteredStringsT2 = [    // List of Tier 2 strings to filter for
     "quest whe?n[?]*",
@@ -92,11 +65,165 @@ var filteredNames = [       // List of names to filter for
 ];
 /* USER OPTIONS END */
 
+var settings = {
+    "UserSettings": {
+        "inlineImages": {
+            "name": "Inline Images",
+            "description": "Load full-size images in the thread, enable click to expand",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "imageHover": {
+                    "name": "Image Hover",
+                    "description": "Hovering over images with the mouse brings a full or window scaled version in view",
+                    "type": "checkbox",
+                    "value": true
+                },
+                "videoHover": {
+                    "name": "Video Hover",
+                    "description": "Hovering over videos with the mouse brings a full or window scaled version in view",
+                    "type": "checkbox",
+                    "value": true
+                }
+            }
+        },
+        "embedImages": {
+            "name": "Embed Images",
+            "description": "Embed image (and other media) links in thread",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "imgNumMaster": {
+                    "name": "Embed Count",
+                    "description": "The maximum number of images (or other media) to embed in each post.",
+                    "type": "number",
+                    "value": 1
+                },
+                "autoplayVids": {
+                    "name": "Autoplay embedded videos",
+                    "description": "Make embedded videos play automatically (they start muted, expanding unmutes)",
+                    "type": "checkbox",
+                    "value": true
+                }
+            }
+        },
+        "embedGalleries": {
+            "name": "Embed Galleries",
+            "description": "Embed imgur galleries into a single post for ease of image dumps",
+            "type": "checkbox",
+            "value": true
+        },
+        "gallery": {
+            "name": "Gallery",
+            "description": "Pressing G will bring up a view that displays all the images in a thread",
+            "type": "checkbox",
+            "value": true
+        },
+        "hidePosts": {
+            "name": "Hide Posts",
+            "description": "Allow user to hide posts manually",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "recursiveHiding": {
+                    "name": "Recursive Hiding",
+                    "description": "Hide replies to hidden posts",
+                    "type": "checkbox",
+                    "value": true
+                }
+            }
+        },
+        "newPosts": {
+            "name": "New Posts",
+            "description": "Reflect the number of new posts in the tab name",
+            "type": "checkbox",
+            "value": true
+        },
+        "favicon": {
+            "name": "Favicon",
+            "description": "Switch to a dynamic favicon that indicates unread posts and unread replies",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "unlit": {
+                    "name": "Unlit",
+                    "description": "Choose which favicon is used normally. Default is \"http://i.imgur.com/xuadeJ2.png\"",
+                    "type": "text",
+                    "value": "http://i.imgur.com/xuadeJ2.png"
+                },
+                "lit": {
+                    "name": "Lit",
+                    "description": "Choose which favicon is used to indicate there are unread posts. Preset numbers are 0-4, replace with link to custom image if you desire such as: \"http://i.imgur.com/XGsrewo.png\"",
+                    "type": "text",
+                    "value": 2
+                },
+                "alert": {
+                    "name": "Alert",
+                    "description": "The favicon that indicates unread replies to your posts. Value is ignored if using a preset Lit favicon",
+                    "type": "text",
+                    "value": ""
+                },
+                "alertOverlay": {
+                    "name": "Alert Overlay",
+                    "description": "The favicon overlay that indicates unread replies. Default is \"http://i.imgur.com/6EfJyYA.png\"",
+                    "type": "text",
+                    "value": "http://i.imgur.com/6EfJyYA.png"
+                }
+            }
+        },
+        "labelYourPosts": {
+            "name": "Label Your Posts",
+            "description": "Add '(You)' to your posts and links that point to them",
+            "type": "checkbox",
+            "value": true
+        },
+        "inlineReplies": {
+            "name": "Inline Replies",
+            "description": "Click replies to expand them inline",
+            "type": "checkbox",
+            "value": true
+        },
+        "relativeTimestamps": {
+            "name": "Relative Timestamps",
+            "description": "Timestamps will be replaced by elapsed time since post",
+            "type": "checkbox",
+            "value": true
+        },
+        "postQuote": {
+            "name": "Post Quote",
+            "description": "Clicking the post number will insert highlighted text into the reply box",
+            "type": "checkbox",
+            "value": true
+        },
+        "filter": {
+            "name": "Filter",
+            "description": "Hide undesirable posts from view",
+            "type": "checkbox",
+            "value": false
+        },
+        "hideQROptions": {
+            "name": "Hide QR Options",
+            "description": "Make the reply options hidden by default in the quick reply",
+            "type": "checkbox",
+            "value": true
+        },
+        "postCounter": {
+            "name": "Post Counter",
+            "description": "Add a post counter to the reply box",
+            "type": "checkbox",
+            "value": false
+        }
+    }
+};
+
+$.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
+presetFavicons();
+
 var newPostCount = 0;
 var DocumentTitle = document.title;
 var ignoreInline = ['v'];
 var rulesBox = $(".rules_box").html();
-if(autoplayVids){var autoplayVid = "autoplay";}else{var autoplayVid="";}
+if(settings.UserSettings.embedImages.suboptions.autoplayVids.value){var autoplayVid = "autoplay";}else{var autoplayVid="";}
 var queuedYouLabels = [];
 
 var pattThreadAndID = new RegExp("thread\/[0-9]+($|\/)");
@@ -112,25 +239,46 @@ var getBoard = function(){
 };
 var board = getBoard();
 
-function ThreadUpdate(features) {
-    if (features.postCounter){postCounter();}  
-    if (features.inlineImages){inlineImages();}
-    if (features.hidePosts){hidePosts();}
-    if (features.newPosts){newPosts();}
-    if (features.embedImages){embedImages();}
-    if (features.inlineReplies){inlineReplies();}
-    if (features.postQuote){postQuote();}
-    if (features.filter){filter();}
-    if (features.relativeTimestamps){relativeTimestamps();}
+function presetFavicons(){
+    switch(settings.UserSettings.favicon.suboptions.lit.value) {
+        case "0": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/7iTgtjy.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/QrkQSo0.png"; break;
+        case "1": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/AWVjxfw.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/KXIPcD9.png"; break;
+        case "2": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/S7uBSPZ.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/7IxJvBN.png"; break;
+        case "3": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/Rt8dEaq.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/tvJjpqF.png"; break;
+        case "4": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/3bRaVUl.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/5Bv27Co.png"; break;
+        default: console.log("Lit value is: "+settings.UserSettings.favicon.suboptions.lit.value); break;
+    }
 }
 
-switch(favicon.lit) {
-    case 0: favicon.lit = "http://i.imgur.com/7iTgtjy.png"; favicon.alert = "http://i.imgur.com/QrkQSo0.png"; break;
-    case 1: favicon.lit = "http://i.imgur.com/AWVjxfw.png"; favicon.alert = "http://i.imgur.com/KXIPcD9.png"; break;
-    case 2: favicon.lit = "http://i.imgur.com/S7uBSPZ.png"; favicon.alert = "http://i.imgur.com/7IxJvBN.png"; break;
-    case 3: favicon.lit = "http://i.imgur.com/Rt8dEaq.png"; favicon.alert = "http://i.imgur.com/tvJjpqF.png"; break;
-    case 4: favicon.lit = "http://i.imgur.com/3bRaVUl.png"; favicon.alert = "http://i.imgur.com/5Bv27Co.png"; break;
-    default: break;
+function ThreadUpdate(){
+    if (settings.UserSettings.postCounter.value){postCounter();}  
+    if (settings.UserSettings.inlineImages.value){inlineImages();}
+    if (settings.UserSettings.hidePosts.value){hidePosts();}
+    if (settings.UserSettings.newPosts.value){newPosts();}
+    if (settings.UserSettings.embedImages.value){embedImages();}
+    if (settings.UserSettings.inlineReplies.value){inlineReplies();}
+    if (settings.UserSettings.postQuote.value){postQuote();}
+    if (settings.UserSettings.filter.value){filter();}
+    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps();}
+}
+
+/**
+ * Retrieve nested item from object/array
+ * @param {Object|Array} obj
+ * @param {String} path dot separated
+ * @param {*} def default value ( if result undefined )
+ * @returns {*}
+ */
+function path(obj, path, def){
+    var i, len;
+
+    for(i = 0,path = path.split('.'), len = path.length; i < len; i++){
+        if(!obj || typeof obj !== 'object') return def;
+        obj = obj[path[i]];
+    }
+
+    if(obj === undefined) return def;
+    return obj;
 }
 
 $.fn.elemText = function() {
@@ -175,28 +323,28 @@ $.fn.isOnScreen = function(){
 
     var specials = [
         // order matters for these
-        "-"
-        , "["
-        , "]"
+        "-",
+        "[",
+        "]",
         // order doesn't matter for any of these
-        , "/"
-        , "{"
-        , "}"
-        , "("
-        , ")"
-        , "*"
-        , "+"
-        , "?"
-        , "."
-        , "\\"
-        , "^"
-        , "$"
-        , "|"
-    ]
+        "/",
+        "{",
+        "}",
+        "(",
+        ")",
+        "*",
+        "+",
+        "?",
+        ".",
+        "\\",
+        "^",
+        "$",
+        "|"
+    ],
 
-    // I choose to escape every character with '\'
-    // even though only some strictly require it when inside of []
-    , regex = RegExp('[' + specials.join('\\') + ']', 'g')
+        // I choose to escape every character with '\'
+        // even though only some strictly require it when inside of []
+        regex = RegExp('[' + specials.join('\\') + ']', 'g')
     ;
     escapeRegExp = function (str) {
         return str.replace(regex, "\\$&");
@@ -232,7 +380,7 @@ shortcut = {
         var func = function(e) {
             e = e || window.event;
 
-            if(opt['disable_in_input']) { //Don't enable shortcut keys in Input, Textarea fields
+            if(opt.disable_in_input) { //Don't enable shortcut keys in Input, Textarea fields
                 var element;
                 if(e.target) element=e.target;
                 else if(e.srcElement) element=e.srcElement;
@@ -361,8 +509,8 @@ shortcut = {
                 } else if(k.length > 1) { //If it is a special key
                     if(special_keys[k] == code) kp++;
 
-                } else if(opt['keycode']) {
-                    if(opt['keycode'] == code) kp++;
+                } else if(opt.keycode) {
+                    if(opt.keycode == code) kp++;
 
                 } else { //The special keys did not match
                     if(character == k) kp++;
@@ -382,7 +530,7 @@ shortcut = {
                modifiers.meta.pressed == modifiers.meta.wanted) {
                 callback(e);
 
-                if(!opt['propagate']) { //Stop the event
+                if(!opt.propagate) { //Stop the event
                     //e.cancelBubble is supported by IE - this will kill the bubbling process.
                     e.cancelBubble = true;
                     e.returnValue = false;
@@ -399,12 +547,12 @@ shortcut = {
         this.all_shortcuts[shortcut_combination] = {
             'callback':func,
             'target':ele,
-            'event': opt['type']
+            'event': opt.type
         };
         //Attach the function with the event
-        if(ele.addEventListener) ele.addEventListener(opt['type'], func, false);
-        else if(ele.attachEvent) ele.attachEvent('on'+opt['type'], func);
-        else ele['on'+opt['type']] = func;
+        if(ele.addEventListener) ele.addEventListener(opt.type, func, false);
+        else if(ele.attachEvent) ele.attachEvent('on'+opt.type, func);
+        else ele['on'+opt.type] = func;
     },
 
     //Remove the shortcut - just specify the shortcut and I will remove the binding
@@ -413,9 +561,9 @@ shortcut = {
         var binding = this.all_shortcuts[shortcut_combination];
         delete(this.all_shortcuts[shortcut_combination]);
         if(!binding) return;
-        var type = binding['event'];
-        var ele = binding['target'];
-        var callback = binding['callback'];
+        var type = binding.event;
+        var ele = binding.target;
+        var callback = binding.callback;
 
         if(ele.detachEvent) ele.detachEvent('on'+type, callback);
         else if(ele.removeEventListener) ele.removeEventListener(type, callback, false);
@@ -452,7 +600,7 @@ var inlineImages = function()
                                 $(this).click(function(e){
                                     if (!e.originalEvent.ctrlKey && e.which == 1){
                                         e.preventDefault();
-                                        $($(this).parent()["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
+                                        $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
                                         $(this).toggleClass("smallImageOP");
                                         $(this).toggleClass("bigImage");
                                         $('#hoverUI').html('');
@@ -464,7 +612,7 @@ var inlineImages = function()
                                 $(this).click(function(e){
                                     if (!e.originalEvent.ctrlKey && e.which == 1){
                                         e.preventDefault();
-                                        $($(this).parent()["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
+                                        $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
                                         $(this).toggleClass("smallImage");
                                         $(this).toggleClass("bigImage");
                                         $('#hoverUI').html('');
@@ -476,7 +624,7 @@ var inlineImages = function()
                     });
                 }
             });
-            if(features.imageHover){imageHover();}
+            if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
             $(currentImage).data("inline","true");
         }
     });
@@ -486,7 +634,7 @@ var inlineImages = function()
             $(this).click(function(e){
                 //e.preventDefault();
                 $(this).toggleClass("bigImage"); // Make it full opacity to override spoilering
-                $($(this)["0"]["previousSibling"]).toggle(); // Toggle the Spoiler text
+                $($(this)["0"].previousSibling).toggle(); // Toggle the Spoiler text
                 if ($(this).hasClass("fullVideo")){
                     this.pause();
                     this.muted=true;
@@ -504,7 +652,7 @@ var inlineImages = function()
                 $(this).trigger("mouseenter");
             });
             $(currentVideo).data("inline","true");
-            if(features.videoHover){videoHover();}
+            if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
         }
     });
 };
@@ -523,16 +671,16 @@ var inlineReplies = function(){
                     e.preventDefault();
                     //e.stopPropagation();
                     var postID = $(this).attr("data-post");
-                    var rootPostID = $(e["target"].closest('article.base')).attr('id');
-                    if ($(e["target"]).hasClass("inlined")){
-                        $(e["target"]).removeClass("inlined");
+                    var rootPostID = $(e.target.closest('article.base')).attr('id');
+                    if ($(e.target).hasClass("inlined")){
+                        $(e.target).removeClass("inlined");
                         $('.sub'+rootPostID).each(function(index,currentPost){
                             $("#"+currentPost.id.substr(1)+".forwarded").removeClass("forwarded");
                         });
                         $('#i'+postID+'.sub'+rootPostID).remove();
                     }else{
-                        $(e["target"]).addClass("inlined");
-                        $(e["target"]["parentNode"]["parentNode"]).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
+                        $(e.target).addClass("inlined");
+                        $(e.target.parentNode.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
                         $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).appendTo($("#i"+postID+'.sub'+rootPostID));
                         $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
                             if (!$(this).hasClass('sub'+rootPostID)){
@@ -553,16 +701,16 @@ var inlineReplies = function(){
                     e.preventDefault();
                     //e.stopPropagation();
                     var postID = $(this).attr("data-post");
-                    var rootPostID = $(e["target"].closest('article.base')).attr('id');
-                    if ($(e["target"]).hasClass("inlined")){
-                        $(e["target"]).removeClass("inlined");
+                    var rootPostID = $(e.target.closest('article.base')).attr('id');
+                    if ($(e.target).hasClass("inlined")){
+                        $(e.target).removeClass("inlined");
                         $('.sub'+rootPostID).each(function(index,currentPost){
                             $("#"+currentPost.id.substr(1)+".forwarded").removeClass("forwarded");
                         });
                         $('#i'+postID+'.sub'+rootPostID).remove();
                     }else{
-                        $(e["target"]).addClass("inlined");
-                        $(e["target"]["parentNode"]).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
+                        $(e.target).addClass("inlined");
+                        $(e.target.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
                         $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).appendTo($("#i"+postID+'.sub'+rootPostID));
                         $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
                             if (!$(this).hasClass('sub'+rootPostID)){
@@ -624,7 +772,7 @@ var postQuote = function(){
 
 function togglePost(postID, docID, mode){
     if (!docID){
-        var docID = $('article#'+postID).find('.pull-left > button').attr("data-doc-id");
+        docID = $('article#'+postID).find('.pull-left > button').attr("data-doc-id");
     }
     if (mode == "hide"){
         $('.doc_id_'+docID).hide();
@@ -657,7 +805,7 @@ var hidePosts = function(){
             $(currentPost).removeClass('stub');
         }
     });
-    if (features.recursiveHiding){
+    if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
         if (firstTime){
             $('article.post:hidden').each(function(i, post){
                 recursiveToggle($(post).attr('id'));
@@ -725,10 +873,10 @@ function shitpostT2(post, postText){
 var embedImages = function() {
     $('.posts article').each(function(index, currentArticle){
         if ($(currentArticle).data('imgEmbed') != 'true'){
-            var imageFiletypes = new RegExp("\.(jpg|png|gif)($|\\?[\\S]+$)");
-            var videoFiletypes = new RegExp("\.(webm|gifv|mp4)($|\\?[\\S]+$)");
+            var imageFiletypes = new RegExp(".(jpg|png|gif)($|\\?[\\S]+$)");
+            var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|\\?[\\S]+$)");
             var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
-            var imgNum = imgNumMaster - $(currentArticle).find('.thread_image_box').length;
+            var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $(currentArticle).find('.thread_image_box').length;
             $(currentArticle).find(".text a").each(function(index, currentLink){
                 if (imgNum === 0){
                     return false;
@@ -765,9 +913,9 @@ var embedImages = function() {
                         $(currentArticle).find(".thread_image_box:first-child video")[0].onloadedmetadata = function(e){
                             $(currentArticle).find(".thread_image_box:first-child .spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
                             $(currentArticle).find(".thread_image_box:first-child").append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
-                        }
+                        };
                     }
-                }else if (features.embedGalleries && pattImgGal.exec($(this).html()) !== null){
+                }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec($(this).html()) !== null){
                     var imgurLinkFragments = $(this).html().split('\/');
                     if (imgurLinkFragments[3] !== "a" && imgurLinkFragments[3] !== "gallery" ){
                         var link = pattImgGal.exec($(this).html());
@@ -849,7 +997,7 @@ function videoHover(){
                         });
                     });
                 }
-            }
+            };
         }
     });
     $('video').on("mouseout", function(e){
@@ -880,7 +1028,7 @@ function convertMS(ms){
     y = Math.floor(d / 365.25);
     d = Math.floor(d % 365.25);
     return { y: y, d: d, h: h, m: m, s: s };
-};
+}
 
 function changeTimestamp(timeElement, postTimestamp){
     var currentTimestamp = Date.now();
@@ -899,38 +1047,38 @@ function changeTimestamp(timeElement, postTimestamp){
     if (diff.s == 1){seconds = "second";}
     if (diff.y){
         $(timeElement).html(diff.y+' '+years+' and '+diff.d+' '+days+' ago');
-        setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 365.25*24*60*60*1000);        
+        setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 365.25*24*60*60*1000);        
     }else if (diff.d){
         if (diff.d >= 2){
             $(timeElement).html(diff.d+' '+days+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 24*60*60*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 24*60*60*1000);
         }else{
             $(timeElement).html(diff.d+' '+days+' and '+diff.h+' '+hours+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 60*60*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 60*60*1000);
         }
     }else if (diff.h){
         if (diff.h >= 2){
             $(timeElement).html(diff.h+' '+hours+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, (60 - diff.m)*60*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, (60 - diff.m)*60*1000);
         }else{
             $(timeElement).html(diff.h+' '+hours+' and '+diff.m+' '+minutes+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 10*60*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 10*60*1000);
         }
     }else if (diff.m){
         if (diff.m >= 10){
             $(timeElement).html(diff.m+' '+minutes+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 5*60*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 5*60*1000);
         }else{
             $(timeElement).html(diff.m+' '+minutes+' and '+diff.s+' '+seconds+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 1*60*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 1*60*1000);
         }
     }else{
         if (diff.s >= 20){
             $(timeElement).html(diff.s+' '+seconds+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 20*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 20*1000);
         }else{
             $(timeElement).html(diff.s+' '+seconds+' ago');
-            setTimeout(function(){changeTimestamp(timeElement, postTimestamp)}, 9*1000);
+            setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 9*1000);
         }
     }
 }
@@ -950,7 +1098,7 @@ var seenPosts = function(){
 
 var unseenReplies = [];
 var newPosts = function(){
-    if (features.favicon){
+    if (settings.UserSettings.favicon.value){
         //console.log("newPosts called");
         if (windowFocus === true){
             $.each(unseenPosts, function(i,postID){
@@ -964,23 +1112,17 @@ var newPosts = function(){
                     });
                 }
             });
-            $.each(unseenPosts.filter(function(el){
-                return parseInt(el.replace(/_/g, "")) <= parseInt(lastSeenPost);
-            }),function(i,postID){
-                $('#'+postID).removeClass("unseenPost"); // Remove unseen class from all posts with lower ID than the last seen one
-            });
             unseenPosts = unseenPosts.filter(function(el){
                 return parseInt(el.replace(/_/g, "")) > parseInt(lastSeenPost); // Remove posts from list of unseen ones if their ID is lower than the last seen one
             });
-            $('#'+unseenPosts[0]).addClass("unseenPost"); // Add the unseen class to the first of the unseen posts
         }
         newPostCount = unseenPosts.length;
         if (unseenReplies.length){
-            $('#favicon').attr("href", favicon.alert);
+            $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.alert.value);
         }else if (newPostCount > 0){
-            $('#favicon').attr("href", favicon.lit);
-        }else if ($('#favicon').attr("href") !== favicon.unlit){
-            $('#favicon').attr("href", favicon.unlit);
+            $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.lit.value);
+        }else if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.unlit.value){
+            $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.unlit.value);
         }
     }else{ // Original newpost counter code
         $('article').each(function(index, currentArticle){
@@ -1035,7 +1177,7 @@ function notifyMe(title, image, body){
     };
 }
 
-if (features.labelYourPosts){
+if (settings.UserSettings.labelYourPosts.value){
     var yourPosts = localStorage.yourPosts;
     if (yourPosts === undefined){
         yourPosts = {};
@@ -1044,7 +1186,7 @@ if (features.labelYourPosts){
         yourPosts = JSON.parse(localStorage.yourPosts);
     }
 }
-if (features.favicon){
+if (settings.UserSettings.favicon.value){
     var lastSeenPosts = localStorage.lastSeenPosts;
     if (lastSeenPosts === undefined){
         lastSeenPosts = {};
@@ -1055,7 +1197,7 @@ if (features.favicon){
     lastSeenPost = lastSeenPosts[threadID];
 }
 window.addEventListener("beforeunload", function (e){ // After user leaves the page
-    if (features.labelYourPosts){ // Save the your posts object
+    if (settings.UserSettings.labelYourPosts.value){ // Save the your posts object
         if (yourPosts[board][threadID].length){ // If you posted during the thread. Prevents saving of empty arrays
             if (localStorage.yourPosts === undefined){
                 localStorage.yourPosts = JSON.stringify(yourPosts);
@@ -1064,7 +1206,7 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
             }
         }
     }
-    if (features.favicon){ // Save the last read posts object
+    if (settings.UserSettings.favicon.value){ // Save the last read posts object
         lastSeenPosts[board][threadID] = lastSeenPost;
         if (localStorage.lastSeenPosts === undefined){
             localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts);
@@ -1086,7 +1228,6 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
     //return confirmationMessage;                            //Webkit, Safari, Chrome
 });
 
-
 function labelYourPosts(firstcall){
     $.each(queuedYouLabels, function(i, v){ // Parse all names on pageload and with each post submission
         $('#'+v+' .post_author').after('<span> (You)</span>');
@@ -1106,7 +1247,7 @@ function labelYourPosts(firstcall){
 }
 
 function labelNewPosts(response){
-    var newPosts = Object.keys(response[threadID]["posts"]);
+    var newPosts = Object.keys(response[threadID].posts);
     $.each(newPosts, function(i,postID){ // For each post returned by update
         var notificationTriggered = false;
         $('#'+postID+' .greentext > a').each(function(i, link){ // For each post content backlink
@@ -1150,19 +1291,52 @@ function postSubmitEvent(){
 $(document).ready(function(){
     $('head').after('<script src="https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js"></script>'); // Pull in selection plugin (http://madapaja.github.io/jquery.selection/)
     $('head').after('<style type="text/css" id="FoolX-css">#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
-    if (features.favicon){
-        $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+favicon.unlit+'">');
+    if (settings.UserSettings.favicon.value){
+        $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
     $('body').append('<div id="hoverUI"></div>');
+    $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 3px; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 0 3px; float: left;}.credits{float: right;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 5px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color: #d6f0da;}#settingsMenu input{margin: 3px 3px 3px 4px;}#settingsMenu input[type="text"]{height:7px; line-height:0;}#settingsMenu input[type="number"]{height:14px; line-height:0; width:43px;}');
+    $('body').append('<div id="headerBar"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
+    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a title="Main" href="javascript:;" class="active">Main</a> | <a title="Filter" href="javascript:;">Filter</a></div><div class="credits"><a title="Close" href="javascript:;">Close</a></div></div><div id="settingsContent"></div></div>');
+    $('#headerBar > a, a[title=Close]').on('click', function(){
+        populateSettingsMenu();
+    });
+    $('.sections-list').on('click', function(e){ // Main settings tabs change on click
+        if (e.target.tagName == "A"){
+            $('#settingsContent #'+$('.sections-list .active').attr('title')).hide();
+            $('.sections-list .active').removeClass('active');
+            $(e.target).addClass('active').show();
+            $('#settingsContent #'+$('.sections-list .active').attr('title')).show();
+        }
+    });
+    $('#settingsContent').on('change', function(e){
+        var value;
+        if (e.target.type == "checkbox"){
+            value = e.target.checked;
+        }else{
+            value = e.target.value;
+        }
+        path(settings.UserSettings, $(e.target).attr('path')).value = value;
+        var settingsStore = {};
+        settingsStore.UserSettings = settingsStrip(settings.UserSettings);
+        localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
+    });
 
     windowFocus = true;
-    $(window).focus(function(){windowFocus = true; ThreadUpdate(features);});
-    $(window).blur(function(){windowFocus = false;});
-    if (hideQROptions){
+    $(window).focus(function(){
+        windowFocus = true;
+        ThreadUpdate();
+    });
+    $(window).blur(function(){
+        windowFocus = false;
+        $('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
+        $('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
+    });
+    if (settings.UserSettings.hideQROptions.value){
         $('#reply').toggleClass("showQROptions"); // Make options hidden in QR by default
     }
-    if (features.favicon){
+    if (settings.UserSettings.favicon.value){
         if (lastSeenPosts[board] === undefined){
             lastSeenPosts[board] = {};
         }
@@ -1171,7 +1345,7 @@ $(document).ready(function(){
         }
         lastSeenPost = lastSeenPosts[board][threadID];
     }
-    if (features.labelYourPosts){
+    if (settings.UserSettings.labelYourPosts.value){
         if (yourPosts[board] === undefined){
             yourPosts[board] = {};
         }
@@ -1181,7 +1355,7 @@ $(document).ready(function(){
             queuedYouLabels = yourPosts[board][threadID].slice(0);
             //console.log(queuedYouLabels);
         }
-        console.log(yourPosts);
+        //console.log(yourPosts);
         postSubmitEvent();
 
         $(document).ajaxComplete(function(event, request, settings) {
@@ -1199,9 +1373,9 @@ $(document).ready(function(){
             }else{
                 if (settings.type == "POST"){
                     if (response.error === undefined ){
-                        for (var post in response[threadID]["posts"]) {
+                        for (var post in response[threadID].posts) {
                             //console.log(lastSubmittedContent);                    
-                            if(response[threadID]["posts"][post]["comment"].replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
+                            if(response[threadID].posts[post].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
                                 yourPosts[board][threadID].push(post);
                                 queuedYouLabels.push(post);
                                 labelYourPosts();
@@ -1223,8 +1397,8 @@ $(document).ready(function(){
         });
         labelYourPosts(true); // First call, add (You) to page content
     }
-    if(features.imageHover){imageHover();}
-    if(features.videoHover){videoHover();}
+    if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+    if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
 });
 
 var executeShortcut = function(shortcut) {
@@ -1256,9 +1430,9 @@ function quickReplyOptions(){
 }
 
 var favican = document.createElement("IMG");
-favican.src=favicon.lit;
+favican.src = settings.UserSettings.favicon.suboptions.lit.value;
 var exclam = document.createElement("IMG");
-exclam.src=favicon.alertOverlay;
+exclam.src = settings.UserSettings.favicon.suboptions.alertOverlay.value;
 
 function canfav(){
     $('#myCanvas').toggle();
@@ -1298,7 +1472,7 @@ function galleryToggle(){
 
 function galleryChange(direction){
     if (direction == "left"){
-        if (imgIndex == 0 ){
+        if (imgIndex === 0 ){
             imgIndex = $('.thread_image_box').length -1;
         }else{
             imgIndex--;
@@ -1323,7 +1497,58 @@ function galleryUpdate(){
         }else{
             $('#gallery').html('<video style="float:left; max-width:90%; max-height:90%;" name="media" loop muted controls '+autoplayVid+'><source src="'+$(imgList[imgIndex]).find('video')[0].currentSrc+'" type="video/webm"></video>');
         }
+        console.log($(imgList[imgIndex]).find('img').offset().top-50);
+        $(document).scrollTop($(imgList[imgIndex]).find('img').offset().top-50);
     }
+}
+
+function populateSettingsMenu(){
+    if ($('#settingsMenu').is(":visible")){
+        $('#settingsMenu').hide();
+    }else{
+        $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
+        presetFavicons();
+        var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
+        settingsHTML += '<div id="Filter">Placeholder</div>';
+        $('#settingsContent').html(settingsHTML);
+        $('#settingsContent > div').hide();
+        $('#settingsContent #'+$('.sections-list .active').attr('title')).show();
+        $('#settingsMenu').show();
+    }
+}
+
+function generateSubOptionHTML(input, path){
+    var settingsHTML = '';
+    $.each(input, function(key, value){
+        var checked = '';
+        if (value.value){
+            checked = 'checked ';
+        }
+        settingsHTML += '<div><label>';
+        switch(value.type){
+            case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'" '+checked+'path="'+path+key+'">'; break;
+            case "text": settingsHTML += '<input type="text" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
+            case "number": settingsHTML += '<input type="number" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
+        }
+        settingsHTML += value.name+'</label><span class="description">: '+value.description+'</span>';
+        if (value.suboptions !== undefined){
+            settingsHTML += '<div class="suboption-list">' + generateSubOptionHTML(value.suboptions,path+key+'.suboptions.') + '</div>';
+        }
+        settingsHTML += '</div>';
+    });
+    return settingsHTML;
+}
+
+function settingsStrip(input){
+    var obj = {};
+    $.each(input, function(key, value){
+        obj[key] = {};
+        obj[key].value = value.value;
+        if (value.suboptions !== undefined){
+            obj[key].suboptions = settingsStrip(value.suboptions);
+        }
+    });
+    return obj;
 }
 
 $(function(){
@@ -1333,14 +1558,17 @@ $(function(){
     shortcut.add("ctrl+u", function(){ executeShortcut("u");});
     shortcut.add("q", function(){quickReply();}, {"disable_in_input":true});
     shortcut.add("ctrl+q", function(){quickReplyOptions();}, {"disable_in_input":false});
-    if (features.favicon){shortcut.add("f", function(){canfav();}, {"disable_in_input":true});}
-    if (features.gallery){shortcut.add("g", function(){galleryToggle();}, {"disable_in_input":true});}
-    shortcut.add("left", function(){galleryChange("left");}, {"disable_in_input":true});
-    shortcut.add("right", function(){galleryChange("right");}, {"disable_in_input":true});
+    if (settings.UserSettings.favicon.value){shortcut.add("f", function(){canfav();}, {"disable_in_input":true});}
+    if (settings.UserSettings.gallery.value){
+        shortcut.add("g", function(){galleryToggle();}, {"disable_in_input":true});
+        shortcut.add("left", function(){galleryChange("left");}, {"disable_in_input":true});
+        shortcut.add("right", function(){galleryChange("right");}, {"disable_in_input":true});
+    }
+    shortcut.add("o", function(){populateSettingsMenu();}, {"disable_in_input":true});
 
     seenPosts();
-    ThreadUpdate(features);
+    ThreadUpdate();
     getBoard();
     bindShortcuts();
-    window.setInterval( function(){ ThreadUpdate(features); }, 500 );
+    window.setInterval( function(){ ThreadUpdate(); }, 500 );
 });
