@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       27.1
+// @version       27.2
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -685,7 +685,7 @@ var inlineReplies = function(){
                     }else{
                         $(e.target).addClass("inlined");
                         $(e.target.parentNode.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
-                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).appendTo($("#i"+postID+'.sub'+rootPostID));
+                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
                         $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
                             if (!$(this).hasClass('sub'+rootPostID)){
                                 $(this).attr("class","inline sub"+rootPostID);
@@ -715,7 +715,7 @@ var inlineReplies = function(){
                     }else{
                         $(e.target).addClass("inlined");
                         $(e.target.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
-                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).appendTo($("#i"+postID+'.sub'+rootPostID));
+                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
                         $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
                             if (!$(this).hasClass('sub'+rootPostID)){
                                 $(this).attr("class","inline sub"+rootPostID);
@@ -1291,7 +1291,7 @@ function postSubmitEvent(){
 
 $(document).ready(function(){
     $('head').after('<script src="https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js"></script>'); // Pull in selection plugin (http://madapaja.github.io/jquery.selection/)
-    $('head').after('<style type="text/css" id="FoolX-css">#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
+    $('head').after('<style type="text/css" id="FoolX-css">.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
     if (settings.UserSettings.favicon.value){
         $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
