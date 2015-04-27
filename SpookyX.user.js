@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       27
+// @version       27.1
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -66,7 +66,6 @@ var filteredNames = [       // List of names to filter for
     "久保島のミズゴロウ"
 ];
 /* USER OPTIONS END */
-
 var settings = {
     "UserSettings": {
         "inlineImages": {
@@ -157,7 +156,7 @@ var settings = {
                     "name": "Lit",
                     "description": "Choose which favicon is used to indicate there are unread posts. Preset numbers are 0-4, replace with link to custom image if you desire such as: \"http://i.imgur.com/XGsrewo.png\"",
                     "type": "text",
-                    "value": 2
+                    "value": "2"
                 },
                 "alert": {
                     "name": "Alert",
@@ -218,7 +217,9 @@ var settings = {
     }
 };
 
-$.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
+if (localStorage.SpookyXsettings !== undefined){
+    $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
+}
 presetFavicons();
 
 var newPostCount = 0;
@@ -248,7 +249,7 @@ function presetFavicons(){
         case "2": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/S7uBSPZ.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/7IxJvBN.png"; break;
         case "3": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/Rt8dEaq.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/tvJjpqF.png"; break;
         case "4": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/3bRaVUl.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/5Bv27Co.png"; break;
-        default: console.log("Lit value is: "+settings.UserSettings.favicon.suboptions.lit.value); break;
+        default: break;// console.log("Lit value is: "+settings.UserSettings.favicon.suboptions.lit.value);
     }
 }
 
@@ -576,7 +577,8 @@ shortcut = {
 var inlineImages = function()
 {
     $('.thread_image_box').each(function(index,currentImage){
-        if ($(currentImage).data("inline") != "true"){
+        if (!$(currentImage).data("inline")){
+            $(currentImage).data("inline",true);
             $(currentImage).find('>a').each(function(){
                 var fullImage = $(this).attr('href');
                 if (fullImage.match(/\.webm$/)){ // Handle post webms
@@ -586,7 +588,7 @@ var inlineImages = function()
                         var thumbImage = $(this).attr('src');
                         $(this).attr('src',fullImage);
                         $(this).error(function(e){ // Handle images that won't load
-                            if ($(this).data("triedThumb") !== true){
+                            if (!$(this).data("triedThumb")){
                                 $(this).data("triedThumb", true);
                                 if (fullImage !== thumbImage){ // If the image has a thumbnail aka was 4chan native then use that
                                     $(this).attr('src',thumbImage);
@@ -595,7 +597,7 @@ var inlineImages = function()
                         });
                         $(this).removeAttr('width');
                         $(this).removeAttr('height');
-                        if ($(this).data("handled") != "true"){
+                        if (!$(this).data("handled")){
                             if ($(this).hasClass("thread_image")){ // Handle OP images
                                 $(this).data("handled","true");
                                 $(this).addClass("smallImageOP");
@@ -627,12 +629,12 @@ var inlineImages = function()
                 }
             });
             if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-            $(currentImage).data("inline","true");
         }
     });
 
     $('#main video').each(function(index,currentVideo) {
-        if ($(currentVideo).data("inline") != "true"){
+        if (!$(currentVideo).data("inline")){
+            $(currentVideo).data("inline",true);
             $(this).click(function(e){
                 //e.preventDefault();
                 $(this).toggleClass("bigImage"); // Make it full opacity to override spoilering
@@ -653,7 +655,6 @@ var inlineImages = function()
                 $('#hoverUI').html('');
                 $(this).trigger("mouseenter");
             });
-            $(currentVideo).data("inline","true");
             if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
         }
     });
@@ -661,13 +662,14 @@ var inlineImages = function()
 
 var inlineReplies = function(){
     $('article.post').each(function(index,currentPost) {
-        if ($(currentPost).data("inline") != "true"){
+        if (!$(currentPost).data("inline")){
+            $(currentPost).data("inline",true);
             $(this).addClass("base");
         }
-        $(currentPost).data("inline","true");
     });
     $('.post_backlink > .backlink').each(function(index,currentPost) {
-        if ($(currentPost).data("inline") != "true"){
+        if (!$(currentPost).data("inline")){
+            $(currentPost).data("inline",true);
             $(this).on("click", function(e){
                 if (!e.originalEvent.ctrlKey && e.which == 1){
                     e.preventDefault();
@@ -693,11 +695,11 @@ var inlineReplies = function(){
                     }
                 }
             });
-            $(currentPost).data("inline","true");
         }
     });
     $('.text .backlink').each(function(index,currentPost) {
-        if ($(currentPost).data("inline") != "true"){
+        if (!$(currentPost).data("inline")){
+            $(currentPost).data("inline",true);
             $(this).on("click", function(e){
                 if (!e.originalEvent.ctrlKey && e.which == 1){
                     e.preventDefault();
@@ -723,7 +725,6 @@ var inlineReplies = function(){
                     }
                 }
             });
-            $(currentPost).data("inline","true");
         }
     });
 };
@@ -739,9 +740,10 @@ function getSelectionText() {
 }
 
 var postQuote = function(){
-    $('.post_data > [data-function=quote]').each(function(index,currentPost) {
-        if ($(currentPost).data("quotable") != "true"){
-            $(this).removeAttr("data-function"); // Disable native quote function
+    $('.post_data > [data-function=quote], .post_data > [data-function=customQuote]').each(function(index,currentPost) {
+        if (!$(currentPost).data("quotable")){
+            $(currentPost).data("quotable",true);
+            $(this).attr('data-function','customQuote'); // Disable native quote function, make it findable so that inline posts will be handled
             $(this).on("click", function(e){
                 if (!e.originalEvent.ctrlKey && e.which == 1){
                     e.preventDefault();
@@ -767,7 +769,6 @@ var postQuote = function(){
                     }
                 }
             });
-            $(currentPost).data("quotable","true");
         }
     });
 };
@@ -815,8 +816,8 @@ var hidePosts = function(){
             firstTime = false;
         }
         $('.btn-toggle-post').each(function(index, currentButton){
-            if ($(currentButton).data("hideClickListener") != "true"){
-                $(currentButton).data("hideClickListener","true");
+            if (!$(currentButton).data("hideClickListener")){
+                $(currentButton).data("hideClickListener",true);
                 $(currentButton).on("click", function(e){
                     if(e.currentTarget.attributes["data-function"].value == "showPost"){
                         recursiveToggle($('article.doc_id_'+e.currentTarget.attributes["data-doc-id"].value).attr('id'), "show");
@@ -837,8 +838,8 @@ var filter = function(){
     var sieveName = new RegExp("("+filteredNames.join("|")+")");
 
     $('article.post').each(function(index,currentPost){
-        if ($(currentPost).data("filtered") != "true"){
-            $(currentPost).data("filtered","true");
+        if (!$(currentPost).data("filtered")){
+            $(currentPost).data("filtered",true);
             var postText = $(this).find('.text').elemText();
             if (sieveTrip.test($(this).find('.post_tripcode').text()) || sieveName.test($(this).find('.post_author').text())){
                 shitpostT2(currentPost, postText);
@@ -874,7 +875,8 @@ function shitpostT2(post, postText){
 
 var embedImages = function() {
     $('.posts article').each(function(index, currentArticle){
-        if ($(currentArticle).data('imgEmbed') != 'true'){
+        if (!$(currentArticle).data('imgEmbed')){
+            $(currentArticle).data('imgEmbed',true);
             var imageFiletypes = new RegExp(".(jpg|png|gif)($|\\?[\\S]+$)");
             var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|\\?[\\S]+$)");
             var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
@@ -932,7 +934,6 @@ var embedImages = function() {
                     }
                 }
             });
-            $(currentArticle).data('imgEmbed', 'true');
         }
     });
 };
@@ -1009,7 +1010,7 @@ function videoHover(){
 
 function relativeTimestamps(){
     $('time').each(function(index, timeElement){
-        if ($(timeElement).data('relativeTime') !== true){
+        if (!$(timeElement).data('relativeTime')){
             $(timeElement).data('relativeTime', true);
             //var postTimestamp = Date.parse($(timeElement).attr('datetime'));
             //changeTimestamp(postTimestamp);
@@ -1102,9 +1103,9 @@ var unseenReplies = [];
 var newPosts = function(){
     if (settings.UserSettings.favicon.value){
         //console.log("newPosts called");
-        if (windowFocus === true){
+        if (windowFocus){
             $.each(unseenPosts, function(i,postID){
-                if ($('#'+postID).isOnScreen() === true){
+                if ($('#'+postID).isOnScreen()){
                     lastSeenPost = postID.replace(/_/g, ""); // Update last seen post
                     $.each(unseenReplies, function(i, unseenID){
                         if (unseenID == postID){
@@ -1128,9 +1129,8 @@ var newPosts = function(){
         }
     }else{ // Original newpost counter code
         $('article').each(function(index, currentArticle){
-            if ($(currentArticle).data('seen') != 'true')
-            {
-                $(currentArticle).data('seen', 'true');
+            if (!$(currentArticle).data('seen')){
+                $(currentArticle).data('seen', true);
                 newPostCount +=1;
             }
         });
@@ -1154,8 +1154,7 @@ function notifyMe(title, image, body){
         return;
     }
 
-    if (Notification.permission !== "granted")
-        Notification.requestPermission();
+    if (Notification.permission !== "granted"){Notification.requestPermission();}
     var icon = image;
     var timeFade = true;
     if(!Math.floor(Math.random()*8192)){
@@ -1239,9 +1238,9 @@ function labelYourPosts(firstcall){
     if (firstcall){ // Parse all backlinks present on pageload
         $.each(yourPosts[board][threadID], function(i,v){
             $('.backlink[data-post='+v+']').each(function(){
-                if ($(this).data('linkedYou') != 'true'){
+                if (!$(this).data('linkedYou')){
+                    $(this).data('linkedYou',true);
                     this.textContent += ' (You)';
-                    $(this).data('linkedYou','true');
                 }
             });
         });
@@ -1298,7 +1297,7 @@ $(document).ready(function(){
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
     $('body').append('<div id="hoverUI"></div>');
-    $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 3px; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 0 3px; float: left;}.credits{float: right;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 5px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color: #d6f0da;}#settingsMenu input{margin: 3px 3px 3px 4px;}#settingsMenu input[type="text"]{height:7px; line-height:0;}#settingsMenu input[type="number"]{height:14px; line-height:0; width:43px;}');
+    $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 3px; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 0 3px; float: left;}.credits{float: right;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 5px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color: #d6f0da;}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:0; padding-bottom:0; padding-right:0;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('body').append('<div id="headerBar"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
     $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a title="Main" href="javascript:;" class="active">Main</a> | <a title="Filter" href="javascript:;">Filter</a></div><div class="credits"><a title="Close" href="javascript:;">Close</a></div></div><div id="settingsContent"></div></div>');
     $('#headerBar > a, a[title=Close]').on('click', function(){
@@ -1320,7 +1319,7 @@ $(document).ready(function(){
             value = e.target.value;
         }
         path(settings.UserSettings, $(e.target).attr('path')).value = value;
-        var settingsStore = {};
+        settingsStore = {};
         settingsStore.UserSettings = settingsStrip(settings.UserSettings);
         localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
     });
@@ -1499,7 +1498,6 @@ function galleryUpdate(){
         }else{
             $('#gallery').html('<video style="float:left; max-width:90%; max-height:90%;" name="media" loop muted controls '+autoplayVid+'><source src="'+$(imgList[imgIndex]).find('video')[0].currentSrc+'" type="video/webm"></video>');
         }
-        console.log($(imgList[imgIndex]).find('img').offset().top-50);
         $(document).scrollTop($(imgList[imgIndex]).find('img').offset().top-50);
     }
 }
@@ -1508,7 +1506,9 @@ function populateSettingsMenu(){
     if ($('#settingsMenu').is(":visible")){
         $('#settingsMenu').hide();
     }else{
-        $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
+        if (localStorage.SpookyXsettings !== undefined){
+            $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
+        }
         presetFavicons();
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
         settingsHTML += '<div id="Filter">Placeholder</div>';
@@ -1572,5 +1572,5 @@ $(function(){
     ThreadUpdate();
     getBoard();
     bindShortcuts();
-    window.setInterval( function(){ ThreadUpdate(); }, 500 );
+    window.setInterval(function(){ThreadUpdate();},500);
 });
