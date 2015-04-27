@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       26.1
+// @version       27
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
