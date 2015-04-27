@@ -2,6 +2,10 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v27.1:** *(2015-04-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.1/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.1/README.md)
+- fixed bug where it just plain didn't work in Firefox
+- fixed bug where inline posts can't be quoted
+
 **v27:** *(2015-04-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27/README.md)
 - New Feature: Settings menu. Hit 'O' or click on the 'Settings' link in the top right to bring up the menu. Settings are saved as they are changed, refresh the page for the changes to fully take effect
 - Gallery mode scrolls the page to the viewed image
