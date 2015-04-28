@@ -2,6 +2,11 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v27.3:** *(2015-04-28)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.3/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.3/README.md)
+- Massive performance boost for recursive hiding
+- fixed bug where quoting a post threw an error in the console (it was interfering with the site's native javascript)
+- fixed bug where the gallery couldn't scroll to videos
+
 **v27.2:** *(2015-04-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.2/README.md)
 - Made the hide post button hidden from the popup posts when you hover over reply links and the inline posts from when you click them
 - Made it such that hidden posts that are embedded inline by clicking a reply link are visible rather than showing as a small square
