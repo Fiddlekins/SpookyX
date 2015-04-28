@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       27.3
+// @version       27.4
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -96,7 +96,7 @@ var settings = {
             "suboptions": {
                 "imgNumMaster": {
                     "name": "Embed Count",
-                    "description": "The maximum number of images (or other media) to embed in each post.",
+                    "description": "The maximum number of images (or other media) to embed in each post",
                     "type": "number",
                     "value": 1
                 },
@@ -104,15 +104,23 @@ var settings = {
                     "name": "Autoplay embedded videos",
                     "description": "Make embedded videos play automatically (they start muted, expanding unmutes)",
                     "type": "checkbox",
-                    "value": true
+                    "value": false
                 }
             }
         },
         "embedGalleries": {
             "name": "Embed Galleries",
-            "description": "Embed imgur galleries into a single post for ease of image dumps",
+            "description": "Embed Imgur galleries into a single post for ease of image dumps",
             "type": "checkbox",
-            "value": true
+            "value": true,
+            "suboptions":{
+                "showDetails":{
+                    "name":"Show Details",
+                    "description":"Show the title, image description and view count for embedded Imgur albums",
+                    "type":"checkbox",
+                    "value":true
+                }
+            }
         },
         "gallery": {
             "name": "Gallery",
@@ -897,35 +905,43 @@ var embedImages = function() {
                     var filename = '<div class="post_file embedded_post_file"><a href="'+mediaLink+'" class="post_file_filename" rel="tooltip" title="'+mediaLink+'">'+mediaLink.match(/[^\/]*/g)[mediaLink.match(/[^\/]*/g).length -2]+'</a></div>';
                     var spoiler = "";
                     //console.log(mediaType);
-                    $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box">'+filename+'</div>');
+                    var elem = $('<div class="thread_image_box">'+filename+'</div>').insertBefore($(currentArticle).find("header"));
                     if($(this).parents('.spoiler').length){
                         spoiler = "spoilerImage ";
-                        $(currentArticle).find(".thread_image_box:first-child").append('<div class="spoilerText">Spoiler</div>');
+                        elem.append('<div class="spoilerText">Spoiler</div>');
                     }
                     if (mediaType == "image"){
-                        $(currentArticle).find(".thread_image_box:first-child").append('<a href="'+mediaLink+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+mediaLink+'" class="lazyload post_image '+spoiler+'smallImage"></a>');
-                        $(this).remove();
-                        $(currentArticle).find(".thread_image_box:first-child img").on("load", function(e){
-                            $(currentArticle).find(".thread_image_box:first-child .spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
-                            $(currentArticle).find(".thread_image_box:first-child").append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
+                        elem.append('<a href="'+mediaLink+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+mediaLink+'" class="lazyload post_image '+spoiler+'smallImage"></a>');
+                        removeLink(currentLink);
+                        elem.find('img').on("load", function(e){
+                            $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
+                            $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
                         });
                     }else if (mediaType == "video"){
                         mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
-                        $(currentArticle).find(".thread_image_box:first-child").append('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
-                        $(this).remove();
-                        $(currentArticle).find(".thread_image_box:first-child video")[0].onloadedmetadata = function(e){
-                            $(currentArticle).find(".thread_image_box:first-child .spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
-                            $(currentArticle).find(".thread_image_box:first-child").append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
+                        elem.append('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
+                        removeLink(currentLink);
+                        elem.find('video')[0].onloadedmetadata = function(e){
+                            $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
+                            $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
                         };
                     }
                 }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec($(this).html()) !== null){
                     var imgurLinkFragments = $(this).html().split('\/');
-                    if (imgurLinkFragments[3] !== "a" && imgurLinkFragments[3] !== "gallery" ){
+                    if (imgurLinkFragments[3] == "a"){
+                        if (settings.UserSettings.embedGalleries.suboptions.showDetails.value){
+                            $(currentArticle).find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/'+imgurLinkFragments[4]+'"><a href="//imgur.com/a/'+imgurLinkFragments[4]+'"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
+                        }else{
+                            $(currentArticle).find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/'+imgurLinkFragments[4]+'" data-context="false"><a href="//imgur.com/a/'+imgurLinkFragments[4]+'"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
+                        }
+                        removeLink(currentLink);
+                    }else if (imgurLinkFragments[3] !== "gallery"){
                         var link = pattImgGal.exec($(this).html());
                         var individualImages = link[0].match(/[A-z0-9]{7}/g);
                         $.each(individualImages.reverse(), function(i,imgID){
                             $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box"><a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>');
                         });
+                        removeLink(currentLink);
                     }
                 }else{
                     if(!(/&gt;&gt;/).test(mediaLink)){
@@ -936,6 +952,19 @@ var embedImages = function() {
         }
     });
 };
+
+function removeLink(currentLink){
+    if ($(currentLink)[0].nextSibling !== null){
+        if ($(currentLink)[0].nextSibling.nodeName == "BR"){
+            if ($(currentLink)[0].previousSibling.nodeName !== "#text"){
+                $(currentLink).next().remove(); // Remove linebreaks 
+            }else if($(currentLink)[0].previousSibling.nodeValue == " "){
+                $(currentLink).next().remove(); // Remove linebreaks 
+            }
+        }
+    }
+    $(currentLink).remove();
+}
 
 function imageHover(){
     $('img').off("mouseenter");
@@ -1294,7 +1323,7 @@ function postSubmitEvent(){
 
 $(document).ready(function(){
     $('head').after('<script src="https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js"></script>'); // Pull in selection plugin (http://madapaja.github.io/jquery.selection/)
-    $('head').after('<style type="text/css" id="FoolX-css">.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
+    $('head').after('<style type="text/css" id="FoolX-css">.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
     if (settings.UserSettings.favicon.value){
         $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
@@ -1302,16 +1331,16 @@ $(document).ready(function(){
     $('body').append('<div id="hoverUI"></div>');
     $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 3px; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 0 3px; float: left;}.credits{float: right;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 5px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color: #d6f0da;}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:0; padding-bottom:0; padding-right:0;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('body').append('<div id="headerBar"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
-    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a title="Main" href="javascript:;" class="active">Main</a> | <a title="Filter" href="javascript:;">Filter</a></div><div class="credits"><a title="Close" href="javascript:;">Close</a></div></div><div id="settingsContent"></div></div>');
+    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     $('#headerBar > a, a[title=Close]').on('click', function(){
         populateSettingsMenu();
     });
     $('.sections-list').on('click', function(e){ // Main settings tabs change on click
         if (e.target.tagName == "A"){
-            $('#settingsContent #'+$('.sections-list .active').attr('title')).hide();
+            $('#settingsContent #'+$('.sections-list .active').html()).hide();
             $('.sections-list .active').removeClass('active');
             $(e.target).addClass('active').show();
-            $('#settingsContent #'+$('.sections-list .active').attr('title')).show();
+            $('#settingsContent #'+$('.sections-list .active').html()).show();
         }
     });
     $('#settingsContent').on('change', function(e){
@@ -1513,7 +1542,7 @@ function populateSettingsMenu(){
         settingsHTML += '<div id="Filter">Placeholder</div>';
         $('#settingsContent').html(settingsHTML);
         $('#settingsContent > div').hide();
-        $('#settingsContent #'+$('.sections-list .active').attr('title')).show();
+        $('#settingsContent #'+$('.sections-list .active').html()).show();
         $('#settingsMenu').show();
     }
 }
