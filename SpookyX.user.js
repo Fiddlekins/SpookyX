@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       27.2
+// @version       27.3
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -597,33 +597,30 @@ var inlineImages = function()
                         });
                         $(this).removeAttr('width');
                         $(this).removeAttr('height');
-                        if (!$(this).data("handled")){
-                            if ($(this).hasClass("thread_image")){ // Handle OP images
-                                $(this).data("handled","true");
-                                $(this).addClass("smallImageOP");
-                                $(this).click(function(e){
-                                    if (!e.originalEvent.ctrlKey && e.which == 1){
-                                        e.preventDefault();
-                                        $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
-                                        $(this).toggleClass("smallImageOP");
-                                        $(this).toggleClass("bigImage");
-                                        $('#hoverUI').html('');
-                                        $(this).trigger("mouseenter");
-                                    }
-                                });
-                            }else{ // Handle post images
-                                $(this).addClass("smallImage");
-                                $(this).click(function(e){
-                                    if (!e.originalEvent.ctrlKey && e.which == 1){
-                                        e.preventDefault();
-                                        $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
-                                        $(this).toggleClass("smallImage");
-                                        $(this).toggleClass("bigImage");
-                                        $('#hoverUI').html('');
-                                        $(this).trigger("mouseenter");
-                                    }
-                                });
-                            }
+                        if ($(this).hasClass("thread_image")){ // Handle OP images
+                            $(this).addClass("smallImageOP");
+                            $(this).click(function(e){
+                                if (!e.originalEvent.ctrlKey && e.which == 1){
+                                    e.preventDefault();
+                                    $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
+                                    $(this).toggleClass("smallImageOP");
+                                    $(this).toggleClass("bigImage");
+                                    $('#hoverUI').html('');
+                                    $(this).trigger("mouseenter");
+                                }
+                            });
+                        }else{ // Handle post images
+                            $(this).addClass("smallImage");
+                            $(this).click(function(e){
+                                if (!e.originalEvent.ctrlKey && e.which == 1){
+                                    e.preventDefault();
+                                    $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
+                                    $(this).toggleClass("smallImage");
+                                    $(this).toggleClass("bigImage");
+                                    $('#hoverUI').html('');
+                                    $(this).trigger("mouseenter");
+                                }
+                            });
                         }
                     });
                 }
@@ -673,7 +670,6 @@ var inlineReplies = function(){
             $(this).on("click", function(e){
                 if (!e.originalEvent.ctrlKey && e.which == 1){
                     e.preventDefault();
-                    //e.stopPropagation();
                     var postID = $(this).attr("data-post");
                     var rootPostID = $(e.target.closest('article.base')).attr('id');
                     if ($(e.target).hasClass("inlined")){
@@ -703,7 +699,6 @@ var inlineReplies = function(){
             $(this).on("click", function(e){
                 if (!e.originalEvent.ctrlKey && e.which == 1){
                     e.preventDefault();
-                    //e.stopPropagation();
                     var postID = $(this).attr("data-post");
                     var rootPostID = $(e.target.closest('article.base')).attr('id');
                     if ($(e.target).hasClass("inlined")){
@@ -740,14 +735,15 @@ function getSelectionText() {
 }
 
 var postQuote = function(){
-    $('.post_data > [data-function=quote], .post_data > [data-function=customQuote]').each(function(index,currentPost) {
+    $('.post_data > [data-function=quote], .postQuote').each(function(index,currentPost) {
         if (!$(currentPost).data("quotable")){
             $(currentPost).data("quotable",true);
-            $(this).attr('data-function','customQuote'); // Disable native quote function, make it findable so that inline posts will be handled
-            $(this).on("click", function(e){
+            $(currentPost).removeAttr('data-function'); // Disable native quote function
+            $(currentPost).addClass('postQuote'); // Make it findable so that inline posts will be handled
+            $(currentPost).on("click", function(e){
                 if (!e.originalEvent.ctrlKey && e.which == 1){
                     e.preventDefault();
-                    var postnum = $(this)["0"].innerHTML;
+                    var postnum = $(this)[0].innerHTML;
                     var input = document.getElementById('reply_chennodiscursus');
 
                     if (input.selectionStart !== undefined)
@@ -773,45 +769,48 @@ var postQuote = function(){
     });
 };
 
-function togglePost(postID, docID, mode){
-    if (!docID){
-        docID = $('article#'+postID).find('.pull-left > button').attr("data-doc-id");
-    }
+function togglePost(postID, mode){
     if (mode == "hide"){
-        $('.doc_id_'+docID).hide();
-        $('.stub_doc_id_'+docID).show();
+        $('#'+postID).css({'display':'none'});
+        $('#'+postID).prev().css({'display':'block'});
     }else if (mode == "show"){
-        $('.doc_id_'+docID).show();
-        $('.stub_doc_id_'+docID).hide();
+        $('#'+postID).css({'display':'block'});
+        $('#'+postID).prev().css({'display':'none'});
     }else{
-        $('.doc_id_'+docID).toggle();
-        $('.stub_doc_id_'+docID).toggle();
+        $('#'+postID).toggle();
+        $('#'+postID).prev().toggle();
     }
 }
 function recursiveToggle(postID, mode){
-    var replies = [postID];
-    while(replies.length){
-        var repliesNew = [];
-        $.each(replies, function(i, reply){
-            $('article.post[id='+reply+']').find('.backlink_list a').each(function(i,backlink){
-                togglePost($(backlink).attr('data-post'), false, mode);
-                repliesNew.push($(backlink).attr('data-post'));
-            });
+    var checkedPostCollection = {};
+    var postList = [postID];
+    for (var i=0; i < postList.length; i++) {
+        checkedPostCollection[postList[i]] = true;
+        $('#p_b'+postList[i]+' > a').each(function(i, backlink){
+            var backlinkID = backlink.getAttribute('data-post');
+            if (!checkedPostCollection[backlinkID]){
+                postList.push(backlinkID);
+            }
         });
-        replies = repliesNew;
+    }
+    for (var i=0; i < postList.length; i++) {
+        togglePost(postList[i], mode);
     }
 }
+
 var firstTime = true;
 var hidePosts = function(){
-    $('.pull-left').each(function(index, currentPost){
-        if ($(currentPost).hasClass('stub')) {
-            $(currentPost).removeClass('stub');
-        }
-    });
+    $('.pull-left.stub').removeClass('stub');
     if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+        $('article.post').each(function(i, val){
+            if (!$(val).data('backlinkIDed')){
+                $(val).data('backlinkIDed',true);
+                $(val).find('.post_backlink').attr('id','p_b'+val.id);
+            }
+        });
         if (firstTime){
             $('article.post:hidden').each(function(i, post){
-                recursiveToggle($(post).attr('id'));
+                recursiveToggle(post.id, "hide");
             });
             firstTime = false;
         }
@@ -1091,8 +1090,8 @@ var unseenPosts = [];
 var seenPosts = function(){
     $('article.backlink_container').attr('id',"0"); // Prevent error when it's undefined
     $('article').each(function(index, currentArticle){ // Add unseen posts to array
-        if (parseInt($(currentArticle).attr('id').replace(/_/g, "")) > lastSeenPost){
-            unseenPosts.push($(currentArticle).attr('id'));
+        if (parseInt(currentArticle.id.replace(/_/g, "")) > lastSeenPost){
+            unseenPosts.push(currentArticle.id);
         }
     });
     $('article.backlink_container').removeAttr('id'); // Remove id again
@@ -1121,11 +1120,17 @@ var newPosts = function(){
         }
         newPostCount = unseenPosts.length;
         if (unseenReplies.length){
-            $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.alert.value);
+            if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.alert.value){
+                $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.alert.value);
+            }
         }else if (newPostCount > 0){
-            $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.lit.value);
-        }else if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.unlit.value){
-            $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.unlit.value);
+            if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.lit.value){
+                $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.lit.value);
+            }
+        }else{
+            if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.unlit.value){
+                $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.unlit.value);
+            }
         }
     }else{ // Original newpost counter code
         $('article').each(function(index, currentArticle){
@@ -1213,8 +1218,6 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
             localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts);
         }else{
             latestLastSeenPosts = JSON.parse(localStorage.lastSeenPosts); // Get the most recent version of the stored object
-            //console.log(latestLastSeenPosts[board][threadID]);
-            //console.log(lastSeenPosts[board][threadID]);
             if (latestLastSeenPosts[board][threadID] !== undefined){
                 if (parseInt(latestLastSeenPosts[board][threadID].replace(/_/g, "")) > parseInt(lastSeenPosts[board][threadID].replace(/_/g, ""))){
                     lastSeenPosts[board][threadID] = latestLastSeenPosts[board][threadID];
@@ -1263,9 +1266,9 @@ function labelNewPosts(response){
             }
             if ($.inArray(postID, yourPosts[board][threadID])+1){ // If the post is your own
                 var backlink = $('#'+linkID+' .post_backlink [data-post='+postID+']');
-                if (backlink.data('linkedYou') != 'true'){
+                if (!backlink.data('linkedYou')){
                     backlink[0].textContent += ' (You)'; // Find your post's new reply backlink and designate it too
-                    backlink.data('linkedYou','true');
+                    backlink.data('linkedYou',true);
                 }
             }
         });
@@ -1277,7 +1280,7 @@ var lastSubmittedContent;
 function postSubmitEvent(){
     if ($('#reply [type=submit]').length){
         window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
-        var target =  $('#reply [type=submit]')["0"],
+        var target =  $('#reply [type=submit]')[0],
             observer = new MutationObserver(function(mutation) {
                 //console.log("Post Submit Event Triggered");
                 lastSubmittedContent = $('#reply_chennodiscursus')[0].value;
@@ -1354,9 +1357,7 @@ $(document).ready(function(){
             yourPosts[board][threadID] = [];
         } else {
             queuedYouLabels = yourPosts[board][threadID].slice(0);
-            //console.log(queuedYouLabels);
         }
-        //console.log(yourPosts);
         postSubmitEvent();
 
         $(document).ajaxComplete(function(event, request, settings) {
@@ -1368,14 +1369,12 @@ $(document).ready(function(){
             }else{
                 response = {"error":"No responseText"};
             }
-            //console.log(response);
             if (response.error !== undefined){
                 //console.log(response.error);
             }else{
                 if (settings.type == "POST"){
                     if (response.error === undefined ){
-                        for (var post in response[threadID].posts) {
-                            //console.log(lastSubmittedContent);                    
+                        for (var post in response[threadID].posts) {                  
                             if(response[threadID].posts[post].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
                                 yourPosts[board][threadID].push(post);
                                 queuedYouLabels.push(post);
@@ -1437,8 +1436,8 @@ exclam.src = settings.UserSettings.favicon.suboptions.alertOverlay.value;
 
 function canfav(){
     $('#myCanvas').toggle();
-    $('#myCanvas')["0"].getContext("2d").drawImage(favican, 0, 0);
-    $('#myCanvas')["0"].getContext("2d").drawImage(exclam, 0, 0);
+    $('#myCanvas')[0].getContext("2d").drawImage(favican, 0, 0);
+    $('#myCanvas')[0].getContext("2d").drawImage(exclam, 0, 0);
 }
 var imgIndex;
 function galleryToggle(){
@@ -1448,7 +1447,7 @@ function galleryToggle(){
         var lowestVisiblePostID;
         $('article').each(function(i, post){
             if ($(post).isOnScreen()){
-                lowestVisiblePostID = $(post).attr("id");
+                lowestVisiblePostID = post.id;
             }
         });
         lowestVisiblePostID = parseInt(lowestVisiblePostID.replace(/_/g, ""));
@@ -1498,7 +1497,7 @@ function galleryUpdate(){
         }else{
             $('#gallery').html('<video style="float:left; max-width:90%; max-height:90%;" name="media" loop muted controls '+autoplayVid+'><source src="'+$(imgList[imgIndex]).find('video')[0].currentSrc+'" type="video/webm"></video>');
         }
-        $(document).scrollTop($(imgList[imgIndex]).find('img').offset().top-50);
+        $(document).scrollTop($(imgList[imgIndex]).find('img, video').offset().top-50);
     }
 }
 
