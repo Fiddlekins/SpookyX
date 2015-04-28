@@ -2,6 +2,14 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v27.4:** *(2015-04-29)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.4/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.4/README.md)
+- Added some links to the settings menu that takes you to the various github pages
+- Made multiple embedded images embedded in the order the links were written, rather than the reverse
+- Made linebreaks at the end of a line with an image link get remove alongside the link so long as there isn't any text on the same line
+- Imgur albums can now be embedded provided the link is of the form "https://imgur.com/a/12qoX". This is accompanied by a new setting, 'Show Details'
+- fixed bug where when embedding multiple images the dimensions were all appended to the first one
+- fixed bug where when embedding multiple spoilered images only the spoiler text of the first one was centered.
+
 **v27.3:** *(2015-04-28)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.3/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.3/README.md)
 - Massive performance boost for recursive hiding
 - fixed bug where quoting a post threw an error in the console (it was interfering with the site's native javascript)
