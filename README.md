@@ -11,7 +11,8 @@ Or if you don't want automatic updates use [this version](https://github.com/Fid
 Install [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/), then click the link above to install SpookyX. If you're using a fork of Firefox (e.g. Pale Moon), you may need to use [Greasemonkey 1.15](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/versions/#version-1.15) instead of the most recent version. No idea if SpookyX works on an old version of Greasemonkey though.
 ### Chrome:
 Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo), then click the link above to install SpookyX.
-
+### Opera:
+Install [Violentmonkey](https://addons.opera.com/en-gb/extensions/details/violent-monkey/), then click the link above to install SpookyX.
  
 ## Added Features:
 #### Settings Menu
