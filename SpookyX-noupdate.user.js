@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       27.4
+// @version       27.5
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -927,6 +927,7 @@ var embedImages = function() {
                 }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec($(this).html()) !== null){
                     var imgurLinkFragments = $(this).html().split('\/');
                     if (imgurLinkFragments[3] == "a"){
+                        imgurLinkFragments[4] = imgurLinkFragments[4].replace(/#[0-9]+/, ''); // Remove the trailing image number
                         if (settings.UserSettings.embedGalleries.suboptions.showDetails.value){
                             $(currentArticle).find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/'+imgurLinkFragments[4]+'"><a href="//imgur.com/a/'+imgurLinkFragments[4]+'"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
                         }else{
@@ -937,7 +938,14 @@ var embedImages = function() {
                         var link = pattImgGal.exec($(this).html());
                         var individualImages = link[0].match(/[A-z0-9]{7}/g);
                         $.each(individualImages.reverse(), function(i,imgID){
-                            $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box"><a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>');
+                            var filename = '<div class="post_file embedded_post_file"><a href="https://i.imgur.com/'+imgID+'.jpg" class="post_file_filename" rel="tooltip" title="https://i.imgur.com/'+imgID+'.jpg">'+imgID+'.jpg</a></div>';
+                            $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box">'+filename+'<a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>');
+                        });
+                        $(currentArticle).find('.thread_image_box img').each(function(i, image){
+                            $(image).on("load", function(e){
+                                $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
+                                $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
+                            });
                         });
                         removeLink(currentLink);
                     }
@@ -954,10 +962,8 @@ var embedImages = function() {
 function removeLink(currentLink){
     if ($(currentLink)[0].nextSibling !== null){
         if ($(currentLink)[0].nextSibling.nodeName == "BR"){
-            if ($(currentLink)[0].previousSibling.nodeName !== "#text"){
-                $(currentLink).next().remove(); // Remove linebreaks 
-            }else if($(currentLink)[0].previousSibling.nodeValue == " "){
-                $(currentLink).next().remove(); // Remove linebreaks 
+            if ($(currentLink)[0].previousSibling === null || $(currentLink)[0].previousSibling.nodeName !== "#text" || $(currentLink)[0].previousSibling.nodeValue == " "){
+                $(currentLink).next().remove(); // Remove linebreaks
             }
         }
     }
