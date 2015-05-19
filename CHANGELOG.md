@@ -2,6 +2,11 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v27.5:** *(2015-05-19)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.5/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.5/README.md)
+- Added file details to embedded Imgur image collections that aren't albums
+- fixed bug with the tests to determine whether to remove a linebreak whilst removing a link where a previous node that was null caused an error
+- fixed bug where imgur album links to a specific image of the set (the url ends in #number) were being embedded incorrectly
+
 **v27.4:** *(2015-04-29)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.4/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.4/README.md)
 - Added some links to the settings menu that takes you to the various github pages
 - Made multiple embedded images embedded in the order the links were written, rather than the reverse
