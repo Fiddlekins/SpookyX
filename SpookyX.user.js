@@ -9,7 +9,7 @@
 // @author        Fiddlekins
 
 // Version Number
-// @version       27.5
+// @version       27.6
 
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -913,7 +913,8 @@ var embedImages = function() {
                     if (mediaType == "image"){
                         elem.append('<a href="'+mediaLink+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+mediaLink+'" class="lazyload post_image '+spoiler+'smallImage"></a>');
                         removeLink(currentLink);
-                        elem.find('img').on("load", function(e){
+                        elem.find('img').on('load', function(e){
+                            elem.find('img').unbind('load');
                             $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
                             $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
                         });
@@ -945,6 +946,7 @@ var embedImages = function() {
                         });
                         $(currentArticle).find('.thread_image_box img').each(function(i, image){
                             $(image).on("load", function(e){
+                                $(image).unbind('load');
                                 $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
                                 $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
                             });
