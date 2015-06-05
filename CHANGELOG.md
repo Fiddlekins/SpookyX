@@ -2,6 +2,15 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v28.0:** *(2015-06-05)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.0/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.0/README.md)
+- New Feature: Mascot. Pick your browsing companion!
+- Added filter settings to the settings menu, expanded their funtionality
+- Massive performance gains, should make browsing threads with thousands of posts more bearable
+- Unchecked options in the settings menu have their suboptions collapsed
+- fixed bug where the last seen post ID was still being compared incorrectly. This will unfortunately require you to delete the lastSeenPosts item from the browser's Local Storage since the stored values have incomplete information. See [here](https://github.com/Fiddlekins/SpookyX/blob/v28.0/ManualFixForv28.0.md) for further instructions
+- fixed bug where expanding an image hid the filename if it wasn't a spoilered image
+- fixed bug where media links ending in non-lowercase file extensions were being ignored
+
 **v27.6:** *(2015-05-22)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v27.6/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v27.6/README.md)
 - fixed bug where image dimensions were appearing twice in some instances
 
