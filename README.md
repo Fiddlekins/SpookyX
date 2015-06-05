@@ -12,7 +12,7 @@ Install [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonk
 ### Chrome:
 Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo), then click the link above to install SpookyX.
 ### Opera:
-Install [Violentmonkey](https://addons.opera.com/en-gb/extensions/details/violent-monkey/), then click the link above to install SpookyX.
+Install [Violentmonkey](https://addons.opera.com/en-gb/extensions/details/violent-monkey/), then click the link above to install SpookyX. An alternative that I have yet to test thoroughly is [Tampermonkey Beta](https://addons.opera.com/en-gb/extensions/details/tampermonkey-beta/?hidemessage=1), give this a try if the script doesn't seem to be working properly in Violentmonkey.
  
 ## Added Features:
 #### Settings Menu
@@ -61,39 +61,20 @@ Install [Violentmonkey](https://addons.opera.com/en-gb/extensions/details/violen
 #### Relative timestamps
 - Hovering over them will show the 4chan timestamp for the post
 
-#### Post content will be filtered against 'shitpost flags'
-- There are three tiers of shitpost:
- - T0 isn't bound by a character limit and outright removes posts. Capitalisation sensitive
- - T1 which is considered worthy of outright removal but is constrained only to posts shorter than the character limit. Not capitalisation sensitive
- - T2 which is considered potentially worth seeing and is thus collapsed instead, allowing you to show/hide toggle it. Not capitalisation sensitive
-- Also filter by tripcode or name
-- The 'shitpost flags' can be edited manually to customise your filter
+#### Filter
+- Under the filter tab of the settings menu you can customise how you filter thread content
+- A variety of post details can be checked against [regular expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)
+- Can be filtered in different ways, see the Guide tab in the settings menu
+
+#### Mascot
+- You can now choose your plucky mascot to keep your company whilst browsing!
+- This feature overlays an image on your page
+- Can also be used to set a wallpaper
 
 #### Fixed bugs present in the original FoolX:
 - Using keyboard shortcuts to wrap highlighted text in tags no longer wraps the first instance if there are multiple instances of the highlighted text in the reply box.
 - Inline OP images work
  
-## User Options:
-At the start of the script is a section titled "/\* User Options \*/" which contains several variables that you can change.
-
-- filterCharThreshold: the number of characters that a post must be over to be exempt from shitpost filtering
-- filteredStringsT0: List of Tier 0 strings to filter for. Tier 0 get's removed
-    - These are actually in regex form, a handy reference can be found here: http://www.w3schools.com/jsref/jsref_obj_regexp.asp
-    - This allows more complex pattern matching than simply finding the string
-    - This is capitalisation specific
-- filteredStringsT1: List of Tier 1 strings to filter for. Tier 1 get's removed
-    - Works the same as filteredStringsT0
-    - This is not capitalisation specific
-- filteredStringsT2: List of Tier 2 strings to filter for. Tier 2 get's collapsed
-    - Works the same as filteredStringsT0
-    - This is not capitalisation specific
-- filteredTrips: List of tripcodes to filter for. These get collapsed.
-    - Works the same as filteredStringsT0
-    - This is capitalisation specific
-- filteredNames: List of names to filter for. These get collapsed.
-    - Works the same as filteredStringsT0
-    - This is capitalisation specific
-
 ## Customising the favicons:
 You can use custom favicons by changing the URLs in the settings menu.
 
