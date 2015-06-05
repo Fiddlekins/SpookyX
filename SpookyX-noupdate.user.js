@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       28.1
+// @version       28.2
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -203,6 +203,12 @@ var settings = {
                     "type": "number",
                     "value": -1
                 },
+                "width": {
+                    "name": "Width",
+                    "description": "Specify the width of the mascot in pixels. Use a negative number to leave it as the image's default width",
+                    "type": "number",
+                    "value": -1
+                },
                 "x": {
                     "name": "Horizontal Displacement",
                     "description": "Specify horizontal displacement of the mascot in pixels",
@@ -214,6 +220,12 @@ var settings = {
                     "description": "Specify vertical displacement of the mascot in pixels",
                     "type": "number",
                     "value": 0
+                },
+                "mute": {
+                    "name": "Mute videos",
+                    "description": "If using a video for a mascot the sound will be muted",
+                    "type": "checkbox",
+                    "value": true,
                 }
             }
         }
@@ -303,7 +315,7 @@ var defaultMascots = [
     "http://i.imgur.com/CrjD09g.png",
     "http://i.imgur.com/r6RuI3Q.png",
     "http://i.imgur.com/U9NQ0aQ.png",
-    "http://i.imgur.com/qzIWr2F.png",
+    "http://i.imgur.com/avlBCUC.png",
     "http://i.imgur.com/RSealGL.png",
     "http://i.imgur.com/ZTf8d85.png",
     "http://i.imgur.com/47Nf9WQ.png",
@@ -373,7 +385,7 @@ function path(obj, path, def){
     if(obj === undefined) return def;
     return obj;
 }
-
+/*
 $.fn.elemText = function() {
     var text = '';
     this.each(function() {
@@ -383,10 +395,9 @@ $.fn.elemText = function() {
         });
     });
     return text;
-};
+};*/
 
-var escapeRegExp;
-
+/*
 $.fn.isOnScreen = function(){
     var win = $(window);
     var viewport = {
@@ -402,7 +413,9 @@ $.fn.isOnScreen = function(){
 
     return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
 };
+*/
 
+var escapeRegExp;
 (function () {
     // Referring to the table here:
     // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/regexp
@@ -1272,14 +1285,40 @@ function mascot(mascotImageLink){
             default: console.log("Invalid corner setting");
         }
         if (mascotImageLink !== ""){
-            if (!$('#mascot').length){
-                $('.container-fluid').prepend('<img id="mascot" src="'+mascotImageLink+'" style="position:fixed; z-index:-1;">');
+            if (!$('#mascotContainer').length){
+                $('.container-fluid').prepend('<div id="mascotContainer"></div>');
+            }
+            var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|\\?[\\S]+$)",'i');
+            if (videoFiletypes.test(mascotImageLink)){
+                $('#mascotContainer > img').remove();
+                if (!$('#mascotContainer > *').length){
+                    $('#mascotContainer').html('<video id="mascot" style="position:fixed; z-index:-1;" name="media" loop muted autoplay><source src="'+mascotImageLink+'" type="video/webm"></video>');
+                }else{
+                    $('#mascot')[0].src = mascotImageLink;
+                }
             }else{
-                $('#mascot')[0].src = mascotImageLink;
+                $('#mascotContainer > video').remove();
+                if (!$('#mascotContainer > *').length){
+                    $('#mascotContainer').html('<img id="mascot" src="'+mascotImageLink+'" style="position:fixed; z-index:-1;">');
+                }else{
+                    $('#mascot')[0].src = mascotImageLink;
+                }
             }
         }
         cornerCSS["z-index"] = settings.UserSettings.mascot.suboptions.zindex.value;
+        if (settings.UserSettings.mascot.suboptions.width.value < 0){
+            cornerCSS["width"] = "";
+        }else{
+            cornerCSS["width"] = settings.UserSettings.mascot.suboptions.width.value;
+        }
         $('#mascot').css(cornerCSS);
+        if ($('#mascotContainer > video').length){
+            if (settings.UserSettings.mascot.suboptions.mute.value){
+                $('#mascot')[0].muted=true;
+            }else{
+                $('#mascot')[0].muted=false;
+            }
+        }
     }else{
         $('#mascot').remove();
     }
