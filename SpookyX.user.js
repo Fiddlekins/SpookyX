@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       28.0
+// @version       28.1
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -1018,7 +1018,9 @@ var seenPosts = function(){
         if (currentID[0] > parsedLastSeenPost[0]){
             unseenPosts.push(currentArticle.id);
         }else if (currentID[0] == parsedLastSeenPost[0]){
-            if (isNaN(parsedLastSeenPost[1]) || currentID[1] > parsedLastSeenPost[1]){
+            if (isNaN(currentID[1])){
+                // Do nothing
+            }else if (isNaN(parsedLastSeenPost[1]) || currentID[1] > parsedLastSeenPost[1]){
                 unseenPosts.push(currentArticle.id);
             }else{
                 //console.log(currentID);
@@ -1066,7 +1068,6 @@ function newPosts(){
                         //console.log(lastSeed);
                     }
                     lastSeenPost = unseenPosts[predictedLastSeenPostIndex]; // Update last seen post
-                    //console.log(lastSeenPost);
                     unseenPosts = unseenPosts.slice(predictedLastSeenPostIndex + 1); // Only keep posts after the lastSeenPost
 
                     var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
