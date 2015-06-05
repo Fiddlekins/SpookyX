@@ -1,16 +1,8 @@
 // ==UserScript==
-// Displayable Name of your script
 // @name          SpookyX
-
-// Brief description
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
-
-// Your name, copyright  
 // @author        Fiddlekins
-
-// Version Number
-// @version       27.6
-
+// @version       28.0
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -26,46 +18,13 @@
 // @include       http://*fgts.jp/*
 // @include       https://*not4plebs.org/*
 // @include       http://*not4plebs.org/*
-
+// @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @grant         none
 // @updateURL     https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.meta.js
 // @downloadURL   https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js
 // @icon          http://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
 
-/* USER OPTIONS START */
-var filterCharThreshold = 100; // Filter posts with less than this number of characters
-var filteredStringsT0 = [    // List of Tier 0 strings to filter for. Capitalisation sensitive
-    //"[\\S]*(a{4,}|b{4,}|c{4,}|d{4,}|e{4,}|f{4,}|g{4,}|h{4,}|i{4,}|j{4,}|k{4,}|l{4,}|m{4,}|n{4,}|o{4,}|p{4,}|q{4,}|r{4,}|s{4,}|t{4,}|u{4,}|v{4,}|w{4,}|x{4,}|y{4,}|z{4,})[\\S]*",
-    "[\\S]*(e{4,}|E{4,}|i{4,}|I{4,}|o{4,}|O{4,}|u{4,}|U{4,})[\\S]*",
-    "E(G|g)(O|o)(-kun|kun)?"
-];
-var filteredStringsT1 = [    // List of Tier 1 strings to filter for
-    "daki[\\S]*",
-    "ded",
-    "ayy lmao",
-    "incest",
-    "imoutos?",
-    "moonrunes",
-    "tale[\\S]*[^( of witches)]",
-    "ree+[\\S]*",
-    "boogeyman",
-    "normies",
-    "(Fuck[^A-z]*off|Eat.*dick)[^A-z]*Tartarus"
-];
-var filteredStringsT2 = [    // List of Tier 2 strings to filter for
-    "quest whe?n[?]*",
-    "test",
-    "tsukaima"
-];
-var filteredTrips = [       // List of tripcodes to filter for
-    "!!/90sanF9F3Z",
-    "!!T2TCnNZDvZu"
-];
-var filteredNames = [       // List of names to filter for
-    "久保島のミズゴロウ"
-];
-/* USER OPTIONS END */
 var settings = {
     "UserSettings": {
         "inlineImages": {
@@ -221,9 +180,142 @@ var settings = {
             "description": "Add a post counter to the reply box",
             "type": "checkbox",
             "value": false
+        },
+        "mascot": {
+            "name": "Mascot",
+            "description": "Place your favourite mascot on the background to keep you company!",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "mascotImage": {
+                    "name": "Mascot image",
+                    "description": "Specify a link to your custom mascot or leave blank for SpookyX defaults",
+                    "type": "text",
+                    "value": ""
+                },
+                "corner": {
+                    "name": "Corner",
+                    "description": "Specify which corner to align the mascot to",
+                    "type": "select",
+                    "value": {"value":"Bottom Right","options":["Top Right","Bottom Right","Bottom Left","Top Left"]}
+                },
+                "zindex":{
+                    "name": "Z-index",
+                    "description": "Determine what page elements the mascot is in front and behind of. Default value is -1",
+                    "type": "number",
+                    "value": -1
+                },
+                "x": {
+                    "name": "Horizontal Displacement",
+                    "description": "Specify horizontal displacement of the mascot in pixels",
+                    "type": "number",
+                    "value": 0
+                },
+                "y": {
+                    "name": "Vertical Displacement",
+                    "description": "Specify vertical displacement of the mascot in pixels",
+                    "type": "number",
+                    "value": 0
+                }
+            }
+        }
+    },
+    "FilterSettings": {
+        "name":{
+            "name":"Name",
+            "value":[
+                {"comment": "#/久保島のミズゴロウ/;"}
+            ],
+            "textFunction":function(currentPost){return $(currentPost).find('.post_author').html();}
+        },
+        "tripcode":{
+            "name":"Tripcode",
+            "value":[
+                {"comment": "#/!!/90sanF9F3Z/;"},
+                {"comment": "#/!!T2TCnNZDvZu/;"}
+            ],
+            "textFunction":function(currentPost){return $(currentPost).find('.post_tripcode').html();}
+        },
+        "uniqueID":{
+            "name":"Unique ID",
+            "value":[
+                {"comment": "# Remember to escape any special characters"},
+                {"comment": "# For example these are valid:"},
+                {"comment": "#/bUAl\\+t9X/;"},
+                {"comment": "#/ID:bUAl\\+t9X/;"},
+                {"comment": "# But this fails:"},
+                {"comment": "#/bUAl+t9X/; "}
+            ],
+            "textFunction":function(currentPost){return $(currentPost).find('.poster_hash').html();}
+        },
+        "capcode":{
+            "name":"Capcode",
+            "value":[
+                {"comment": "# Set a custom class for mods:"},
+                {"comment": "#/Mod$/;highlight:mod;"},
+                {"comment": "# Set a custom class for moot:"},
+                {"comment": "#/Admin$/;highlight:moot;"},
+                {"comment": "# (highlighting isn't implemented yet)"}
+            ],
+            "textFunction":function(currentPost){return $(currentPost).find('.post_level').html();}
+        },
+        "subject":{
+            "name":"Subject",
+            "value":[
+                {"comment": "#/(^|[^A-z])quest([^A-z]|$)/i;boards:tg;"}
+            ],
+            "textFunction":function(currentPost){return $(currentPost).find('.post_title').html();}
+        },
+        "comment":{
+            "name":"Comment",
+            "value":[
+                {"comment": "#/daki[\\\\S]*/i; boards:tg;"}
+            ],
+            "textFunction":function(currentPost){return $(currentPost).find('.text').html();}
+        },
+        "flag":{
+            "name":"Flag",
+            "value":[
+                {"comment": "#Remove kebob"},
+                {"comment": "#/turkey/i;mode:remove;"}
+            ],
+            "textFunction":function(currentPost){return $(currentPost).find('.flag').attr('title')}
+        },
+        "filename":{
+            "name":"Filename",
+            "value":[],
+            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename').html();}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.innerHTML});} return combined;}
+        },
+        "fileurl":{
+            "name":"File URL",
+            "value":[
+                {"comment": "# Filter by site for example:"},
+                {"comment": "#/tumblr/;"}
+            ],
+            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename')[0].href;}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.href});} return combined;}
         }
     }
 };
+
+var defaultMascots = [
+    "http://i.imgur.com/l2rGSUs.png",
+    "http://i.imgur.com/QudFqBK.png",
+    "http://i.imgur.com/YtdTqBW.png",
+    "http://i.imgur.com/cinWJsP.png",
+    "http://i.imgur.com/CrjD09g.png",
+    "http://i.imgur.com/r6RuI3Q.png",
+    "http://i.imgur.com/U9NQ0aQ.png",
+    "http://i.imgur.com/qzIWr2F.png",
+    "http://i.imgur.com/RSealGL.png",
+    "http://i.imgur.com/ZTf8d85.png",
+    "http://i.imgur.com/47Nf9WQ.png",
+    "http://i.imgur.com/zw1NtJZ.png",
+    "http://i.imgur.com/jIx9a5q.png",
+    "http://i.imgur.com/IGT97Rg.png",
+    "http://i.imgur.com/Q8OSBd4.png",
+    "http://i.imgur.com/T5LyxZ3.png",
+    "http://i.imgur.com/xdcWW4m.png"
+];
 
 if (localStorage.SpookyXsettings !== undefined){
     $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
@@ -235,7 +327,6 @@ var DocumentTitle = document.title;
 var ignoreInline = ['v'];
 var rulesBox = $(".rules_box").html();
 if(settings.UserSettings.embedImages.suboptions.autoplayVids.value){var autoplayVid = "autoplay";}else{var autoplayVid="";}
-var queuedYouLabels = [];
 
 var pattThreadAndID = new RegExp("thread\/[0-9]+($|\/)");
 var pattThreadID = new RegExp("[0-9]+");
@@ -257,20 +348,13 @@ function presetFavicons(){
         case "2": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/S7uBSPZ.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/7IxJvBN.png"; break;
         case "3": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/Rt8dEaq.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/tvJjpqF.png"; break;
         case "4": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/3bRaVUl.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/5Bv27Co.png"; break;
-        default: break;// console.log("Lit value is: "+settings.UserSettings.favicon.suboptions.lit.value);
+        default: break;
     }
 }
 
 function ThreadUpdate(){
-    if (settings.UserSettings.postCounter.value){postCounter();}  
-    if (settings.UserSettings.inlineImages.value){inlineImages();}
-    if (settings.UserSettings.hidePosts.value){hidePosts();}
+    if (settings.UserSettings.postCounter.value){postCounter();}
     if (settings.UserSettings.newPosts.value){newPosts();}
-    if (settings.UserSettings.embedImages.value){embedImages();}
-    if (settings.UserSettings.inlineReplies.value){inlineReplies();}
-    if (settings.UserSettings.postQuote.value){postQuote();}
-    if (settings.UserSettings.filter.value){filter();}
-    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps();}
 }
 
 /**
@@ -582,151 +666,37 @@ shortcut = {
     }
 };
 
-var inlineImages = function()
-{
-    $('.thread_image_box').each(function(index,currentImage){
-        if (!$(currentImage).data("inline")){
-            $(currentImage).data("inline",true);
-            $(currentImage).find('>a').each(function(){
-                var fullImage = $(this).attr('href');
-                if (fullImage.match(/\.webm$/)){ // Handle post webms
-                    $(currentImage).html('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
-                }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
-                    $(currentImage).find('img').each(function(){
-                        var thumbImage = $(this).attr('src');
-                        $(this).attr('src',fullImage);
-                        $(this).error(function(e){ // Handle images that won't load
-                            if (!$(this).data("triedThumb")){
-                                $(this).data("triedThumb", true);
-                                if (fullImage !== thumbImage){ // If the image has a thumbnail aka was 4chan native then use that
-                                    $(this).attr('src',thumbImage);
-                                }
-                            }
-                        });
-                        $(this).removeAttr('width');
-                        $(this).removeAttr('height');
-                        if ($(this).hasClass("thread_image")){ // Handle OP images
-                            $(this).addClass("smallImageOP");
-                            $(this).click(function(e){
-                                if (!e.originalEvent.ctrlKey && e.which == 1){
-                                    e.preventDefault();
-                                    $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
-                                    $(this).toggleClass("smallImageOP");
-                                    $(this).toggleClass("bigImage");
-                                    $('#hoverUI').html('');
-                                    $(this).trigger("mouseenter");
+var inlineImages = function(posts){
+    posts.each(function(i, post){
+        if (!$(post).data('inlineImages')){
+            $(post).data('inlineImages', true);
+            $(post).find('.thread_image_box').each(function(index,currentImage){
+                $(currentImage).find('>a').each(function(){
+                    var fullImage = $(this).attr('href');
+                    if (fullImage.match(/\.webm$/)){ // Handle post webms
+                        $(currentImage).html('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
+                    }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
+                        $(currentImage).find('img').each(function(){
+                            var thumbImage = $(this).attr('src');
+                            $(this).attr('src',fullImage);
+                            $(this).error(function(e){ // Handle images that won't load
+                                if (!$(this).data("triedThumb")){
+                                    $(this).data("triedThumb", true);
+                                    if (fullImage !== thumbImage){ // If the image has a thumbnail aka was 4chan native then use that
+                                        $(this).attr('src',thumbImage);
+                                    }
                                 }
                             });
-                        }else{ // Handle post images
-                            $(this).addClass("smallImage");
-                            $(this).click(function(e){
-                                if (!e.originalEvent.ctrlKey && e.which == 1){
-                                    e.preventDefault();
-                                    $($(this).parent()["0"].previousSibling).toggle(); // Toggle the Spoiler text
-                                    $(this).toggleClass("smallImage");
-                                    $(this).toggleClass("bigImage");
-                                    $('#hoverUI').html('');
-                                    $(this).trigger("mouseenter");
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-            if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-        }
-    });
-
-    $('#main video').each(function(index,currentVideo) {
-        if (!$(currentVideo).data("inline")){
-            $(currentVideo).data("inline",true);
-            $(this).click(function(e){
-                //e.preventDefault();
-                $(this).toggleClass("bigImage"); // Make it full opacity to override spoilering
-                $($(this)["0"].previousSibling).toggle(); // Toggle the Spoiler text
-                if ($(this).hasClass("fullVideo")){
-                    this.pause();
-                    this.muted=true;
-                    $(this).attr('width',"125");
-                    $(this).removeAttr('controls');
-                    $(this).removeClass("fullVideo");
-                }else{
-                    $(this).removeAttr('width');
-                    $(this).attr('controls',"");
-                    $(this).addClass("fullVideo");
-                    this.muted=false;
-                    this.play();
-                }
-                $('#hoverUI').html('');
-                $(this).trigger("mouseenter");
-            });
-            if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
-        }
-    });
-};
-
-var inlineReplies = function(){
-    $('article.post').each(function(index,currentPost) {
-        if (!$(currentPost).data("inline")){
-            $(currentPost).data("inline",true);
-            $(this).addClass("base");
-        }
-    });
-    $('.post_backlink > .backlink').each(function(index,currentPost) {
-        if (!$(currentPost).data("inline")){
-            $(currentPost).data("inline",true);
-            $(this).on("click", function(e){
-                if (!e.originalEvent.ctrlKey && e.which == 1){
-                    e.preventDefault();
-                    var postID = $(this).attr("data-post");
-                    var rootPostID = $(e.target.closest('article.base')).attr('id');
-                    if ($(e.target).hasClass("inlined")){
-                        $(e.target).removeClass("inlined");
-                        $('.sub'+rootPostID).each(function(index,currentPost){
-                            $("#"+currentPost.id.substr(1)+".forwarded").removeClass("forwarded");
-                        });
-                        $('#i'+postID+'.sub'+rootPostID).remove();
-                    }else{
-                        $(e.target).addClass("inlined");
-                        $(e.target.parentNode.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
-                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
-                        $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
-                            if (!$(this).hasClass('sub'+rootPostID)){
-                                $(this).attr("class","inline sub"+rootPostID);
+                            $(this).removeAttr('width');
+                            $(this).removeAttr('height');
+                            if ($(this).hasClass("thread_image")){ // Handle OP images
+                                $(this).addClass("smallImageOP");
+                            }else{ // Handle post images
+                                $(this).addClass("smallImage");
                             }
                         });
-                        $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
                     }
-                }
-            });
-        }
-    });
-    $('.text .backlink').each(function(index,currentPost) {
-        if (!$(currentPost).data("inline")){
-            $(currentPost).data("inline",true);
-            $(this).on("click", function(e){
-                if (!e.originalEvent.ctrlKey && e.which == 1){
-                    e.preventDefault();
-                    var postID = $(this).attr("data-post");
-                    var rootPostID = $(e.target.closest('article.base')).attr('id');
-                    if ($(e.target).hasClass("inlined")){
-                        $(e.target).removeClass("inlined");
-                        $('.sub'+rootPostID).each(function(index,currentPost){
-                            $("#"+currentPost.id.substr(1)+".forwarded").removeClass("forwarded");
-                        });
-                        $('#i'+postID+'.sub'+rootPostID).remove();
-                    }else{
-                        $(e.target).addClass("inlined");
-                        $(e.target.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
-                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
-                        $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
-                            if (!$(this).hasClass('sub'+rootPostID)){
-                                $(this).attr("class","inline sub"+rootPostID);
-                            }
-                        });
-                        $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
-                    }
-                }
+                });
             });
         }
     });
@@ -741,41 +711,6 @@ function getSelectionText() {
     }
     return text;
 }
-
-var postQuote = function(){
-    $('.post_data > [data-function=quote], .postQuote').each(function(index,currentPost) {
-        if (!$(currentPost).data("quotable")){
-            $(currentPost).data("quotable",true);
-            $(currentPost).removeAttr('data-function'); // Disable native quote function
-            $(currentPost).addClass('postQuote'); // Make it findable so that inline posts will be handled
-            $(currentPost).on("click", function(e){
-                if (!e.originalEvent.ctrlKey && e.which == 1){
-                    e.preventDefault();
-                    var postnum = $(this)[0].innerHTML;
-                    var input = document.getElementById('reply_chennodiscursus');
-
-                    if (input.selectionStart !== undefined)
-                    {
-                        var startPos = input.selectionStart;
-                        var endPos = input.selectionEnd;
-                        var startText = input.value.substring(0, startPos);
-                        var endText = input.value.substring(startPos);
-
-                        var originalText = input.value;
-                        var selectedText = getSelectionText();
-                        var newText;
-                        if (selectedText === ""){
-                            newText = startText +">>"+postnum+"\n"+ endText;
-                        }else{
-                            newText = startText +">>"+postnum+"\n>"+ selectedText +"\n"+ endText;
-                        }
-                        document.getElementById('reply_chennodiscursus').value = originalText.replace(originalText,newText);
-                    }
-                }
-            });
-        }
-    });
-};
 
 function togglePost(postID, mode){
     if (mode == "hide"){
@@ -801,91 +736,43 @@ function recursiveToggle(postID, mode){
             }
         });
     }
-    for (var i=0; i < postList.length; i++) {
-        togglePost(postList[i], mode);
+    for (var j=0; j < postList.length; j++) {
+        togglePost(postList[j], mode);
     }
 }
 
-var firstTime = true;
-var hidePosts = function(){
-    $('.pull-left.stub').removeClass('stub');
-    if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
-        $('article.post').each(function(i, val){
-            if (!$(val).data('backlinkIDed')){
-                $(val).data('backlinkIDed',true);
-                $(val).find('.post_backlink').attr('id','p_b'+val.id);
-            }
-        });
-        if (firstTime){
-            $('article.post:hidden').each(function(i, post){
-                recursiveToggle(post.id, "hide");
-            });
-            firstTime = false;
-        }
-        $('.btn-toggle-post').each(function(index, currentButton){
-            if (!$(currentButton).data("hideClickListener")){
-                $(currentButton).data("hideClickListener",true);
-                $(currentButton).on("click", function(e){
-                    if(e.currentTarget.attributes["data-function"].value == "showPost"){
-                        recursiveToggle($('article.doc_id_'+e.currentTarget.attributes["data-doc-id"].value).attr('id'), "show");
-                    }else if(e.currentTarget.attributes["data-function"].value == "hidePost"){
-                        recursiveToggle($('article.doc_id_'+e.currentTarget.attributes["data-doc-id"].value).attr('id'), "hide");
+function filter(posts){
+    posts.each(function(index,currentPost){
+        var boardPatt = new RegExp("(^|,)\s*"+board+"\s*(,|$)");
+        for (filterType in settings.FilterSettings){
+            var testText = settings.FilterSettings[filterType].textFunction(currentPost);
+            var shortcut = settings.FilterSettings[filterType].value;
+            for (line in shortcut){
+                if (!shortcut[line].comment && shortcut[line].regex !== undefined){
+                    if (shortcut[line].boards === undefined || boardPatt.test(shortcut[line].boards)){
+                        var regex = new RegExp(shortcut[line].regex.pattern, shortcut[line].regex.flag);
+                        if(regex.test(testText)){
+                            switch(shortcut[line].mode){
+                                case "purge": $(currentPost).prev().remove(); $(currentPost).remove(); break;
+                                case "remove": $(currentPost).hide(); break;
+                                case "hide": togglePost(currentPost.id, "hide"); break;
+                                case "fade":
+                                default: $(currentPost).addClass("shitpost");
+                            }
+                        }
                     }
-                });
-            }
-        });
-    }
-};
-
-var filter = function(){
-    var sieveStrT0 = new RegExp("\\b("+filteredStringsT0.join("|")+")\\b"); // \b or (^|\s) works
-    var sieveStrT1 = new RegExp("\\b("+filteredStringsT1.join("|")+")\\b","i"); // \b or (^|\s) works
-    var sieveStrT2 = new RegExp("(^|\\s)("+filteredStringsT2.join("|")+")($|\\s)","i");
-    var sieveTrip = new RegExp("("+filteredTrips.join("|")+")");
-    var sieveName = new RegExp("("+filteredNames.join("|")+")");
-
-    $('article.post').each(function(index,currentPost){
-        if (!$(currentPost).data("filtered")){
-            $(currentPost).data("filtered",true);
-            var postText = $(this).find('.text').elemText();
-            if (sieveTrip.test($(this).find('.post_tripcode').text()) || sieveName.test($(this).find('.post_author').text())){
-                shitpostT2(currentPost, postText);
-            }else if(sieveStrT0.test(postText)){
-                //console.log(postText.match(sieveStrT0));
-                shitpostT0(currentPost, postText);
-            }else if (postText.length <= filterCharThreshold){
-                if (sieveStrT1.test(postText)){
-                    //console.log(postText.match(sieveStrT1));
-                    shitpostT1(currentPost, postText);
-                } else if (sieveStrT2.test(postText)){
-                    //console.log(postText.match(sieveStrT2));
-                    shitpostT2(currentPost, postText);
                 }
             }
         }
     });
 };
 
-function shitpostT0(post, postText){
-    $(post).addClass("shitpost");
-}
-function shitpostT1(post, postText){
-    $(post).addClass("shitpost");
-}
-function shitpostT2(post, postText){
-    $(post).removeClass('stub');
-    $(post).find('.pull-left').removeClass('stub');
-    var docID = $(post).find('.pull-left > button').attr("data-doc-id");
-    $('.doc_id_'+docID).hide();
-    $('.stub_doc_id_'+docID).show();
-}
-
-var embedImages = function() {
-    $('.posts article').each(function(index, currentArticle){
+var embedImages = function(posts){
+    posts.each(function(index, currentArticle){
         if (!$(currentArticle).data('imgEmbed')){
             $(currentArticle).data('imgEmbed',true);
-            var imageFiletypes = new RegExp(".(jpg|png|gif)($|\\?[\\S]+$)");
-            var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|\\?[\\S]+$)");
+            var imageFiletypes = new RegExp(".(jpg|png|gif)($|\\?[\\S]+$)",'i');
+            var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|\\?[\\S]+$)",'i');
             var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
             var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $(currentArticle).find('.thread_image_box').length;
             $(currentArticle).find(".text a").each(function(index, currentLink){
@@ -894,7 +781,6 @@ var embedImages = function() {
                 }
                 var mediaType = "notMedia";
                 var mediaLink = $(this).html();
-                //console.log(mediaLink);
                 if (imageFiletypes.test(mediaLink)){
                     mediaType = "image";
                 }else if (videoFiletypes.test(mediaLink)){
@@ -904,7 +790,6 @@ var embedImages = function() {
                     imgNum--;
                     var filename = '<div class="post_file embedded_post_file"><a href="'+mediaLink+'" class="post_file_filename" rel="tooltip" title="'+mediaLink+'">'+mediaLink.match(/[^\/]*/g)[mediaLink.match(/[^\/]*/g).length -2]+'</a></div>';
                     var spoiler = "";
-                    //console.log(mediaType);
                     var elem = $('<div class="thread_image_box">'+filename+'</div>').insertBefore($(currentArticle).find("header"));
                     if($(this).parents('.spoiler').length){
                         spoiler = "spoilerImage ";
@@ -918,6 +803,7 @@ var embedImages = function() {
                             $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
                             $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
                         });
+                        if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
                     }else if (mediaType == "video"){
                         mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
                         elem.append('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
@@ -926,6 +812,7 @@ var embedImages = function() {
                             $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
                             $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
                         };
+                        if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
                     }
                 }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec($(this).html()) !== null){
                     var imgurLinkFragments = $(this).html().split('\/');
@@ -952,6 +839,7 @@ var embedImages = function() {
                             });
                         });
                         removeLink(currentLink);
+                        if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
                     }
                 }else{
                     if(!(/&gt;&gt;/).test(mediaLink)){
@@ -1044,12 +932,10 @@ function videoHover(){
     });
 }
 
-function relativeTimestamps(){
-    $('time').each(function(index, timeElement){
+function relativeTimestamps(posts){
+    posts.find('time').each(function(index, timeElement){
         if (!$(timeElement).data('relativeTime')){
             $(timeElement).data('relativeTime', true);
-            //var postTimestamp = Date.parse($(timeElement).attr('datetime'));
-            //changeTimestamp(postTimestamp);
             changeTimestamp(timeElement, Date.parse($(timeElement).attr('datetime')));
         }
     });
@@ -1126,9 +1012,17 @@ var lastSeenPost;
 var unseenPosts = [];
 var seenPosts = function(){
     $('article.backlink_container').attr('id',"0"); // Prevent error when it's undefined
+    var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
     $('article').each(function(index, currentArticle){ // Add unseen posts to array
-        if (parseInt(currentArticle.id.replace(/_/g, "")) > lastSeenPost){
+        var currentID = [parseInt(currentArticle.id.split('_')[0]),parseInt(currentArticle.id.split('_')[1])];  
+        if (currentID[0] > parsedLastSeenPost[0]){
             unseenPosts.push(currentArticle.id);
+        }else if (currentID[0] == parsedLastSeenPost[0]){
+            if (isNaN(parsedLastSeenPost[1]) || currentID[1] > parsedLastSeenPost[1]){
+                unseenPosts.push(currentArticle.id);
+            }else{
+                //console.log(currentID);
+            }
         }
     });
     $('article.backlink_container').removeAttr('id'); // Remove id again
@@ -1136,24 +1030,64 @@ var seenPosts = function(){
 };
 
 var unseenReplies = [];
-var newPosts = function(){
+function newPosts(){
     if (settings.UserSettings.favicon.value){
-        //console.log("newPosts called");
         if (windowFocus){
-            $.each(unseenPosts, function(i,postID){
-                if ($('#'+postID).isOnScreen()){
-                    lastSeenPost = postID.replace(/_/g, ""); // Update last seen post
+            //console.log(unseenPosts);
+            //console.log(unseenReplies);
+            if (unseenPosts.length){
+                var viewportBottom = window.scrollY + window.innerHeight -200;
+                if (document.getElementById(unseenPosts[0]).offsetTop < viewportBottom){
+                    var meanPostHeight = (document.getElementById(unseenPosts[unseenPosts.length -1]).offsetTop - document.getElementById(unseenPosts[0]).offsetTop) / unseenPosts.length;
+                    var predictedLastSeenPostIndex = 0;
+                    var testedSeeds = []; // Keep track of which indices have been checked to prevent endless loops
+                    var lastSeed = 0;
+                    while (!(document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetTop <= viewportBottom && (unseenPosts[predictedLastSeenPostIndex + 1] === undefined || document.getElementById(unseenPosts[predictedLastSeenPostIndex + 1]).offsetTop > viewportBottom))){
+                        testedSeeds[predictedLastSeenPostIndex] = true;
+                        predictedLastSeenPostIndex += Math.floor((viewportBottom - document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetTop) / meanPostHeight);
+                        if (predictedLastSeenPostIndex >= unseenPosts.length){
+                            predictedLastSeenPostIndex = unseenPosts.length -1; // Keep it from exceeding the array bounds
+                        }else if (predictedLastSeenPostIndex < 0){
+                            predictedLastSeenPostIndex = 0; // Keep it from being negative
+                        }
+                        if (testedSeeds[predictedLastSeenPostIndex]){
+                            //console.log("We've been here before:"+testedSeeds[predictedLastSeenPostIndex]);
+                            for (lastSeed; lastSeed < unseenPosts.length; lastSeed++){
+                                //console.log("LS:"+lastSeed);
+                                //console.log(!testedSeeds[lastSeed]);
+                                if (!testedSeeds[lastSeed]){
+                                    predictedLastSeenPostIndex = lastSeed;
+                                    break;
+                                }
+                            }
+                        }
+                        //console.log(predictedLastSeenPostIndex);
+                        //console.log(testedSeeds);
+                        //console.log(lastSeed);
+                    }
+                    lastSeenPost = unseenPosts[predictedLastSeenPostIndex]; // Update last seen post
+                    //console.log(lastSeenPost);
+                    unseenPosts = unseenPosts.slice(predictedLastSeenPostIndex + 1); // Only keep posts after the lastSeenPost
+
+                    var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
                     $.each(unseenReplies, function(i, unseenID){
-                        if (unseenID == postID){
+                        var currentID = [parseInt(unseenID.split('_')[0]),parseInt(unseenID.split('_')[1])];                        
+                        if (currentID[0] < parsedLastSeenPost[0]){
                             unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
                             return;
+                        }else if (currentID[0] == parsedLastSeenPost[0]){
+                            if(isNaN(parsedLastSeenPost[1]) && !(isNaN(currentID[1]))){
+                                return;
+                            }else if (isNaN(currentID[1]) || currentID[1] <= parsedLastSeenPost[1]){
+                                unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
+                                return;
+                            }
                         }
-                    });
+                    });                    
+                    //$('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
+                    //$('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
                 }
-            });
-            unseenPosts = unseenPosts.filter(function(el){
-                return parseInt(el.replace(/_/g, "")) > parseInt(lastSeenPost); // Remove posts from list of unseen ones if their ID is lower than the last seen one
-            });
+            }
         }
         newPostCount = unseenPosts.length;
         if (unseenReplies.length){
@@ -1183,14 +1117,8 @@ var newPosts = function(){
 
 var postCounter = function() {$(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/400 <br> Images: " + $(".thread_image_box").length + "/250</h6>" + rulesBox);};
 
-var bindShortcuts = function()
-{
-
-};
-
 var pokemon = ["bulbasaur","ivysaur","venusaur","charmander","charmeleon","charizard","squirtle","wartortle","blastoise","caterpie","metapod","butterfree","weedle","kakuna","beedrill","pidgey","pidgeotto","pidgeot","rattata","raticate","spearow","fearow","ekans","arbok","pikachu","raichu","sandshrew","sandslash","nidoran♀","nidorina","nidoqueen","nidoran♂","nidorino","nidoking","clefairy","clefable","vulpix","ninetales","jigglypuff","wigglytuff","zubat","golbat","oddish","gloom","vileplume","paras","parasect","venonat","venomoth","diglett","dugtrio","meowth","persian","psyduck","golduck","mankey","primeape","growlithe","arcanine","poliwag","poliwhirl","poliwrath","abra","kadabra","alakazam","machop","machoke","machamp","bellsprout","weepinbell","victreebel","tentacool","tentacruel","geodude","graveler","golem","ponyta","rapidash","slowpoke","slowbro","magnemite","magneton","farfetch'd","doduo","dodrio","seel","dewgong","grimer","muk","shellder","cloyster","gastly","haunter","gengar","onix","drowzee","hypno","krabby","kingler","voltorb","electrode","exeggcute","exeggutor","cubone","marowak","hitmonlee","hitmonchan","lickitung","koffing","weezing","rhyhorn","rhydon","chansey","tangela","kangaskhan","horsea","seadra","goldeen","seaking","staryu","starmie","mr. mime","scyther","jynx","electabuzz","magmar","pinsir","tauros","magikarp","gyarados","lapras","ditto","eevee","vaporeon","jolteon","flareon","porygon","omanyte","omastar","kabuto","kabutops","aerodactyl","snorlax","articuno","zapdos","moltres","dratini","dragonair","dragonite","mewtwo","mew","chikorita","bayleef","meganium","cyndaquil","quilava","typhlosion","totodile","croconaw","feraligatr","sentret","furret","hoothoot","noctowl","ledyba","ledian","spinarak","ariados","crobat","chinchou","lanturn","pichu","cleffa","igglybuff","togepi","togetic","natu","xatu","mareep","flaaffy","ampharos","bellossom","marill","azumarill","sudowoodo","politoed","hoppip","skiploom","jumpluff","aipom","sunkern","sunflora","yanma","wooper","quagsire","espeon","umbreon","murkrow","slowking","misdreavus","unown","wobbuffet","girafarig","pineco","forretress","dunsparce","gligar","steelix","snubbull","granbull","qwilfish","scizor","shuckle","heracross","sneasel","teddiursa","ursaring","slugma","magcargo","swinub","piloswine","corsola","remoraid","octillery","delibird","mantine","skarmory","houndour","houndoom","kingdra","phanpy","donphan","porygon2","stantler","smeargle","tyrogue","hitmontop","smoochum","elekid","magby","miltank","blissey","raikou","entei","suicune","larvitar","pupitar","tyranitar","lugia","ho-oh","celebi","treecko","grovyle","sceptile","torchic","combusken","blaziken","mudkip","marshtomp","swampert","poochyena","mightyena","zigzagoon","linoone","wurmple","silcoon","beautifly","cascoon","dustox","lotad","lombre","ludicolo","seedot","nuzleaf","shiftry","taillow","swellow","wingull","pelipper","ralts","kirlia","gardevoir","surskit","masquerain","shroomish","breloom","slakoth","vigoroth","slaking","nincada","ninjask","shedinja","whismur","loudred","exploud","makuhita","hariyama","azurill","nosepass","skitty","delcatty","sableye","mawile","aron","lairon","aggron","meditite","medicham","electrike","manectric","plusle","minun","volbeat","illumise","roselia","gulpin","swalot","carvanha","sharpedo","wailmer","wailord","numel","camerupt","torkoal","spoink","grumpig","spinda","trapinch","vibrava","flygon","cacnea","cacturne","swablu","altaria","zangoose","seviper","lunatone","solrock","barboach","whiscash","corphish","crawdaunt","baltoy","claydol","lileep","cradily","anorith","armaldo","feebas","milotic","castform","kecleon","shuppet","banette","duskull","dusclops","tropius","chimecho","absol","wynaut","snorunt","glalie","spheal","sealeo","walrein","clamperl","huntail","gorebyss","relicanth","luvdisc","bagon","shelgon","salamence","beldum","metang","metagross","regirock","regice","registeel","latias","latios","kyogre","groudon","rayquaza","jirachi","deoxys","turtwig","grotle","torterra","chimchar","monferno","infernape","piplup","prinplup","empoleon","starly","staravia","staraptor","bidoof","bibarel","kricketot","kricketune","shinx","luxio","luxray","budew","roserade","cranidos","rampardos","shieldon","bastiodon","burmy","wormadam","mothim","combee","vespiquen","pachirisu","buizel","floatzel","cherubi","cherrim","shellos","gastrodon","ambipom","drifloon","drifblim","buneary","lopunny","mismagius","honchkrow","glameow","purugly","chingling","stunky","skuntank","bronzor","bronzong","bonsly","mime jr.","happiny","chatot","spiritomb","gible","gabite","garchomp","munchlax","riolu","lucario","hippopotas","hippowdon","skorupi","drapion","croagunk","toxicroak","carnivine","finneon","lumineon","mantyke","snover","abomasnow","weavile","magnezone","lickilicky","rhyperior","tangrowth","electivire","magmortar","togekiss","yanmega","leafeon","glaceon","gliscor","mamoswine","porygon-z","gallade","probopass","dusknoir","froslass","rotom","uxie","mesprit","azelf","dialga","palkia","heatran","regigigas","giratina","cresselia","phione","manaphy","darkrai","shaymin","arceus","victini","snivy","servine","serperior","tepig","pignite","emboar","oshawott","dewott","samurott","patrat","watchog","lillipup","herdier","stoutland","purrloin","liepard","pansage","simisage","pansear","simisear","panpour","simipour","munna","musharna","pidove","tranquill","unfezant","blitzle","zebstrika","roggenrola","boldore","gigalith","woobat","swoobat","drilbur","excadrill","audino","timburr","gurdurr","conkeldurr","tympole","palpitoad","seismitoad","throh","sawk","sewaddle","swadloon","leavanny","venipede","whirlipede","scolipede","cottonee","whimsicott","petilil","lilligant","basculin","sandile","krokorok","krookodile","darumaka","darmanitan","maractus","dwebble","crustle","scraggy","scrafty","sigilyph","yamask","cofagrigus","tirtouga","carracosta","archen","archeops","trubbish","garbodor","zorua","zoroark","minccino","cinccino","gothita","gothorita","gothitelle","solosis","duosion","reuniclus","ducklett","swanna","vanillite","vanillish","vanilluxe","deerling","sawsbuck","emolga","karrablast","escavalier","foongus","amoonguss","frillish","jellicent","alomomola","joltik","galvantula","ferroseed","ferrothorn","klink","klang","klinklang","tynamo","eelektrik","eelektross","elgyem","beheeyem","litwick","lampent","chandelure","axew","fraxure","haxorus","cubchoo","beartic","cryogonal","shelmet","accelgor","stunfisk","mienfoo","mienshao","druddigon","golett","golurk","pawniard","bisharp","bouffalant","rufflet","braviary","vullaby","mandibuzz","heatmor","durant","deino","zweilous","hydreigon","larvesta","volcarona","cobalion","terrakion","virizion","tornadus","thundurus","reshiram","zekrom","landorus","kyurem","keldeo","meloetta","genesect","chespin","quilladin","chesnaught","fennekin","braixen","delphox","froakie","frogadier","greninja","bunnelby","diggersby","fletchling","fletchinder","talonflame","scatterbug","spewpa","vivillon","litleo","pyroar","flabébé","floette","florges","skiddo","gogoat","pancham","pangoro","furfrou","espurr","meowstic","honedge","doublade","aegislash","spritzee","aromatisse","swirlix","slurpuff","inkay","malamar","binacle","barbaracle","skrelp","dragalge","clauncher","clawitzer","helioptile","heliolisk","tyrunt","tyrantrum","amaura","aurorus","sylveon","hawlucha","dedenne","carbink","goomy","sliggoo","goodra","klefki","phantump","trevenant","pumpkaboo","gourgeist","bergmite","avalugg","noibat","noivern","xerneas","yveltal","zygarde","diancie","hoopa","volcanion"];
 function notifyMe(title, image, body){
-    //console.log("notifyMe called");
     if (!Notification){
         alert('Please us a modern version of Chrome, Firefox, Opera or Firefox.');
         return;
@@ -1255,9 +1183,13 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
             localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts);
         }else{
             latestLastSeenPosts = JSON.parse(localStorage.lastSeenPosts); // Get the most recent version of the stored object
-            if (latestLastSeenPosts[board][threadID] !== undefined){
-                if (parseInt(latestLastSeenPosts[board][threadID].replace(/_/g, "")) > parseInt(lastSeenPosts[board][threadID].replace(/_/g, ""))){
+            if (latestLastSeenPosts[board] !== undefined && latestLastSeenPosts[board][threadID] !== undefined){
+                if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) > parseInt(lastSeenPosts[board][threadID].split('_')[0])){
                     lastSeenPosts[board][threadID] = latestLastSeenPosts[board][threadID];
+                }else if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) == parseInt(lastSeenPosts[board][threadID].split('_')[0])){
+                    if (isNaN(lastSeenPosts[board][threadID].split('_')[1]) || parseInt(latestLastSeenPosts[board][threadID].split('_')[1]) > parseInt(lastSeenPosts[board][threadID].split('_')[1])){
+                        lastSeenPosts[board][threadID] = latestLastSeenPosts[board][threadID];
+                    }
                 }
             }
             localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts); // Save it again
@@ -1268,24 +1200,6 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
     //(e || window.event).returnValue = confirmationMessage; //Gecko + IE
     //return confirmationMessage;                            //Webkit, Safari, Chrome
 });
-
-function labelYourPosts(firstcall){
-    $.each(queuedYouLabels, function(i, v){ // Parse all names on pageload and with each post submission
-        $('#'+v+' .post_author').after('<span> (You)</span>');
-    });
-    queuedYouLabels = [];
-
-    if (firstcall){ // Parse all backlinks present on pageload
-        $.each(yourPosts[board][threadID], function(i,v){
-            $('.backlink[data-post='+v+']').each(function(){
-                if (!$(this).data('linkedYou')){
-                    $(this).data('linkedYou',true);
-                    this.textContent += ' (You)';
-                }
-            });
-        });
-    }
-}
 
 function labelNewPosts(response){
     var newPosts = Object.keys(response[threadID].posts);
@@ -1321,6 +1235,7 @@ function postSubmitEvent(){
             observer = new MutationObserver(function(mutation) {
                 //console.log("Post Submit Event Triggered");
                 lastSubmittedContent = $('#reply_chennodiscursus')[0].value;
+                //console.log("Latest LSC:"+lastSubmittedContent);
             }),
             config = {
                 attributes: true
@@ -1329,17 +1244,73 @@ function postSubmitEvent(){
     }
 }
 
+function linkHoverEvent(){ // Hook into the native internal link hover
+    window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+    var target =  $('#backlink')[0],
+        observer = new MutationObserver(function(mutation) {
+            //console.log("Link Hover Event Triggered");
+            relativeTimestamps($('#backlink > article'));
+        }),
+        config = {
+            childList: true
+        };
+    observer.observe(target, config);
+}
+
+function mascot(mascotImageLink){
+    if (settings.UserSettings.mascot.value){
+        if (!$('#mascotBackground').length){
+            $('.container-fluid').prepend('<div id="mascotBackground" style="position:fixed; background-color:'+$('.container-fluid').css('background-color')+'; z-index:-2; top:0; right:0; bottom:0; left:0;"></div>');
+            $('.letters').css({'padding-top':"4px","margin":"0 0 -2px"});
+            $('.container-fluid').css({'background-color':'rgba(0, 0, 0, 0)'});
+        }
+        var cornerCSS;
+        switch (settings.UserSettings.mascot.suboptions.corner.value.value){
+            case "Top Right": cornerCSS = {"top":-settings.UserSettings.mascot.suboptions.y.value+"px","right":-settings.UserSettings.mascot.suboptions.x.value+"px","bottom":"","left":""}; break;
+            case "Bottom Right": cornerCSS = {"top":"","right":-settings.UserSettings.mascot.suboptions.x.value+"px","bottom":settings.UserSettings.mascot.suboptions.y.value+"px","left":""}; break;
+            case "Bottom Left": cornerCSS = {"top":"","right":"","bottom":settings.UserSettings.mascot.suboptions.y.value+"px","left":settings.UserSettings.mascot.suboptions.x.value+"px"}; break;
+            case "Top Left": cornerCSS = {"top":-settings.UserSettings.mascot.suboptions.y.value+"px","right":"","bottom":"","left":settings.UserSettings.mascot.suboptions.x.value+"px"}; break;
+            default: console.log("Invalid corner setting");
+        }
+        if (mascotImageLink !== ""){
+            if (!$('#mascot').length){
+                $('.container-fluid').prepend('<img id="mascot" src="'+mascotImageLink+'" style="position:fixed; z-index:-1;">');
+            }else{
+                $('#mascot')[0].src = mascotImageLink;
+            }
+        }
+        cornerCSS["z-index"] = settings.UserSettings.mascot.suboptions.zindex.value;
+        $('#mascot').css(cornerCSS);
+    }else{
+        $('#mascot').remove();
+    }
+}
+
+function parseMascotImageValue(){
+    var mascotImageLink;
+    if (isNaN(parseInt(settings.UserSettings.mascot.suboptions.mascotImage.value))){
+        if (settings.UserSettings.mascot.suboptions.mascotImage.value === undefined || settings.UserSettings.mascot.suboptions.mascotImage.value === ""){
+            mascotImageLink = defaultMascots[Math.floor(Math.random()*defaultMascots.length)]; // If empty set to a random default mascot
+        }else{
+            mascotImageLink = settings.UserSettings.mascot.suboptions.mascotImage.value;
+        }
+    }else{
+        mascotImageLink = defaultMascots[parseInt(settings.UserSettings.mascot.suboptions.mascotImage.value)];
+    }
+    return mascotImageLink;
+}
+
 $(document).ready(function(){
-    $('head').after('<script src="https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js"></script>'); // Pull in selection plugin (http://madapaja.github.io/jquery.selection/)
-    $('head').after('<style type="text/css" id="FoolX-css">.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
+    $('head').after('<style type="text/css" id="FoolX-css">.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
     if (settings.UserSettings.favicon.value){
         $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
     $('body').append('<div id="hoverUI"></div>');
-    $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 3px; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 0 3px; float: left;}.credits{float: right;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 5px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color: #d6f0da;}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:0; padding-bottom:0; padding-right:0;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
+    $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
+    $('#FoolX-css').append('#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
     $('body').append('<div id="headerBar"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
-    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
+    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     $('#headerBar > a, a[title=Close]').on('click', function(){
         populateSettingsMenu();
     });
@@ -1347,20 +1318,74 @@ $(document).ready(function(){
         if (e.target.tagName == "A"){
             $('#settingsContent #'+$('.sections-list .active').html()).hide();
             $('.sections-list .active').removeClass('active');
-            $(e.target).addClass('active').show();
+            $(e.target).addClass('active');
             $('#settingsContent #'+$('.sections-list .active').html()).show();
         }
     });
-    $('#settingsContent').on('change', function(e){
-        var value;
-        if (e.target.type == "checkbox"){
-            value = e.target.checked;
-        }else{
-            value = e.target.value;
+    $('#settingsContent').on('click', function(e){ // Filter subtabs change on click
+        if (e.target.parentNode.className == "filters-list"){
+            var filterSubmenu = $(e.target).attr('name');
+            $('#filter_'+$('.filters-list .active').attr('name')).hide();
+            $('.filters-list .active').removeClass('active');
+            $('.filters-list > a[name='+filterSubmenu+']').addClass('active');
+            $('#filter_'+filterSubmenu).show();
         }
-        path(settings.UserSettings, $(e.target).attr('path')).value = value;
+    });
+    $('#settingsContent').on('change', function(e){
+        if ($(e.target).hasClass('filterTextarea')){
+            var store = [];
+            $.each(e.target.value.split('\n'), function(i, line){
+                var lineStore = {};
+                if (line.trim().substr(0,1) == "#"){
+                    lineStore.comment = line;
+                }else{
+                    line = line.replace(/\\;/g, '<delimitedSemiColon>');
+                    $.each(line.split(';'), function(i, fragment){
+                        if (fragment !== ""){
+                            if (!i){
+                                var regex = fragment.trim().replace(/<delimitedSemiColon>/g, ';');
+                                if ((/[gim]/).test(regex.substring(regex.length -1))){                                    
+                                    lineStore.regex = {"pattern":regex.substring(1,regex.length-2),"flag":regex.substring(regex.length-1)};
+                                }else{
+                                    lineStore.regex = {"pattern":regex.substring(1,regex.length-1),"flag":""};
+                                }
+                            }else{
+                                var components = fragment.split(':');
+                                lineStore[components.shift().trim().replace(/<delimitedSemiColon>/g, ';')] = components.join(':').trim().replace(/<delimitedSemiColon>/g, ';');
+                            }
+                        }
+                    });
+                    if (lineStore.regex !== undefined){
+                        lineStore.comment = false;
+                    }
+                }
+                store.push(lineStore);
+            });
+            settings.FilterSettings[$(e.target).attr('name')].value = store;
+        }else{
+            var value;
+            if (e.target.type == "checkbox"){
+                value = e.target.checked;
+                $(e.target).closest('div').find('.suboption-list').toggle(); // Make parent checkboxes collapse the suboptions if they're unticked
+            }else{
+                value = e.target.value;
+            }
+            if (e.target.nodeName == "SELECT"){
+                path(settings.UserSettings, $(e.target).attr('path')).value.value = value;
+            }else{
+                path(settings.UserSettings, $(e.target).attr('path')).value = value;
+            }
+            if ($(e.target).attr('path').substr(0,6) == "mascot"){ // Live update changes in mascot settings
+                if (e.target.name == "Mascot image" || e.target.name == "Mascot"){
+                    mascot(parseMascotImageValue());
+                }else{
+                    mascot('');
+                }
+            }
+        }
         settingsStore = {};
         settingsStore.UserSettings = settingsStrip(settings.UserSettings);
+        settingsStore.FilterSettings = settingsStrip(settings.FilterSettings);
         localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
     });
 
@@ -1392,15 +1417,13 @@ $(document).ready(function(){
         }
         if (yourPosts[board][threadID] === undefined){
             yourPosts[board][threadID] = [];
-        } else {
-            queuedYouLabels = yourPosts[board][threadID].slice(0);
         }
         postSubmitEvent();
 
-        $(document).ajaxComplete(function(event, request, settings) {
+        $(document).ajaxComplete(function(event, request, ajaxSettings) {
             //console.log(event);
             //console.log(request);
-            //console.log(settings);
+            //console.log(ajaxSettings);
             if (request.responseText !== ""){
                 response = JSON.parse(request.responseText);
             }else{
@@ -1409,19 +1432,24 @@ $(document).ready(function(){
             if (response.error !== undefined){
                 //console.log(response.error);
             }else{
-                if (settings.type == "POST"){
+                if (ajaxSettings.type == "POST"){
                     if (response.error === undefined ){
-                        for (var post in response[threadID].posts) {                  
-                            if(response[threadID].posts[post].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
-                                yourPosts[board][threadID].push(post);
-                                queuedYouLabels.push(post);
-                                labelYourPosts();
-                                break;
+                        if (response.captcha){ // If you are required to fill a captcha before posting
+                            //console.log(response);
+                        }else{
+                            for (var postID in response[threadID].posts){
+                                //console.log(response[threadID].posts[postID].comment.replace(/[\r\n]/g,''));
+                                //console.log(lastSubmittedContent.replace(/[\r\n]/g,''));
+                                if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
+                                    yourPosts[board][threadID].push(postID);
+                                    $('#'+postID+' .post_author').after('<span> (You)</span>');
+                                    break;
+                                }
                             }
+                            labelNewPosts(response);
                         }
-                        labelNewPosts(response);
                     }else{
-                        console.log(response.error);
+                        //console.log(response.error);
                     }
                 }else{
                     if (response[threadID] !== undefined){
@@ -1432,10 +1460,207 @@ $(document).ready(function(){
                 }
             }
         });
-        labelYourPosts(true); // First call, add (You) to page content
     }
-    if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-    if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+    var staticPosts = $('article.post');
+    var staticPostsAndOP = $('article.post, article.thread:not(.backlink_container)');
+    mascot(parseMascotImageValue()); // Insert mascot
+    if (settings.UserSettings.inlineImages.value){inlineImages(staticPostsAndOP);} // Inline images
+    if (settings.UserSettings.inlineReplies.value){ // Inline replies
+        staticPosts.each(function(i, post){
+            $(post).addClass("base");
+        });
+    }
+    if (settings.UserSettings.labelYourPosts.value){ // Label your posts
+        $.each(yourPosts[board][threadID], function(i,v){ // Parse all backlinks present on pageload
+            $('#'+v+' .post_author').after('<span> (You)</span>');
+            $('.backlink[data-post='+v+']').each(function(){
+                if (!$(this).data('linkedYou')){
+                    $(this).data('linkedYou',true);
+                    this.textContent += ' (You)';
+                }
+            });
+        });
+    }
+    if (settings.UserSettings.embedImages.value){embedImages(staticPosts);} // Embed images
+    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(staticPostsAndOP);linkHoverEvent();} // Initiate relative timestamps
+    if (settings.UserSettings.postQuote.value){
+        $('.post_data > [data-function=quote]').each(function(){
+            $(this).removeAttr('data-function'); // Disable native quote function
+            $(this).addClass('postQuote'); // Make it findable so that inline posts will be handled
+        });
+    }
+    if (settings.UserSettings.hidePosts.value){
+        $('.pull-left.stub').removeClass('stub'); // Show hide post buttons
+        if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+            $('article.post').each(function(i, val){
+                $(val).find('.post_backlink').attr('id','p_b'+val.id);
+            });
+            $('article.post:hidden').each(function(i, post){ // Recursively hide pre-hidden posts
+                recursiveToggle(post.id, "hide");
+            });
+        }
+    }
+    if (settings.UserSettings.filter.value){filter(staticPostsAndOP);}
+    if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+    if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+
+    $(document).ajaxComplete(function(event, request, ajaxSettings){
+        if (request.responseText !== ""){
+            response = JSON.parse(request.responseText);
+        }else{
+            response = {"error":"No responseText"};
+        }
+        if (response.error !== undefined){
+            //console.log(response.error);
+        }else{
+            if (response[threadID] !== undefined){
+                for (var post in response[threadID].posts){
+                    var newPost = $('#'+post);
+                    if (settings.UserSettings.inlineReplies.value){
+                        newPost.addClass("base");
+                    }
+                    if (settings.UserSettings.embedImages.value){embedImages(newPost);}
+                    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
+                    if (settings.UserSettings.filter.value){filter(newPost);}
+                    if (settings.UserSettings.postQuote.value){
+                        newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
+                    }
+                    if (settings.UserSettings.hidePosts.value){
+                        $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
+                        if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+                            newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                        }
+                    }
+                }                
+            }else{
+                //console.log("Didn't return new posts object");
+            }
+        }
+    });
+
+    $('#main').on('click', function(e){ // Detect clicks on page content
+        if (settings.UserSettings.inlineReplies.value && $(e.target).hasClass("backlink")){ // Inline replies
+            if (!e.originalEvent.ctrlKey && e.which == 1){
+                e.preventDefault();
+                var postID = $(e.target).attr('data-post');
+                var rootPostID = e.target.closest('article.base').id;
+                if (e.target.parentNode.className == "post_backlink"){
+                    if ($(e.target).hasClass("inlined")){
+                        $(e.target).removeClass("inlined");
+                        $('.sub'+rootPostID).each(function(index,currentPost){
+                            $("#"+currentPost.id.substr(1)+".forwarded").removeClass("forwarded");
+                        });
+                        $('#i'+postID+'.sub'+rootPostID).remove();
+                    }else{
+                        $(e.target).addClass("inlined");
+                        $(e.target.parentNode.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
+                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
+                        $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
+                            if (!$(this).hasClass('sub'+rootPostID)){
+                                $(this).attr("class","inline sub"+rootPostID);
+                            }
+                        });
+                        $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
+                        if (settings.UserSettings.inlineImages.value){inlineImages($('#r'+postID));} // Inline images
+                        if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+                        if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+                    }
+                }else{
+                    if ($(e.target).hasClass("inlined")){
+                        $(e.target).removeClass("inlined");
+                        $('.sub'+rootPostID).each(function(index,currentPost){
+                            $("#"+currentPost.id.substr(1)+".forwarded").removeClass("forwarded");
+                        });
+                        $('#i'+postID+'.sub'+rootPostID).remove();
+                    }else{
+                        $(e.target).addClass("inlined");
+                        $(e.target.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
+                        $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
+                        $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
+                            if (!$(this).hasClass('sub'+rootPostID)){
+                                $(this).attr("class","inline sub"+rootPostID);
+                            }
+                        });
+                        $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
+                        if (settings.UserSettings.inlineImages.value){inlineImages($('#r'+postID));} // Inline images
+                        if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+                        if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+                    }
+                }
+            }
+        }else if (settings.UserSettings.postQuote.value && e.target.className == "postQuote"){ // Better post quoting
+            if (!e.originalEvent.ctrlKey && e.which == 1){
+                e.preventDefault();
+                var postnum = e.target.innerHTML;
+                var input = document.getElementById('reply_chennodiscursus');
+
+                if (input.selectionStart !== undefined)
+                {
+                    var startPos = input.selectionStart;
+                    var endPos = input.selectionEnd;
+                    var startText = input.value.substring(0, startPos);
+                    var endText = input.value.substring(startPos);
+
+                    var originalText = input.value;
+                    var selectedText = getSelectionText();
+                    var newText;
+                    if (selectedText === ""){
+                        newText = startText +">>"+postnum+"\n"+ endText;
+                    }else{
+                        newText = startText +">>"+postnum+"\n>"+ selectedText +"\n"+ endText;
+                    }
+                    document.getElementById('reply_chennodiscursus').value = originalText.replace(originalText,newText);
+                }
+            }
+        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName == "IMG"){ // Expand images
+            if (!e.originalEvent.ctrlKey && e.which == 1){
+                e.preventDefault();
+                var image = $(e.target);
+                image.closest('.thread_image_box').find('.spoilerText').toggle(); // Toggle the Spoiler text
+                if (image.hasClass("thread_image")){
+                    image.toggleClass("smallImageOP"); // If OP image
+                }else{
+                    image.toggleClass("smallImage");
+                }
+                image.toggleClass("bigImage");
+                $('#hoverUI').html('');
+                image.trigger("mouseenter");
+            }
+        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName == "VIDEO"){ // Expand videos
+            var video = $(e.target);
+            video.toggleClass("bigImage"); // Make it full opacity to override spoilering
+            video.closest('.thread_image_box').find('.spoilerText').toggle(); // Toggle the Spoiler text
+            if (video.hasClass("fullVideo")){
+                video[0].pause();
+                video[0].muted=true;
+                video.attr('width',"125");
+                video.removeAttr('controls');
+                video.removeClass("fullVideo");
+            }else{
+                video.removeAttr('width');
+                video.attr('controls',"");
+                video.addClass("fullVideo");
+                video[0].muted=false;
+                video[0].play();
+            }
+            $('#hoverUI').html('');
+            video.trigger("mouseenter");
+        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.className == "btn-toggle-post"){ // Recursive hiding
+            var button = e.target;
+            if(button.attributes["data-function"].value == "showPost"){
+                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "show");
+            }else if(button.attributes["data-function"].value == "hidePost"){
+                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "hide");
+            }
+        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.parentNode.className == "btn-toggle-post"){ // Recursive hiding
+            var button = e.target.parentNode;
+            if(button.attributes["data-function"].value == "showPost"){
+                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "show");
+            }else if(button.attributes["data-function"].value == "hidePost"){
+                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "hide");
+            }
+        }
+    });
 });
 
 var executeShortcut = function(shortcut) {
@@ -1547,30 +1772,66 @@ function populateSettingsMenu(){
         }
         presetFavicons();
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
-        settingsHTML += '<div id="Filter">Placeholder</div>';
-        $('#settingsContent').html(settingsHTML);
+        settingsHTML += '<div id="Filter">'+generateFilterHTML()+'</div>';
+        $('#settingsContent').html(settingsHTML);        
         $('#settingsContent > div').hide();
         $('#settingsContent #'+$('.sections-list .active').html()).show();
         $('#settingsMenu').show();
     }
 }
 
+function generateFilterHTML(){
+    var settingsHTML = '';
+    settingsHTML += '<div class="filters-list"><a href="javascript:;" class="active" name="guide">Guide</a>';
+    for (type in settings.FilterSettings){
+        settingsHTML += ' | <a href="javascript:;" name="'+type+'">'+settings.FilterSettings[type].name+'</a>';
+    }
+    settingsHTML += '</div>';
+    settingsHTML += '<div id="filter_guide" style="padding:4px;"><p>Use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" style="text-decoration: underline;">regular expressions</a>, one per line. <br>Lines starting with a <code>#</code> will be ignored. <br>For example, <code>/weeaboo/i</code> will filter posts containing the string <code>weeaboo</code>, case-insensitive. <br><br>You can use these settings with each regular expression, separate them with semicolons: </p><ul> <li>Per boards, separate them with commas. It is global if not specified. <br>For example: <code>boards:a,tg;</code></li><li> Set the way the filter will handle the post with <code>mode</code><br>For example: <code>mode:hide;</code><br>Valid options are: <ul> <li><code>purge</code>: Remove the post from the page entirely, the site will need to reload the post for hoverlinks and such to work.</li><li><code>remove</code>: Remove the post from view but leave it in the page.</li><li><code>hide</code>: Collapse the post, leave a button to restore it.</li><li><code>fade</code>: Simply halve the opacity of the post. This is the default if the mode isn\'t specified.</li></ul> </li></ul></div>';
+    for (type in settings.FilterSettings){
+        settingsHTML += '<div id="filter_'+type+'" style="display: none;"><textarea name="'+type+'" spellcheck="false" class="filterTextarea">';
+        $.each(settings.FilterSettings[type].value, function(i,line){
+            if (i){
+                settingsHTML += '\n';
+            }
+            if(!line.comment){
+                if (line.regex !== undefined && line.regex.pattern !== undefined){
+                    settingsHTML += "/" + line.regex.pattern + "/" + line.regex.flag + ';';
+                    for (prop in line){
+                        if (prop !== "comment" && prop !=="regex"){
+                            settingsHTML += prop + ':' + line[prop] + ';';
+                        }
+                    }
+                }
+            }else{
+                settingsHTML += line.comment;
+            }
+        });
+        settingsHTML += '</textarea></div>';
+    }
+    return settingsHTML;
+}
+
 function generateSubOptionHTML(input, path){
     var settingsHTML = '';
     $.each(input, function(key, value){
         var checked = '';
+        var subOpsHidden = '';
         if (value.value){
-            checked = 'checked ';
+            checked = ' checked';
+        }else{
+            subOpsHidden = ' style="display: none;"';
         }
         settingsHTML += '<div><label>';
         switch(value.type){
-            case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'" '+checked+'path="'+path+key+'">'; break;
+            case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'"'+checked+' path="'+path+key+'">'; break;
             case "text": settingsHTML += '<input type="text" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
             case "number": settingsHTML += '<input type="number" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
+            case "select": settingsHTML += '<select path="'+path+key+'">'; $.each(value.value.options, function(i,v){settingsHTML += '<option'; if(v == value.value.value){settingsHTML += ' selected';} settingsHTML += '>'+v+'</option>';}); settingsHTML +='</select>'; break;
         }
         settingsHTML += value.name+'</label><span class="description">: '+value.description+'</span>';
         if (value.suboptions !== undefined){
-            settingsHTML += '<div class="suboption-list">' + generateSubOptionHTML(value.suboptions,path+key+'.suboptions.') + '</div>';
+            settingsHTML += '<div class="suboption-list"'+subOpsHidden+'>' + generateSubOptionHTML(value.suboptions,path+key+'.suboptions.') + '</div>';
         }
         settingsHTML += '</div>';
     });
@@ -1607,6 +1868,5 @@ $(function(){
     seenPosts();
     ThreadUpdate();
     getBoard();
-    bindShortcuts();
     window.setInterval(function(){ThreadUpdate();},500);
 });
