@@ -2,6 +2,10 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v28.2:** *(2015-06-05)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.2/README.md)
+- The mascot feature now supports videos
+- You can now specify the width of the mascot
+
 **v28.1:** *(2015-06-05)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.1/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.1/README.md)
 - fixed bug where is the last seen post is a non-ghost post it wasn't being removed from the list of unseen posts on page load
 
