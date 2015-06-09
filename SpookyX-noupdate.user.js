@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       28.2
+// @version       28.3
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -183,7 +183,7 @@ var settings = {
             "name": "Mascot",
             "description": "Place your favourite mascot on the background to keep you company!",
             "type": "checkbox",
-            "value": true,
+            "value": false,
             "suboptions": {
                 "mascotImage": {
                     "name": "Mascot image",
@@ -202,6 +202,18 @@ var settings = {
                     "description": "Determine what page elements the mascot is in front and behind of. Default value is -1",
                     "type": "number",
                     "value": -1
+                },
+                "opacity":{
+                    "name": "Opacity",
+                    "description": "Specify the opacity of the mascot, ranges from 0 to 1",
+                    "type": "number",
+                    "value": 1
+                },
+                "clickthrough": {
+                    "name": "Click-through",
+                    "description": "Allow you to click through the mascot if it is on top of buttons, etc",
+                    "type": "checkbox",
+                    "value": true,
                 },
                 "width": {
                     "name": "Width",
@@ -226,6 +238,32 @@ var settings = {
                     "description": "If using a video for a mascot the sound will be muted",
                     "type": "checkbox",
                     "value": true,
+                }
+            }
+        },
+        "postFlow": {
+            "name": "Adjust post flow",
+            "description": "Change the way posts are laid out in the page",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "leftMargin": {
+                    "name": "Left margin",
+                    "description": "Specify the width in pixels of the gap between the start of the posts and the left side of the screen. Negative values set it to equal the mascot width",
+                    "type": "number",
+                    "value": 0,
+                },
+                "rightMargin": {
+                    "name": "Right margin",
+                    "description": "Specify the width in pixels of the gap between the end of the posts and the right side of the screen. Negative values set it to equal the mascot width",
+                    "type": "number",
+                    "value": 0,
+                },
+                "align": {
+                    "name": "Align",
+                    "description": "Specify how posts are aligned",
+                    "type": "select",
+                    "value": {"value":"Left","options":["Left","Center","Right"]}
                 }
             }
         }
@@ -289,12 +327,12 @@ var settings = {
                 {"comment": "#Remove kebob"},
                 {"comment": "#/turkey/i;mode:remove;"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.flag').attr('title')}
+            "textFunction":function(currentPost){return $(currentPost).find('.flag').attr('title');}
         },
         "filename":{
             "name":"Filename",
             "value":[],
-            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename').html();}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.innerHTML});} return combined;}
+            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename').html();}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.innerHTML;});} return combined;}
         },
         "fileurl":{
             "name":"File URL",
@@ -302,7 +340,7 @@ var settings = {
                 {"comment": "# Filter by site for example:"},
                 {"comment": "#/tumblr/;"}
             ],
-            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename')[0].href;}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.href});} return combined;}
+            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename')[0].href;}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.href;});} return combined;}
         }
     }
 };
@@ -338,18 +376,34 @@ var ignoreInline = ['v'];
 var rulesBox = $(".rules_box").html();
 if(settings.UserSettings.embedImages.suboptions.autoplayVids.value){var autoplayVid = "autoplay";}else{var autoplayVid="";}
 
-var pattThreadAndID = new RegExp("thread\/[0-9]+($|\/)");
-var pattThreadID = new RegExp("[0-9]+");
 var threadID; // Returns undefined if there's no thread
-if (pattThreadAndID.exec(document.URL) !== null){
-    threadID = pattThreadID.exec(pattThreadAndID.exec(document.URL))[0];
+var splitURL = (document.URL).split("/");
+var board = splitURL[3];
+if ((/\/search\//).test(document.URL)){
+    threadID = "search";
+}else if ((/\/thread\//).test(document.URL)){    
+    threadID = splitURL[5];
+}else if ((/\/last\//).test(document.URL)){
+    threadID = splitURL[6];
+}else{
+    if (board === "_" || splitURL[4] === "" || splitURL[4] === undefined || splitURL[4] === "ghost"){
+        if (board !== "" && board !== undefined && board !== "_"){
+            threadID = "board";
+        }else{
+            threadID = "other";
+        }
+    }
 }
+/*
+console.log(URL.split("/"));
+console.log(threadID);
+console.log(board);*/
 
-var getBoard = function(){
-    var URL = document.URL;
-    return URL.split("/")[3];
-};
-var board = getBoard();
+var yourPostsLookup = {};
+var crosslinkTracker = {};
+if (localStorage.crosslinkTracker === undefined){
+    localStorage.crosslinkTracker = "{}";
+}
 
 function presetFavicons(){
     switch(settings.UserSettings.favicon.suboptions.lit.value) {
@@ -385,35 +439,6 @@ function path(obj, path, def){
     if(obj === undefined) return def;
     return obj;
 }
-/*
-$.fn.elemText = function() {
-    var text = '';
-    this.each(function() {
-        $(this).contents().each(function() {
-            if (this.nodeType == Node.TEXT_NODE)
-                text += this.textContent;
-        });
-    });
-    return text;
-};*/
-
-/*
-$.fn.isOnScreen = function(){
-    var win = $(window);
-    var viewport = {
-        top : win.scrollTop(),
-        left : win.scrollLeft()
-    };
-    viewport.right = viewport.left + win.width();
-    viewport.bottom = viewport.top + win.height() - 200;
-
-    var bounds = this.offset();
-    bounds.right = bounds.left + this.outerWidth();
-    bounds.bottom = bounds.top + this.outerHeight();
-
-    return (!(viewport.right < bounds.left || viewport.left > bounds.right || viewport.bottom < bounds.top || viewport.top > bounds.bottom));
-};
-*/
 
 var escapeRegExp;
 (function () {
@@ -747,27 +772,27 @@ function recursiveToggle(postID, mode){
             }
         });
     }
-    for (var j=0; j < postList.length; j++) {
+    for (var j=0, len = postList.length; j < len; j++) {
         togglePost(postList[j], mode);
     }
 }
 
 function filter(posts){
     posts.each(function(index,currentPost){
-        var boardPatt = new RegExp("(^|,)\s*"+board+"\s*(,|$)");
-        for (filterType in settings.FilterSettings){
+        var boardPatt = new RegExp("(^|,)\\s*"+board+"\\s*(,|$)");
+        for (var filterType in settings.FilterSettings){
             var testText = settings.FilterSettings[filterType].textFunction(currentPost);
             var shortcut = settings.FilterSettings[filterType].value;
-            for (line in shortcut){
+            for (var line in shortcut){
                 if (!shortcut[line].comment && shortcut[line].regex !== undefined){
                     if (shortcut[line].boards === undefined || boardPatt.test(shortcut[line].boards)){
                         var regex = new RegExp(shortcut[line].regex.pattern, shortcut[line].regex.flag);
                         if(regex.test(testText)){
                             switch(shortcut[line].mode){
-                                case "purge": $(currentPost).prev().remove(); $(currentPost).remove(); break;
-                                case "remove": $(currentPost).hide(); break;
                                 case "hide": togglePost(currentPost.id, "hide"); break;
-                                case "fade":
+                                case "fade": $(currentPost).addClass("shitpost"); break;
+                                case "remove": $(currentPost).hide(); break;
+                                case "purge": $(currentPost).prev().remove(); $(currentPost).remove(); break;
                                 default: $(currentPost).addClass("shitpost");
                             }
                         }
@@ -776,14 +801,14 @@ function filter(posts){
             }
         }
     });
-};
+}
 
 var embedImages = function(posts){
     posts.each(function(index, currentArticle){
         if (!$(currentArticle).data('imgEmbed')){
             $(currentArticle).data('imgEmbed',true);
-            var imageFiletypes = new RegExp(".(jpg|png|gif)($|\\?[\\S]+$)",'i');
-            var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|\\?[\\S]+$)",'i');
+            var imageFiletypes = new RegExp(".(jpg|jpeg|png|gif)($|(\\?|:)[\\S]+$)",'i');
+            var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|(\\?|:)[\\S]+$)",'i');
             var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
             var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $(currentArticle).find('.thread_image_box').length;
             $(currentArticle).find(".text a").each(function(index, currentLink){
@@ -791,7 +816,7 @@ var embedImages = function(posts){
                     return false;
                 }
                 var mediaType = "notMedia";
-                var mediaLink = $(this).html();
+                var mediaLink = currentLink.href;//$(this).html();
                 if (imageFiletypes.test(mediaLink)){
                     mediaType = "image";
                 }else if (videoFiletypes.test(mediaLink)){
@@ -878,7 +903,7 @@ function imageHover(){
     $('img').off("mousemove");
     $('img').off("mouseout");
     $('img').on("mouseenter", function(e){
-        if(!$(this).hasClass("bigImage")){
+        if($(this)[0].id !== "mascot" && !$(this).hasClass("bigImage")){
             $(this).clone().removeClass("smallImage smallImageOP spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
             $('#hoverUI > img').css({
                 "max-height":window.innerHeight,
@@ -911,7 +936,7 @@ function videoHover(){
     $('video').off("mousemove");
     $('video').off("mouseout");
     $('video').on("mouseenter", function(e){
-        if(!$(this).hasClass("fullVideo")){
+        if($(this)[0].id !== "mascot" && !$(this).hasClass("fullVideo")){
             $(this).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
             $('#hoverUI > video').removeAttr('width');
             $('#hoverUI > video')[0].oncanplay = function(){
@@ -1021,7 +1046,7 @@ function changeTimestamp(timeElement, postTimestamp){
 
 var lastSeenPost;
 var unseenPosts = [];
-var seenPosts = function(){
+function seenPosts(){
     $('article.backlink_container').attr('id',"0"); // Prevent error when it's undefined
     var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
     $('article').each(function(index, currentArticle){ // Add unseen posts to array
@@ -1040,22 +1065,28 @@ var seenPosts = function(){
     });
     $('article.backlink_container').removeAttr('id'); // Remove id again
     $('#'+unseenPosts[0]).addClass("unseenPost");
-};
+}
 
 var unseenReplies = [];
 function newPosts(){
     if (settings.UserSettings.favicon.value){
-        if (windowFocus){
-            //console.log(unseenPosts);
-            //console.log(unseenReplies);
-            if (unseenPosts.length){
-                var viewportBottom = window.scrollY + window.innerHeight -200;
-                if (document.getElementById(unseenPosts[0]).offsetTop < viewportBottom){
+        if (unseenPosts.length){
+            //console.time('lastpost');
+            var predictedLastSeenPostIndex = -1;
+            if (windowFocus){
+                var viewportBottom = window.scrollY + window.innerHeight;
+                var unseenPostOffset = document.getElementById(unseenPosts[0]).offsetTop + document.getElementById(unseenPosts[0]).offsetHeight;
+                if (unseenPostOffset < viewportBottom){
                     var meanPostHeight = (document.getElementById(unseenPosts[unseenPosts.length -1]).offsetTop - document.getElementById(unseenPosts[0]).offsetTop) / unseenPosts.length;
-                    var predictedLastSeenPostIndex = 0;
                     var testedSeeds = []; // Keep track of which indices have been checked to prevent endless loops
                     var lastSeed = 0;
-                    while (!(document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetTop <= viewportBottom && (unseenPosts[predictedLastSeenPostIndex + 1] === undefined || document.getElementById(unseenPosts[predictedLastSeenPostIndex + 1]).offsetTop > viewportBottom))){
+                    predictedLastSeenPostIndex = 0;
+                    var predictedLSP0offset = document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetTop + document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetHeight;
+                    var predictedLSP1offset;
+                    if (unseenPosts[predictedLastSeenPostIndex + 1] !== undefined){
+                        predictedLSP1offset = document.getElementById(unseenPosts[predictedLastSeenPostIndex + 1]).offsetTop + document.getElementById(unseenPosts[predictedLastSeenPostIndex + 1]).offsetHeight;
+                    }
+                    while (!(predictedLSP0offset <= viewportBottom && (unseenPosts[predictedLastSeenPostIndex + 1] === undefined || predictedLSP1offset > viewportBottom))){
                         testedSeeds[predictedLastSeenPostIndex] = true;
                         predictedLastSeenPostIndex += Math.floor((viewportBottom - document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetTop) / meanPostHeight);
                         if (predictedLastSeenPostIndex >= unseenPosts.length){
@@ -1063,43 +1094,51 @@ function newPosts(){
                         }else if (predictedLastSeenPostIndex < 0){
                             predictedLastSeenPostIndex = 0; // Keep it from being negative
                         }
-                        if (testedSeeds[predictedLastSeenPostIndex]){
-                            //console.log("We've been here before:"+testedSeeds[predictedLastSeenPostIndex]);
+                        if (testedSeeds[predictedLastSeenPostIndex]){ // Prevent it from getting caught in infinite loops by making sure it never uses the same predictedLSPi twice
                             for (lastSeed; lastSeed < unseenPosts.length; lastSeed++){
-                                //console.log("LS:"+lastSeed);
-                                //console.log(!testedSeeds[lastSeed]);
                                 if (!testedSeeds[lastSeed]){
                                     predictedLastSeenPostIndex = lastSeed;
                                     break;
                                 }
                             }
                         }
-                        //console.log(predictedLastSeenPostIndex);
-                        //console.log(testedSeeds);
-                        //console.log(lastSeed);
-                    }
-                    lastSeenPost = unseenPosts[predictedLastSeenPostIndex]; // Update last seen post
-                    unseenPosts = unseenPosts.slice(predictedLastSeenPostIndex + 1); // Only keep posts after the lastSeenPost
-
-                    var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
-                    $.each(unseenReplies, function(i, unseenID){
-                        var currentID = [parseInt(unseenID.split('_')[0]),parseInt(unseenID.split('_')[1])];                        
-                        if (currentID[0] < parsedLastSeenPost[0]){
-                            unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
-                            return;
-                        }else if (currentID[0] == parsedLastSeenPost[0]){
-                            if(isNaN(parsedLastSeenPost[1]) && !(isNaN(currentID[1]))){
-                                return;
-                            }else if (isNaN(currentID[1]) || currentID[1] <= parsedLastSeenPost[1]){
-                                unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
-                                return;
-                            }
+                        predictedLSP0offset = document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetTop + document.getElementById(unseenPosts[predictedLastSeenPostIndex]).offsetHeight;                    
+                        if (unseenPosts[predictedLastSeenPostIndex + 1] !== undefined){
+                            predictedLSP1offset = document.getElementById(unseenPosts[predictedLastSeenPostIndex + 1]).offsetTop + document.getElementById(unseenPosts[predictedLastSeenPostIndex + 1]).offsetHeight;
                         }
-                    });                    
-                    //$('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
-                    //$('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
+                    }
                 }
             }
+            for (var i = predictedLastSeenPostIndex + 1, len = unseenPosts.length; i < len; i++){
+                if (yourPostsLookup[board][unseenPosts[i]]){
+                    predictedLastSeenPostIndex = i; // Consider any posts following the last seen post that are yours as seen
+                }else{
+                    break;
+                }
+            }
+            if (predictedLastSeenPostIndex >= 0){
+                lastSeenPost = unseenPosts[predictedLastSeenPostIndex]; // Update last seen post
+                unseenPosts = unseenPosts.slice(predictedLastSeenPostIndex + 1); // Only keep posts after the lastSeenPost
+
+                var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
+                $.each(unseenReplies, function(i, unseenID){
+                    var currentID = [parseInt(unseenID.split('_')[0]),parseInt(unseenID.split('_')[1])];                        
+                    if (currentID[0] < parsedLastSeenPost[0]){
+                        unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
+                        return;
+                    }else if (currentID[0] == parsedLastSeenPost[0]){
+                        if(isNaN(parsedLastSeenPost[1]) && !(isNaN(currentID[1]))){
+                            return;
+                        }else if (isNaN(currentID[1]) || currentID[1] <= parsedLastSeenPost[1]){
+                            unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
+                            return;
+                        }
+                    }
+                });
+            }
+            //$('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
+            //$('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
+            //console.timeEnd('lastpost');
         }
         newPostCount = unseenPosts.length;
         if (unseenReplies.length){
@@ -1125,31 +1164,26 @@ function newPosts(){
         if (windowFocus === true){newPostCount = 0;}
     }
     document.title = "(" + newPostCount + ") " + DocumentTitle;
-};
+}
 
 var postCounter = function() {$(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/400 <br> Images: " + $(".thread_image_box").length + "/250</h6>" + rulesBox);};
 
 var pokemon = ["bulbasaur","ivysaur","venusaur","charmander","charmeleon","charizard","squirtle","wartortle","blastoise","caterpie","metapod","butterfree","weedle","kakuna","beedrill","pidgey","pidgeotto","pidgeot","rattata","raticate","spearow","fearow","ekans","arbok","pikachu","raichu","sandshrew","sandslash","nidoran♀","nidorina","nidoqueen","nidoran♂","nidorino","nidoking","clefairy","clefable","vulpix","ninetales","jigglypuff","wigglytuff","zubat","golbat","oddish","gloom","vileplume","paras","parasect","venonat","venomoth","diglett","dugtrio","meowth","persian","psyduck","golduck","mankey","primeape","growlithe","arcanine","poliwag","poliwhirl","poliwrath","abra","kadabra","alakazam","machop","machoke","machamp","bellsprout","weepinbell","victreebel","tentacool","tentacruel","geodude","graveler","golem","ponyta","rapidash","slowpoke","slowbro","magnemite","magneton","farfetch'd","doduo","dodrio","seel","dewgong","grimer","muk","shellder","cloyster","gastly","haunter","gengar","onix","drowzee","hypno","krabby","kingler","voltorb","electrode","exeggcute","exeggutor","cubone","marowak","hitmonlee","hitmonchan","lickitung","koffing","weezing","rhyhorn","rhydon","chansey","tangela","kangaskhan","horsea","seadra","goldeen","seaking","staryu","starmie","mr. mime","scyther","jynx","electabuzz","magmar","pinsir","tauros","magikarp","gyarados","lapras","ditto","eevee","vaporeon","jolteon","flareon","porygon","omanyte","omastar","kabuto","kabutops","aerodactyl","snorlax","articuno","zapdos","moltres","dratini","dragonair","dragonite","mewtwo","mew","chikorita","bayleef","meganium","cyndaquil","quilava","typhlosion","totodile","croconaw","feraligatr","sentret","furret","hoothoot","noctowl","ledyba","ledian","spinarak","ariados","crobat","chinchou","lanturn","pichu","cleffa","igglybuff","togepi","togetic","natu","xatu","mareep","flaaffy","ampharos","bellossom","marill","azumarill","sudowoodo","politoed","hoppip","skiploom","jumpluff","aipom","sunkern","sunflora","yanma","wooper","quagsire","espeon","umbreon","murkrow","slowking","misdreavus","unown","wobbuffet","girafarig","pineco","forretress","dunsparce","gligar","steelix","snubbull","granbull","qwilfish","scizor","shuckle","heracross","sneasel","teddiursa","ursaring","slugma","magcargo","swinub","piloswine","corsola","remoraid","octillery","delibird","mantine","skarmory","houndour","houndoom","kingdra","phanpy","donphan","porygon2","stantler","smeargle","tyrogue","hitmontop","smoochum","elekid","magby","miltank","blissey","raikou","entei","suicune","larvitar","pupitar","tyranitar","lugia","ho-oh","celebi","treecko","grovyle","sceptile","torchic","combusken","blaziken","mudkip","marshtomp","swampert","poochyena","mightyena","zigzagoon","linoone","wurmple","silcoon","beautifly","cascoon","dustox","lotad","lombre","ludicolo","seedot","nuzleaf","shiftry","taillow","swellow","wingull","pelipper","ralts","kirlia","gardevoir","surskit","masquerain","shroomish","breloom","slakoth","vigoroth","slaking","nincada","ninjask","shedinja","whismur","loudred","exploud","makuhita","hariyama","azurill","nosepass","skitty","delcatty","sableye","mawile","aron","lairon","aggron","meditite","medicham","electrike","manectric","plusle","minun","volbeat","illumise","roselia","gulpin","swalot","carvanha","sharpedo","wailmer","wailord","numel","camerupt","torkoal","spoink","grumpig","spinda","trapinch","vibrava","flygon","cacnea","cacturne","swablu","altaria","zangoose","seviper","lunatone","solrock","barboach","whiscash","corphish","crawdaunt","baltoy","claydol","lileep","cradily","anorith","armaldo","feebas","milotic","castform","kecleon","shuppet","banette","duskull","dusclops","tropius","chimecho","absol","wynaut","snorunt","glalie","spheal","sealeo","walrein","clamperl","huntail","gorebyss","relicanth","luvdisc","bagon","shelgon","salamence","beldum","metang","metagross","regirock","regice","registeel","latias","latios","kyogre","groudon","rayquaza","jirachi","deoxys","turtwig","grotle","torterra","chimchar","monferno","infernape","piplup","prinplup","empoleon","starly","staravia","staraptor","bidoof","bibarel","kricketot","kricketune","shinx","luxio","luxray","budew","roserade","cranidos","rampardos","shieldon","bastiodon","burmy","wormadam","mothim","combee","vespiquen","pachirisu","buizel","floatzel","cherubi","cherrim","shellos","gastrodon","ambipom","drifloon","drifblim","buneary","lopunny","mismagius","honchkrow","glameow","purugly","chingling","stunky","skuntank","bronzor","bronzong","bonsly","mime jr.","happiny","chatot","spiritomb","gible","gabite","garchomp","munchlax","riolu","lucario","hippopotas","hippowdon","skorupi","drapion","croagunk","toxicroak","carnivine","finneon","lumineon","mantyke","snover","abomasnow","weavile","magnezone","lickilicky","rhyperior","tangrowth","electivire","magmortar","togekiss","yanmega","leafeon","glaceon","gliscor","mamoswine","porygon-z","gallade","probopass","dusknoir","froslass","rotom","uxie","mesprit","azelf","dialga","palkia","heatran","regigigas","giratina","cresselia","phione","manaphy","darkrai","shaymin","arceus","victini","snivy","servine","serperior","tepig","pignite","emboar","oshawott","dewott","samurott","patrat","watchog","lillipup","herdier","stoutland","purrloin","liepard","pansage","simisage","pansear","simisear","panpour","simipour","munna","musharna","pidove","tranquill","unfezant","blitzle","zebstrika","roggenrola","boldore","gigalith","woobat","swoobat","drilbur","excadrill","audino","timburr","gurdurr","conkeldurr","tympole","palpitoad","seismitoad","throh","sawk","sewaddle","swadloon","leavanny","venipede","whirlipede","scolipede","cottonee","whimsicott","petilil","lilligant","basculin","sandile","krokorok","krookodile","darumaka","darmanitan","maractus","dwebble","crustle","scraggy","scrafty","sigilyph","yamask","cofagrigus","tirtouga","carracosta","archen","archeops","trubbish","garbodor","zorua","zoroark","minccino","cinccino","gothita","gothorita","gothitelle","solosis","duosion","reuniclus","ducklett","swanna","vanillite","vanillish","vanilluxe","deerling","sawsbuck","emolga","karrablast","escavalier","foongus","amoonguss","frillish","jellicent","alomomola","joltik","galvantula","ferroseed","ferrothorn","klink","klang","klinklang","tynamo","eelektrik","eelektross","elgyem","beheeyem","litwick","lampent","chandelure","axew","fraxure","haxorus","cubchoo","beartic","cryogonal","shelmet","accelgor","stunfisk","mienfoo","mienshao","druddigon","golett","golurk","pawniard","bisharp","bouffalant","rufflet","braviary","vullaby","mandibuzz","heatmor","durant","deino","zweilous","hydreigon","larvesta","volcarona","cobalion","terrakion","virizion","tornadus","thundurus","reshiram","zekrom","landorus","kyurem","keldeo","meloetta","genesect","chespin","quilladin","chesnaught","fennekin","braixen","delphox","froakie","frogadier","greninja","bunnelby","diggersby","fletchling","fletchinder","talonflame","scatterbug","spewpa","vivillon","litleo","pyroar","flabébé","floette","florges","skiddo","gogoat","pancham","pangoro","furfrou","espurr","meowstic","honedge","doublade","aegislash","spritzee","aromatisse","swirlix","slurpuff","inkay","malamar","binacle","barbaracle","skrelp","dragalge","clauncher","clawitzer","helioptile","heliolisk","tyrunt","tyrantrum","amaura","aurorus","sylveon","hawlucha","dedenne","carbink","goomy","sliggoo","goodra","klefki","phantump","trevenant","pumpkaboo","gourgeist","bergmite","avalugg","noibat","noivern","xerneas","yveltal","zygarde","diancie","hoopa","volcanion"];
-function notifyMe(title, image, body){
+function notifyMe(title,icon,body,timeFade){
     if (!Notification){
         alert('Please us a modern version of Chrome, Firefox, Opera or Firefox.');
         return;
     }
-
     if (Notification.permission !== "granted"){Notification.requestPermission();}
-    var icon = image;
-    var timeFade = true;
     if(!Math.floor(Math.random()*8192)){
-        var ND = Math.floor(Math.random()*720);
+        var ND = Math.floor(Math.random()*pokemon.length);
         icon = "http://img.pokemondb.net/sprites/black-white/shiny/"+pokemon[ND]+".png";
         timeFade = false;
     }
-
     var notification = new Notification(title, {
         icon: icon,
         body: body
     });
-
     if (timeFade){
         notification.onshow = function (){
             setTimeout(notification.close.bind(notification), 5000);
@@ -1179,15 +1213,18 @@ if (settings.UserSettings.favicon.value){
     }
     lastSeenPost = lastSeenPosts[threadID];
 }
+function saveYourPosts(){
+    if (yourPosts[board][threadID].length){ // If you posted during the thread. Prevents saving of empty arrays
+        if (localStorage.yourPosts === undefined){
+            localStorage.yourPosts = JSON.stringify(yourPosts);
+        }else{
+            localStorage.yourPosts = JSON.stringify($.extend(true, yourPosts, JSON.parse(localStorage.yourPosts)));
+        }
+    }
+}
 window.addEventListener("beforeunload", function (e){ // After user leaves the page
     if (settings.UserSettings.labelYourPosts.value){ // Save the your posts object
-        if (yourPosts[board][threadID].length){ // If you posted during the thread. Prevents saving of empty arrays
-            if (localStorage.yourPosts === undefined){
-                localStorage.yourPosts = JSON.stringify(yourPosts);
-            }else{
-                localStorage.yourPosts = JSON.stringify($.extend(true, yourPosts, JSON.parse(localStorage.yourPosts)));
-            }
-        }
+        saveYourPosts();
     }
     if (settings.UserSettings.favicon.value){ // Save the last read posts object
         lastSeenPosts[board][threadID] = lastSeenPost;
@@ -1215,21 +1252,38 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
 
 function labelNewPosts(response){
     var newPosts = Object.keys(response[threadID].posts);
+    var crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+    localStorage.crosslinkTracker = "{}";
+    yourPosts = JSON.parse(localStorage.yourPosts);
+
+    for (var boardVal in yourPosts){
+        if (crosslinkTracker[boardVal]){
+            if (yourPostsLookup[boardVal] === undefined){
+                yourPostsLookup[boardVal] = {};
+            }
+            for (var thread in yourPosts[boardVal]){
+                for (var i=0, threadLength = yourPosts[boardVal][thread].length; i < threadLength; i++){
+                    yourPostsLookup[boardVal][yourPosts[boardVal][thread][i]] = true;
+                }
+            }
+        }
+    }
     $.each(newPosts, function(i,postID){ // For each post returned by update
         var notificationTriggered = false;
-        $('#'+postID+' .greentext > a').each(function(i, link){ // For each post content backlink
-            var linkID = $(link).attr('data-post');
-            if ($.inArray(linkID, yourPosts[board][threadID])+1){ // If the link points to your post
+        $('#'+postID+' .backlink').each(function(i, link){ // For each post content backlink
+            var linkID = $(link).attr('data-post').replace(',','_');
+            var linkBoard = $(link).attr('data-board');
+            if (yourPostsLookup[linkBoard][linkID]){ // If the link points to your post
                 if (!notificationTriggered){
-                    notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",$('#'+postID+' .text').text().trim());
+                    notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",$('#'+postID+' .text').text().trim(),true);
                     unseenReplies.push(postID); // add postID to list of unseen replies
                     notificationTriggered = true;
                 }
                 link.textContent += ' (You)'; // Designate the link as such
             }
-            if ($.inArray(postID, yourPosts[board][threadID])+1){ // If the post is your own
+            if (yourPostsLookup[linkBoard][postID]){ // If the post is your own
                 var backlink = $('#'+linkID+' .post_backlink [data-post='+postID+']');
-                if (!backlink.data('linkedYou')){
+                if (backlink.length && !backlink.data('linkedYou')){
                     backlink[0].textContent += ' (You)'; // Find your post's new reply backlink and designate it too
                     backlink.data('linkedYou',true);
                 }
@@ -1241,19 +1295,17 @@ function labelNewPosts(response){
 
 var lastSubmittedContent;
 function postSubmitEvent(){
-    if ($('#reply [type=submit]').length){
-        window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
-        var target =  $('#reply [type=submit]')[0],
-            observer = new MutationObserver(function(mutation) {
-                //console.log("Post Submit Event Triggered");
-                lastSubmittedContent = $('#reply_chennodiscursus')[0].value;
-                //console.log("Latest LSC:"+lastSubmittedContent);
-            }),
-            config = {
-                attributes: true
-            };
-        observer.observe(target, config);
-    }
+    window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+    var target =  $('#reply [type=submit]')[0],
+        observer = new MutationObserver(function(mutation) {
+            //console.log("Post Submit Event Triggered");
+            lastSubmittedContent = $('#reply_chennodiscursus')[0].value;
+            //console.log("Latest LSC:"+lastSubmittedContent);
+        }),
+        config = {
+            attributes: true
+        };
+    observer.observe(target, config);
 }
 
 function linkHoverEvent(){ // Hook into the native internal link hover
@@ -1261,7 +1313,9 @@ function linkHoverEvent(){ // Hook into the native internal link hover
     var target =  $('#backlink')[0],
         observer = new MutationObserver(function(mutation) {
             //console.log("Link Hover Event Triggered");
+            $('#backlink > article').removeClass('shitpost');
             relativeTimestamps($('#backlink > article'));
+            embedImages($('#backlink > article'));
         }),
         config = {
             childList: true
@@ -1306,10 +1360,16 @@ function mascot(mascotImageLink){
             }
         }
         cornerCSS["z-index"] = settings.UserSettings.mascot.suboptions.zindex.value;
-        if (settings.UserSettings.mascot.suboptions.width.value < 0){
-            cornerCSS["width"] = "";
+        cornerCSS.opacity = settings.UserSettings.mascot.suboptions.opacity.value;
+        if (settings.UserSettings.mascot.suboptions.clickthrough.value){
+            cornerCSS["pointer-events"] = "none";
         }else{
-            cornerCSS["width"] = settings.UserSettings.mascot.suboptions.width.value;
+            cornerCSS["pointer-events"] = "";
+        }
+        if (settings.UserSettings.mascot.suboptions.width.value < 0){
+            cornerCSS.width = "";
+        }else{
+            cornerCSS.width = settings.UserSettings.mascot.suboptions.width.value;
         }
         $('#mascot').css(cornerCSS);
         if ($('#mascotContainer > video').length){
@@ -1322,6 +1382,7 @@ function mascot(mascotImageLink){
     }else{
         $('#mascot').remove();
     }
+    postFlow(); // Restructure the postFlow
 }
 
 function parseMascotImageValue(){
@@ -1338,6 +1399,66 @@ function parseMascotImageValue(){
     return mascotImageLink;
 }
 
+function postFlow(){
+    if (settings.UserSettings.postFlow.value){
+        var align = settings.UserSettings.postFlow.suboptions.align.value.value;
+        var leftMargin = settings.UserSettings.postFlow.suboptions.leftMargin.value;
+        var rightMargin = settings.UserSettings.postFlow.suboptions.rightMargin.value;
+        if (settings.UserSettings.mascot.value){
+            if (settings.UserSettings.postFlow.suboptions.leftMargin.value < 0){
+                leftMargin = document.getElementById('mascot').offsetWidth; // Make it fit around the mascot if negative value
+            }
+            if (settings.UserSettings.postFlow.suboptions.rightMargin.value < 0){
+                rightMargin = document.getElementById('mascot').offsetWidth; // Make it fit around the mascot if negative value
+            }
+        }
+        var width = $('body').innerWidth() - leftMargin - rightMargin;
+        if (align === "Left"){
+            $('.posts').css({"display":"block"});
+            $('#main').css({
+                "width":width,
+                "margin-left":leftMargin+"px"
+            });
+            $('.pull-left').css({
+                "float":"left"
+            });
+        }else if (align === "Center"){
+            $('.posts').css({
+                "display":"flex",
+                "flex-direction":"column",
+                "align-items":"center"
+            });
+            $('#main').css({
+                "width":width,
+                "margin-left":leftMargin+"px"
+            });
+            $('.pull-left').css({
+                "float":"left"
+            });
+        }else{ // align == "Right"
+            $('.posts').css({
+                "display":"flex",
+                "flex-direction":"column",
+                "align-items":"flex-end"
+            });
+            $('#main').css({
+                "width":width,
+                "margin-left":"auto",
+                "margin-right":rightMargin+"px"
+            });
+            $('.pull-left').css({
+                "float":"right"
+            });
+        }
+    }else{
+        $('#main').css({
+            "width":"",
+            "margin":"0"
+        });
+        $('.posts').css({"display":"block"});        
+    }
+}
+
 $(document).ready(function(){
     $('head').after('<style type="text/css" id="FoolX-css">.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
     if (settings.UserSettings.favicon.value){
@@ -1347,8 +1468,9 @@ $(document).ready(function(){
     $('body').append('<div id="hoverUI"></div>');
     $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('#FoolX-css').append('#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
-    $('body').append('<div id="headerBar"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
+    $('body').append('<div id="headerBar" style="z-index:10;"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
     $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
+    if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
     $('#headerBar > a, a[title=Close]').on('click', function(){
         populateSettingsMenu();
     });
@@ -1419,6 +1541,8 @@ $(document).ready(function(){
                 }else{
                     mascot('');
                 }
+            }else if ($(e.target).attr('path').substr(0,8) == "postFlow"){
+                postFlow();
             }
         }
         settingsStore = {};
@@ -1456,48 +1580,60 @@ $(document).ready(function(){
         if (yourPosts[board][threadID] === undefined){
             yourPosts[board][threadID] = [];
         }
-        postSubmitEvent();
-
-        $(document).ajaxComplete(function(event, request, ajaxSettings) {
-            //console.log(event);
-            //console.log(request);
-            //console.log(ajaxSettings);
-            if (request.responseText !== ""){
-                response = JSON.parse(request.responseText);
-            }else{
-                response = {"error":"No responseText"};
+        if (!(/(search|board|other)/).test(threadID)){postSubmitEvent();}
+        for (var boardVal in yourPosts){
+            yourPostsLookup[boardVal] = {};
+            for (var thread in yourPosts[boardVal]){
+                var threadLength = yourPosts[boardVal][thread].length;
+                for (var i=0; i < threadLength; i++){
+                    yourPostsLookup[boardVal][yourPosts[boardVal][thread][i]] = true;
+                }
             }
-            if (response.error !== undefined){
-                //console.log(response.error);
-            }else{
+        }
+        if (!(/(search|board|other)/).test(threadID)){
+            $(document).ajaxComplete(function(event, request, ajaxSettings){
+                //console.log(event);
+                //console.log(request);
+                //console.log(ajaxSettings);
+                if (request.responseText !== ""){
+                    response = JSON.parse(request.responseText);
+                }else{
+                    response = {"error":"No responseText"};
+                }
                 if (ajaxSettings.type == "POST"){
-                    if (response.error === undefined ){
+                    if (response.error === undefined){
                         if (response.captcha){ // If you are required to fill a captcha before posting
                             //console.log(response);
                         }else{
                             for (var postID in response[threadID].posts){
-                                //console.log(response[threadID].posts[postID].comment.replace(/[\r\n]/g,''));
-                                //console.log(lastSubmittedContent.replace(/[\r\n]/g,''));
                                 if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
                                     yourPosts[board][threadID].push(postID);
                                     $('#'+postID+' .post_author').after('<span> (You)</span>');
                                     break;
                                 }
                             }
+                            crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+                            crosslinkTracker[board] = true;
+                            localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
+                            saveYourPosts();
                             labelNewPosts(response);
                         }
                     }else{
-                        //console.log(response.error);
+                        notifyMe("An error occurred whilst posting", "http://i.imgur.com/HTcKk4Y.png", response.error, false);
                     }
                 }else{
-                    if (response[threadID] !== undefined){
-                        labelNewPosts(response);
+                    if (response.error !== undefined){
+                        //console.log(response.error);
                     }else{
-                        //console.log("Not in a thread");
+                        if (response[threadID] !== undefined){
+                            labelNewPosts(response);
+                        }else{
+                            //console.log("Not in a thread");
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
     var staticPosts = $('article.post');
     var staticPostsAndOP = $('article.post, article.thread:not(.backlink_container)');
@@ -1509,19 +1645,35 @@ $(document).ready(function(){
         });
     }
     if (settings.UserSettings.labelYourPosts.value){ // Label your posts
-        $.each(yourPosts[board][threadID], function(i,v){ // Parse all backlinks present on pageload
-            $('#'+v+' .post_author').after('<span> (You)</span>');
-            $('.backlink[data-post='+v+']').each(function(){
-                if (!$(this).data('linkedYou')){
-                    $(this).data('linkedYou',true);
-                    this.textContent += ' (You)';
-                }
+        if ((/(search|board)/).test(threadID)){
+            if (board === "_"){ // Handle finding the board per post for all-board searches
+                $('article.post').each(function(i,post){
+                    var postBoard = $(post).find('.post_show_board').html().replace(/\//g,'');
+                    if (yourPostsLookup[postBoard][post.id]){
+                        $(post).find('.post_author').after('<span> (You)</span>');
+                    }
+                });
+            }else{ // Handle the lack of threadID for board indexes and single-board searches
+                $('article.post, article.thread').each(function(i,post){
+                    if (yourPostsLookup[board][post.id]){
+                        $(post).find('.post_author').after('<span> (You)</span>');
+                    }
+                });
+            }
+        }else{ // Handle regular threads by iterating over the yourPosts values for that specific thread (better performance than per each post parsing)
+            $.each(yourPosts[board][threadID], function(i,v){ // Parse all backlinks present on pageload
+                $('#'+v+' .post_author').after('<span> (You)</span>');
             });
+        }
+        $('.backlink').each(function(i,backlink){
+            if (yourPostsLookup[$(backlink).attr('data-board')] !== undefined && yourPostsLookup[$(backlink).attr('data-board')][$(backlink).attr('data-post').replace(',','_')]){
+                backlink.textContent += ' (You)';
+            }
         });
     }
     if (settings.UserSettings.embedImages.value){embedImages(staticPosts);} // Embed images
-    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(staticPostsAndOP);linkHoverEvent();} // Initiate relative timestamps
-    if (settings.UserSettings.postQuote.value){
+    if (!(/(other)/).test(threadID) && settings.UserSettings.relativeTimestamps.value){relativeTimestamps(staticPostsAndOP);linkHoverEvent();} // Initiate relative timestamps
+    if (!(/(search|board|other)/).test(threadID) && settings.UserSettings.postQuote.value){
         $('.post_data > [data-function=quote]').each(function(){
             $(this).removeAttr('data-function'); // Disable native quote function
             $(this).addClass('postQuote'); // Make it findable so that inline posts will be handled
@@ -1542,45 +1694,47 @@ $(document).ready(function(){
     if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
     if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
 
-    $(document).ajaxComplete(function(event, request, ajaxSettings){
-        if (request.responseText !== ""){
-            response = JSON.parse(request.responseText);
-        }else{
-            response = {"error":"No responseText"};
-        }
-        if (response.error !== undefined){
-            //console.log(response.error);
-        }else{
-            if (response[threadID] !== undefined){
-                for (var post in response[threadID].posts){
-                    var newPost = $('#'+post);
-                    if (settings.UserSettings.inlineReplies.value){
-                        newPost.addClass("base");
-                    }
-                    if (settings.UserSettings.embedImages.value){embedImages(newPost);}
-                    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
-                    if (settings.UserSettings.filter.value){filter(newPost);}
-                    if (settings.UserSettings.postQuote.value){
-                        newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
-                    }
-                    if (settings.UserSettings.hidePosts.value){
-                        $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
-                        if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
-                            newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
-                        }
-                    }
-                }                
+    if (!(/(search|board|other)/).test(threadID)){
+        $(document).ajaxComplete(function(event, request, ajaxSettings){
+            if (request.responseText !== ""){
+                response = JSON.parse(request.responseText);
             }else{
-                //console.log("Didn't return new posts object");
+                response = {"error":"No responseText"};
             }
-        }
-    });
+            if (response.error !== undefined){
+                //console.log(response.error);
+            }else{
+                if (response[threadID] !== undefined){
+                    for (var post in response[threadID].posts){
+                        var newPost = $('#'+post);
+                        if (settings.UserSettings.inlineReplies.value){
+                            newPost.addClass("base");
+                        }
+                        if (settings.UserSettings.embedImages.value){embedImages(newPost);}
+                        if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
+                        if (settings.UserSettings.filter.value){filter(newPost);}
+                        if (settings.UserSettings.postQuote.value){
+                            newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
+                        }
+                        if (settings.UserSettings.hidePosts.value){
+                            $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
+                            if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+                                newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                            }
+                        }
+                    }                
+                }else{
+                    //console.log("Didn't return new posts object");
+                }
+            }
+        });
+    }
 
     $('#main').on('click', function(e){ // Detect clicks on page content
         if (settings.UserSettings.inlineReplies.value && $(e.target).hasClass("backlink")){ // Inline replies
             if (!e.originalEvent.ctrlKey && e.which == 1){
                 e.preventDefault();
-                var postID = $(e.target).attr('data-post');
+                var postID = $(e.target).attr('data-post').replace(',','_'); // Replace to deal with crossboard links
                 var rootPostID = e.target.closest('article.base').id;
                 if (e.target.parentNode.className == "post_backlink"){
                     if ($(e.target).hasClass("inlined")){
@@ -1741,63 +1895,64 @@ function canfav(){
 }
 var imgIndex;
 function galleryToggle(){
-    if ($('#gallery').length){
-        $('#gallery').remove();
+    console.time('gal');
+    if ($('#gallery:visible').length){
+        $('#gallery').hide();
     }else{
-        var lowestVisiblePostID;
-        $('article').each(function(i, post){
-            if ($(post).isOnScreen()){
-                lowestVisiblePostID = post.id;
-            }
-        });
-        lowestVisiblePostID = parseInt(lowestVisiblePostID.replace(/_/g, ""));
-        var imgList = $('.thread_image_box');
-        imgIndex = imgList.length -1;
-
-        $.each(imgList, function(i,imageBox){
-            var postID = $(imageBox).parents('article.post').attr("id");
-            if (postID === undefined){
-                postID = $(imageBox).parents('article').attr("id");
-            }
-            if (parseInt(postID.replace(/_/g, "")) > lowestVisiblePostID){
-                imgIndex = i-1;
-                return false;
+        $('#gallery').show();
+        var viewportTop = window.scrollY;
+        var viewportBottom = viewportTop + window.innerHeight;
+        $('.thread_image_box').each(function(i,imageBox){
+            imgIndex = i;
+            if (imageBox.offsetTop + imageBox.offsetHeight > viewportTop){
+                if (imageBox.offsetTop >= viewportBottom){
+                    imgIndex = i - 1;
+                }
+                return false; // break loop
             }
         });
         if (imgIndex == -1){imgIndex = 0;}
-        $('body').append('<div id="gallery"></div>');
+        if (!$('#gallery').length){
+            $('body').append('<div id="gallery"></div>');
+        }
+        galleryUpdate();
+    }
+    console.timeEnd('gal');
+}
+
+function galleryChange(direction){
+    if ($('#gallery:visible').length){
+        if (direction == "left"){
+            if (imgIndex === 0 ){
+                imgIndex = $('.thread_image_box').length -1;
+            }else{
+                imgIndex--;
+            }
+        }else if (direction == "right"){
+            if (imgIndex == $('.thread_image_box').length -1 ){
+                imgIndex = 0;
+            }else{
+                imgIndex++;
+            }
+        }else{
+            console.log("Something went wrong boss.");
+        }
         galleryUpdate();
     }
 }
 
-function galleryChange(direction){
-    if (direction == "left"){
-        if (imgIndex === 0 ){
-            imgIndex = $('.thread_image_box').length -1;
-        }else{
-            imgIndex--;
-        }
-    }else if (direction == "right"){
-        if (imgIndex == $('.thread_image_box').length -1 ){
-            imgIndex = 0;
-        }else{
-            imgIndex++;
-        }
-    }else{
-        console.log("Something went wrong boss.");
-    }
-    galleryUpdate();
-}
-
 function galleryUpdate(){
     if ($('#gallery').length){    
-        var imgList = $('.thread_image_box');
+        var imgList = $('.thread_image_box');        
         if ($(imgList[imgIndex]).find('img').length){
             $('#gallery').html('<img style="max-width:90%; max-height:90%;" src="'+$(imgList[imgIndex]).find('img')[0].src+'">');
-        }else{
+        }else if ($(imgList[imgIndex]).find('video').length){
             $('#gallery').html('<video style="float:left; max-width:90%; max-height:90%;" name="media" loop muted controls '+autoplayVid+'><source src="'+$(imgList[imgIndex]).find('video')[0].currentSrc+'" type="video/webm"></video>');
+        }else{
+            console.log("Oh boy something gone wrong again!");
+            console.log($(imgList[imgIndex]));
         }
-        $(document).scrollTop($(imgList[imgIndex]).find('img, video').offset().top-50);
+        $(document).scrollTop($(imgList[imgIndex]).find('img, video').offset().top-26);
     }
 }
 
@@ -1821,12 +1976,12 @@ function populateSettingsMenu(){
 function generateFilterHTML(){
     var settingsHTML = '';
     settingsHTML += '<div class="filters-list"><a href="javascript:;" class="active" name="guide">Guide</a>';
-    for (type in settings.FilterSettings){
+    for (var type in settings.FilterSettings){
         settingsHTML += ' | <a href="javascript:;" name="'+type+'">'+settings.FilterSettings[type].name+'</a>';
     }
     settingsHTML += '</div>';
     settingsHTML += '<div id="filter_guide" style="padding:4px;"><p>Use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" style="text-decoration: underline;">regular expressions</a>, one per line. <br>Lines starting with a <code>#</code> will be ignored. <br>For example, <code>/weeaboo/i</code> will filter posts containing the string <code>weeaboo</code>, case-insensitive. <br><br>You can use these settings with each regular expression, separate them with semicolons: </p><ul> <li>Per boards, separate them with commas. It is global if not specified. <br>For example: <code>boards:a,tg;</code></li><li> Set the way the filter will handle the post with <code>mode</code><br>For example: <code>mode:hide;</code><br>Valid options are: <ul> <li><code>purge</code>: Remove the post from the page entirely, the site will need to reload the post for hoverlinks and such to work.</li><li><code>remove</code>: Remove the post from view but leave it in the page.</li><li><code>hide</code>: Collapse the post, leave a button to restore it.</li><li><code>fade</code>: Simply halve the opacity of the post. This is the default if the mode isn\'t specified.</li></ul> </li></ul></div>';
-    for (type in settings.FilterSettings){
+    for (var type in settings.FilterSettings){
         settingsHTML += '<div id="filter_'+type+'" style="display: none;"><textarea name="'+type+'" spellcheck="false" class="filterTextarea">';
         $.each(settings.FilterSettings[type].value, function(i,line){
             if (i){
@@ -1835,7 +1990,7 @@ function generateFilterHTML(){
             if(!line.comment){
                 if (line.regex !== undefined && line.regex.pattern !== undefined){
                     settingsHTML += "/" + line.regex.pattern + "/" + line.regex.flag + ';';
-                    for (prop in line){
+                    for (var prop in line){
                         if (prop !== "comment" && prop !=="regex"){
                             settingsHTML += prop + ':' + line[prop] + ';';
                         }
@@ -1895,16 +2050,14 @@ $(function(){
     shortcut.add("ctrl+u", function(){ executeShortcut("u");});
     shortcut.add("q", function(){quickReply();}, {"disable_in_input":true});
     shortcut.add("ctrl+q", function(){quickReplyOptions();}, {"disable_in_input":false});
-    if (settings.UserSettings.favicon.value){shortcut.add("f", function(){canfav();}, {"disable_in_input":true});}
-    if (settings.UserSettings.gallery.value){
-        shortcut.add("g", function(){galleryToggle();}, {"disable_in_input":true});
-        shortcut.add("left", function(){galleryChange("left");}, {"disable_in_input":true});
-        shortcut.add("right", function(){galleryChange("right");}, {"disable_in_input":true});
-    }
+    shortcut.add("f", function(){if (settings.UserSettings.favicon.value){canfav();}}, {"disable_in_input":true});
+    shortcut.add("g", function(){if (settings.UserSettings.gallery.value){galleryToggle();}}, {"disable_in_input":true});
+    shortcut.add("left", function(){if (settings.UserSettings.gallery.value){galleryChange("left");}}, {"disable_in_input":true});
+    shortcut.add("right", function(){if (settings.UserSettings.gallery.value){galleryChange("right");}}, {"disable_in_input":true});
     shortcut.add("o", function(){populateSettingsMenu();}, {"disable_in_input":true});
-
-    seenPosts();
-    ThreadUpdate();
-    getBoard();
-    window.setInterval(function(){ThreadUpdate();},500);
+    if (!(/(search|board|other)/).test(threadID)){
+        seenPosts();
+        ThreadUpdate();
+        window.setInterval(function(){ThreadUpdate();},500);
+    }
 });
