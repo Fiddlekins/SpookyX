@@ -2,6 +2,21 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v28.2:** *(2015-06-09)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.3/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.3/README.md)
+- New Feature: postFlow. This allows you to change the width, placement and alignment of the posts
+- Submitting a post and changing the tab before it goes through will now no longer make the tab title indicate you have an unseen post in that thread (more precisely your posts are no longer added to the list of unseen posts)
+- Posting failure now creates a notification to alert you
+- Added customisable opacity of the mascot
+- Added an option to allow mascots to be click-through (it can overlay a button or link but won't stop you clicking it)
+- Crossthread and crossboard links now recognise the destination posts as being yours (if you made them)
+- Moved the 'button' that opens the settings menu to a higher z-index level (10 now) so that the mascot won't overlay it (unless it's above 10 itself)
+- The gallery feature is now fixed (I completely killed it with one of the updates) and has had both performance and image finding accuracy improved
+- fixed bug where trying to expand crossboard posts inline failed
+- fixed bug where nothing worked on the last 50 replies thread view
+- fixed bug where mousing over the mascot triggered the image hover feature when in higher z-index levels
+- fixed bug where some media links were not being embedded correctly
+- fixed bugs that arose when the script was running on pages that weren't threads (searches, board index, etc)
+
 **v28.2:** *(2015-06-05)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.2/README.md)
 - The mascot feature now supports videos
 - You can now specify the width of the mascot
