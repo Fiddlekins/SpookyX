@@ -2,6 +2,11 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v28.5:** *(2015-06-10)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.5/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.5/README.md)
+- Stopped post counter showing on inappropriate moe pages
+- fixed bug when looking at the main page
+- fixed bug where an error acessing a setting variable that I moved caused Firefox to get hung up about some other bits
+
 **v28.4:** *(2015-06-10)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.4/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.4/README.md)
 - Made a header bar with the board list, settings menu and the post counter
 - Revamped the post counter options, you can change its placement and whether it displays arbitrary denominators
