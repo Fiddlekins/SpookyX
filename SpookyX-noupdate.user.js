@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       28.4
+// @version       28.5
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -436,10 +436,10 @@ if ((/\/search\//).test(document.URL)){
         }
     }
 }
-
+/*
 console.log(splitURL);
 console.log(threadID);
-console.log(board);
+console.log(board);*/
 
 var yourPostsLookup = {};
 var crosslinkTracker = {};
@@ -1209,19 +1209,21 @@ function newPosts(){
 }
 
 function postCounter(){
-    if (settings.UserSettings.postCounter.suboptions.location.value.value === "Header bar"){
-        $(".rules_box").html(rulesBox);
-        if (settings.UserSettings.postCounter.suboptions.limits.value){
-            $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
+    if (!(/other/).test(threadID)){
+        if (settings.UserSettings.postCounter.suboptions.location.value.value === "Header bar"){
+            $(".rules_box").html(rulesBox);
+            if (settings.UserSettings.postCounter.suboptions.limits.value){
+                $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
+            }else{
+                $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + " Images: " + $(".thread_image_box").length + "</span>");
+            }
         }else{
-            $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + " Images: " + $(".thread_image_box").length + "</span>");
-        }
-    }else{
-        $(".threadStats").html('');
-        if (settings.UserSettings.postCounter.suboptions.limits.value){
-            $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
-        }else{
-            $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "<br> Images: " + $(".thread_image_box").length + "</h6>" + rulesBox);
+            $(".threadStats").html('');
+            if (settings.UserSettings.postCounter.suboptions.limits.value){
+                $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
+            }else{
+                $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "<br> Images: " + $(".thread_image_box").length + "</h6>" + rulesBox);
+            }
         }
     }
 }
@@ -1475,7 +1477,6 @@ function postFlow(){
             if (!leftMargin || !rightMargin){
             }
         }
-        console.log(rightMargin);
         var width = $('body').innerWidth() - leftMargin - rightMargin;
         if (align === "Left"){
             $('.posts').css({"display":"block"});
@@ -1545,10 +1546,14 @@ $(document).ready(function(){
     $('#FoolX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('#FoolX-css').append('#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
     $('#FoolX-css').append('#headerFixed{position:fixed; left:0; right:0; top:0; padding:0 10px 0 30px!important; border-bottom:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px!important;}#headerStatic > .headerBar{position:absolute; right:10px;}.threadStats{margin-right:20px;}');
-    $('.letters').append('<div class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
-    $('.letters').clone().hide().insertAfter('.letters');
-    $('.letters')[0].id="headerStatic";
-    $('.letters')[1].id="headerFixed";
+    if ($('.letters').length){
+        $('.letters').append('<div class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
+        $('.letters').clone().hide().insertAfter('.letters');
+        $('.letters')[0].id="headerStatic";
+        $('.letters')[1].id="headerFixed";
+    }else{ // Insert settings link when on board index
+        $('.container-fluid').append('<div class="headerBar" style="position: fixed; right: 0; top: 0;"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
+    }
     $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
     $('.headerBar > a, a[title=Close]').on('click', function(){
@@ -1784,7 +1789,7 @@ $(document).ready(function(){
             });
         }
     }
-    if (settings.UserSettings.hideQROptions.value){
+    if (settings.UserSettings.adjustReplybox.suboptions.hideQROptions.value){
         $('#reply').toggleClass("showQROptions"); // Make options hidden in QR by default
     }
     if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
