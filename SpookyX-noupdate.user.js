@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       28.3
+// @version       28.4
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -167,17 +167,59 @@ var settings = {
             "type": "checkbox",
             "value": false
         },
-        "hideQROptions": {
-            "name": "Hide QR Options",
-            "description": "Make the reply options hidden by default in the quick reply",
+        "adjustReplybox": {
+            "name": "Adjust Replybox",
+            "description": "Change the layout of the reply box",
             "type": "checkbox",
-            "value": true
+            "value": true,
+            "suboptions": {
+                "width":{
+                    "name": "Width",
+                    "description": "Specify the default width of the reply field in pixels",
+                    "type": "number",
+                    "value": 600
+                },
+                "hideQROptions": {
+                    "name": "Hide QR Options",
+                    "description": "Make the reply options hidden by default in the quick reply",
+                    "type": "checkbox",
+                    "value": true
+                }
+            }
         },
         "postCounter": {
             "name": "Post Counter",
             "description": "Add a post counter to the reply box",
             "type": "checkbox",
-            "value": false
+            "value": true,
+            "suboptions": {
+                "location": {
+                    "name": "Location",
+                    "description": "Specify where the post counter is placed",
+                    "type": "select",
+                    "value": {"value":"Header bar","options":["Header bar","Reply box"]}
+                },
+                "limits": {
+                    "name": "Show count limits",
+                    "description": "Adds count denominators, purely aesthetic",
+                    "type": "checkbox",
+                    "value": false,
+                    "suboptions": {
+                        "posts":{
+                            "name": "Posts",
+                            "description": "Specify the posts counter denominator",
+                            "type": "number",
+                            "value": 400
+                        },
+                        "images":{
+                            "name": "Images",
+                            "description": "Specify the images counter denominator",
+                            "type": "number",
+                            "value": 250
+                        }
+                    }                    
+                }
+            }
         },
         "mascot": {
             "name": "Mascot",
@@ -394,10 +436,10 @@ if ((/\/search\//).test(document.URL)){
         }
     }
 }
-/*
-console.log(URL.split("/"));
+
+console.log(splitURL);
 console.log(threadID);
-console.log(board);*/
+console.log(board);
 
 var yourPostsLookup = {};
 var crosslinkTracker = {};
@@ -417,7 +459,6 @@ function presetFavicons(){
 }
 
 function ThreadUpdate(){
-    if (settings.UserSettings.postCounter.value){postCounter();}
     if (settings.UserSettings.newPosts.value){newPosts();}
 }
 
@@ -439,7 +480,7 @@ function path(obj, path, def){
     if(obj === undefined) return def;
     return obj;
 }
-
+/*
 var escapeRegExp;
 (function () {
     // Referring to the table here:
@@ -483,6 +524,7 @@ var escapeRegExp;
 
     // test escapeRegExp("/path/to/res?search=this.that")
 }());
+*/
 
 shortcut = {
     'all_shortcuts':{},//All the shortcuts are stored in this array
@@ -1166,7 +1208,23 @@ function newPosts(){
     document.title = "(" + newPostCount + ") " + DocumentTitle;
 }
 
-var postCounter = function() {$(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/400 <br> Images: " + $(".thread_image_box").length + "/250</h6>" + rulesBox);};
+function postCounter(){
+    if (settings.UserSettings.postCounter.suboptions.location.value.value === "Header bar"){
+        $(".rules_box").html(rulesBox);
+        if (settings.UserSettings.postCounter.suboptions.limits.value){
+            $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
+        }else{
+            $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + " Images: " + $(".thread_image_box").length + "</span>");
+        }
+    }else{
+        $(".threadStats").html('');
+        if (settings.UserSettings.postCounter.suboptions.limits.value){
+            $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
+        }else{
+            $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "<br> Images: " + $(".thread_image_box").length + "</h6>" + rulesBox);
+        }
+    }
+}
 
 var pokemon = ["bulbasaur","ivysaur","venusaur","charmander","charmeleon","charizard","squirtle","wartortle","blastoise","caterpie","metapod","butterfree","weedle","kakuna","beedrill","pidgey","pidgeotto","pidgeot","rattata","raticate","spearow","fearow","ekans","arbok","pikachu","raichu","sandshrew","sandslash","nidoran♀","nidorina","nidoqueen","nidoran♂","nidorino","nidoking","clefairy","clefable","vulpix","ninetales","jigglypuff","wigglytuff","zubat","golbat","oddish","gloom","vileplume","paras","parasect","venonat","venomoth","diglett","dugtrio","meowth","persian","psyduck","golduck","mankey","primeape","growlithe","arcanine","poliwag","poliwhirl","poliwrath","abra","kadabra","alakazam","machop","machoke","machamp","bellsprout","weepinbell","victreebel","tentacool","tentacruel","geodude","graveler","golem","ponyta","rapidash","slowpoke","slowbro","magnemite","magneton","farfetch'd","doduo","dodrio","seel","dewgong","grimer","muk","shellder","cloyster","gastly","haunter","gengar","onix","drowzee","hypno","krabby","kingler","voltorb","electrode","exeggcute","exeggutor","cubone","marowak","hitmonlee","hitmonchan","lickitung","koffing","weezing","rhyhorn","rhydon","chansey","tangela","kangaskhan","horsea","seadra","goldeen","seaking","staryu","starmie","mr. mime","scyther","jynx","electabuzz","magmar","pinsir","tauros","magikarp","gyarados","lapras","ditto","eevee","vaporeon","jolteon","flareon","porygon","omanyte","omastar","kabuto","kabutops","aerodactyl","snorlax","articuno","zapdos","moltres","dratini","dragonair","dragonite","mewtwo","mew","chikorita","bayleef","meganium","cyndaquil","quilava","typhlosion","totodile","croconaw","feraligatr","sentret","furret","hoothoot","noctowl","ledyba","ledian","spinarak","ariados","crobat","chinchou","lanturn","pichu","cleffa","igglybuff","togepi","togetic","natu","xatu","mareep","flaaffy","ampharos","bellossom","marill","azumarill","sudowoodo","politoed","hoppip","skiploom","jumpluff","aipom","sunkern","sunflora","yanma","wooper","quagsire","espeon","umbreon","murkrow","slowking","misdreavus","unown","wobbuffet","girafarig","pineco","forretress","dunsparce","gligar","steelix","snubbull","granbull","qwilfish","scizor","shuckle","heracross","sneasel","teddiursa","ursaring","slugma","magcargo","swinub","piloswine","corsola","remoraid","octillery","delibird","mantine","skarmory","houndour","houndoom","kingdra","phanpy","donphan","porygon2","stantler","smeargle","tyrogue","hitmontop","smoochum","elekid","magby","miltank","blissey","raikou","entei","suicune","larvitar","pupitar","tyranitar","lugia","ho-oh","celebi","treecko","grovyle","sceptile","torchic","combusken","blaziken","mudkip","marshtomp","swampert","poochyena","mightyena","zigzagoon","linoone","wurmple","silcoon","beautifly","cascoon","dustox","lotad","lombre","ludicolo","seedot","nuzleaf","shiftry","taillow","swellow","wingull","pelipper","ralts","kirlia","gardevoir","surskit","masquerain","shroomish","breloom","slakoth","vigoroth","slaking","nincada","ninjask","shedinja","whismur","loudred","exploud","makuhita","hariyama","azurill","nosepass","skitty","delcatty","sableye","mawile","aron","lairon","aggron","meditite","medicham","electrike","manectric","plusle","minun","volbeat","illumise","roselia","gulpin","swalot","carvanha","sharpedo","wailmer","wailord","numel","camerupt","torkoal","spoink","grumpig","spinda","trapinch","vibrava","flygon","cacnea","cacturne","swablu","altaria","zangoose","seviper","lunatone","solrock","barboach","whiscash","corphish","crawdaunt","baltoy","claydol","lileep","cradily","anorith","armaldo","feebas","milotic","castform","kecleon","shuppet","banette","duskull","dusclops","tropius","chimecho","absol","wynaut","snorunt","glalie","spheal","sealeo","walrein","clamperl","huntail","gorebyss","relicanth","luvdisc","bagon","shelgon","salamence","beldum","metang","metagross","regirock","regice","registeel","latias","latios","kyogre","groudon","rayquaza","jirachi","deoxys","turtwig","grotle","torterra","chimchar","monferno","infernape","piplup","prinplup","empoleon","starly","staravia","staraptor","bidoof","bibarel","kricketot","kricketune","shinx","luxio","luxray","budew","roserade","cranidos","rampardos","shieldon","bastiodon","burmy","wormadam","mothim","combee","vespiquen","pachirisu","buizel","floatzel","cherubi","cherrim","shellos","gastrodon","ambipom","drifloon","drifblim","buneary","lopunny","mismagius","honchkrow","glameow","purugly","chingling","stunky","skuntank","bronzor","bronzong","bonsly","mime jr.","happiny","chatot","spiritomb","gible","gabite","garchomp","munchlax","riolu","lucario","hippopotas","hippowdon","skorupi","drapion","croagunk","toxicroak","carnivine","finneon","lumineon","mantyke","snover","abomasnow","weavile","magnezone","lickilicky","rhyperior","tangrowth","electivire","magmortar","togekiss","yanmega","leafeon","glaceon","gliscor","mamoswine","porygon-z","gallade","probopass","dusknoir","froslass","rotom","uxie","mesprit","azelf","dialga","palkia","heatran","regigigas","giratina","cresselia","phione","manaphy","darkrai","shaymin","arceus","victini","snivy","servine","serperior","tepig","pignite","emboar","oshawott","dewott","samurott","patrat","watchog","lillipup","herdier","stoutland","purrloin","liepard","pansage","simisage","pansear","simisear","panpour","simipour","munna","musharna","pidove","tranquill","unfezant","blitzle","zebstrika","roggenrola","boldore","gigalith","woobat","swoobat","drilbur","excadrill","audino","timburr","gurdurr","conkeldurr","tympole","palpitoad","seismitoad","throh","sawk","sewaddle","swadloon","leavanny","venipede","whirlipede","scolipede","cottonee","whimsicott","petilil","lilligant","basculin","sandile","krokorok","krookodile","darumaka","darmanitan","maractus","dwebble","crustle","scraggy","scrafty","sigilyph","yamask","cofagrigus","tirtouga","carracosta","archen","archeops","trubbish","garbodor","zorua","zoroark","minccino","cinccino","gothita","gothorita","gothitelle","solosis","duosion","reuniclus","ducklett","swanna","vanillite","vanillish","vanilluxe","deerling","sawsbuck","emolga","karrablast","escavalier","foongus","amoonguss","frillish","jellicent","alomomola","joltik","galvantula","ferroseed","ferrothorn","klink","klang","klinklang","tynamo","eelektrik","eelektross","elgyem","beheeyem","litwick","lampent","chandelure","axew","fraxure","haxorus","cubchoo","beartic","cryogonal","shelmet","accelgor","stunfisk","mienfoo","mienshao","druddigon","golett","golurk","pawniard","bisharp","bouffalant","rufflet","braviary","vullaby","mandibuzz","heatmor","durant","deino","zweilous","hydreigon","larvesta","volcarona","cobalion","terrakion","virizion","tornadus","thundurus","reshiram","zekrom","landorus","kyurem","keldeo","meloetta","genesect","chespin","quilladin","chesnaught","fennekin","braixen","delphox","froakie","frogadier","greninja","bunnelby","diggersby","fletchling","fletchinder","talonflame","scatterbug","spewpa","vivillon","litleo","pyroar","flabébé","floette","florges","skiddo","gogoat","pancham","pangoro","furfrou","espurr","meowstic","honedge","doublade","aegislash","spritzee","aromatisse","swirlix","slurpuff","inkay","malamar","binacle","barbaracle","skrelp","dragalge","clauncher","clawitzer","helioptile","heliolisk","tyrunt","tyrantrum","amaura","aurorus","sylveon","hawlucha","dedenne","carbink","goomy","sliggoo","goodra","klefki","phantump","trevenant","pumpkaboo","gourgeist","bergmite","avalugg","noibat","noivern","xerneas","yveltal","zygarde","diancie","hoopa","volcanion"];
 function notifyMe(title,icon,body,timeFade){
@@ -1379,10 +1437,13 @@ function mascot(mascotImageLink){
                 $('#mascot')[0].muted=false;
             }
         }
+        $('#mascot').on('load', function(e){ // Wait for Mascot to load (otherwise margins won't read size properly)
+            postFlow(); // Restructure the postFlow
+        });
     }else{
         $('#mascot').remove();
-    }
-    postFlow(); // Restructure the postFlow
+        postFlow(); // Restructure the postFlow
+    }    
 }
 
 function parseMascotImageValue(){
@@ -1411,7 +1472,10 @@ function postFlow(){
             if (settings.UserSettings.postFlow.suboptions.rightMargin.value < 0){
                 rightMargin = document.getElementById('mascot').offsetWidth; // Make it fit around the mascot if negative value
             }
+            if (!leftMargin || !rightMargin){
+            }
         }
+        console.log(rightMargin);
         var width = $('body').innerWidth() - leftMargin - rightMargin;
         if (align === "Left"){
             $('.posts').css({"display":"block"});
@@ -1459,6 +1523,18 @@ function postFlow(){
     }
 }
 
+function adjustReplybox(){
+    if (settings.UserSettings.adjustReplybox.value){
+        $('#reply_chennodiscursus').css({
+            "width":settings.UserSettings.adjustReplybox.suboptions.width.value
+        });
+    }else{
+        $('#reply_chennodiscursus').css({
+            "width":"320"
+        });
+    }
+}
+
 $(document).ready(function(){
     $('head').after('<style type="text/css" id="FoolX-css">.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
     if (settings.UserSettings.favicon.value){
@@ -1466,14 +1542,28 @@ $(document).ready(function(){
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
     $('body').append('<div id="hoverUI"></div>');
-    $('#FoolX-css').append('#headerBar{position:fixed; top:0; right:0;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
+    $('#FoolX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('#FoolX-css').append('#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
-    $('body').append('<div id="headerBar" style="z-index:10;"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
+    $('#FoolX-css').append('#headerFixed{position:fixed; left:0; right:0; top:0; padding:0 10px 0 30px!important; border-bottom:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px!important;}#headerStatic > .headerBar{position:absolute; right:10px;}.threadStats{margin-right:20px;}');
+    $('.letters').append('<div class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
+    $('.letters').clone().hide().insertAfter('.letters');
+    $('.letters')[0].id="headerStatic";
+    $('.letters')[1].id="headerFixed";
     $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
-    $('#headerBar > a, a[title=Close]').on('click', function(){
+    $('.headerBar > a, a[title=Close]').on('click', function(){
         populateSettingsMenu();
     });
+    $(window).on('scroll', function(){
+        if (window.scrollY > 42){
+            $('#headerFixed').show();            
+        }else{
+            $('#headerFixed').hide();
+        }
+    });
+    if (window.scrollY > 42){ // Show headerbar on pageload if necessary
+        $('#headerFixed').show();            
+    }
     $('.sections-list').on('click', function(e){ // Main settings tabs change on click
         if (e.target.tagName == "A"){
             $('#settingsContent #'+$('.sections-list .active').html()).hide();
@@ -1543,6 +1633,10 @@ $(document).ready(function(){
                 }
             }else if ($(e.target).attr('path').substr(0,8) == "postFlow"){
                 postFlow();
+            }else if ($(e.target).attr('path').substr(0,14) == "adjustReplybox"){
+                adjustReplybox();
+            }else if ($(e.target).attr('path').substr(0,11) == "postCounter"){
+                postCounter();
             }
         }
         settingsStore = {};
@@ -1551,18 +1645,17 @@ $(document).ready(function(){
         localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
     });
 
-    windowFocus = true;
-    $(window).focus(function(){
+    if (!(/(search|board|other)/).test(threadID)){
         windowFocus = true;
-        ThreadUpdate();
-    });
-    $(window).blur(function(){
-        windowFocus = false;
-        $('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
-        $('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
-    });
-    if (settings.UserSettings.hideQROptions.value){
-        $('#reply').toggleClass("showQROptions"); // Make options hidden in QR by default
+        $(window).focus(function(){
+            windowFocus = true;
+            ThreadUpdate();
+        });
+        $(window).blur(function(){
+            windowFocus = false;
+            $('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
+            $('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
+        });
     }
     if (settings.UserSettings.favicon.value){
         if (lastSeenPosts[board] === undefined){
@@ -1638,6 +1731,7 @@ $(document).ready(function(){
     var staticPosts = $('article.post');
     var staticPostsAndOP = $('article.post, article.thread:not(.backlink_container)');
     mascot(parseMascotImageValue()); // Insert mascot
+    if (settings.UserSettings.adjustReplybox.value){adjustReplybox();} // Adjust reply box
     if (settings.UserSettings.inlineImages.value){inlineImages(staticPostsAndOP);} // Inline images
     if (settings.UserSettings.inlineReplies.value){ // Inline replies
         staticPosts.each(function(i, post){
@@ -1690,6 +1784,10 @@ $(document).ready(function(){
             });
         }
     }
+    if (settings.UserSettings.hideQROptions.value){
+        $('#reply').toggleClass("showQROptions"); // Make options hidden in QR by default
+    }
+    if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
     if (settings.UserSettings.filter.value){filter(staticPostsAndOP);}
     if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
     if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
@@ -1722,6 +1820,7 @@ $(document).ready(function(){
                                 newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
                             }
                         }
+                        if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
                     }                
                 }else{
                     //console.log("Didn't return new posts object");
@@ -2008,25 +2107,27 @@ function generateFilterHTML(){
 function generateSubOptionHTML(input, path){
     var settingsHTML = '';
     $.each(input, function(key, value){
-        var checked = '';
-        var subOpsHidden = '';
-        if (value.value){
-            checked = ' checked';
-        }else{
-            subOpsHidden = ' style="display: none;"';
+        if (value.name !== undefined){
+            var checked = '';
+            var subOpsHidden = '';
+            if (value.value){
+                checked = ' checked';
+            }else{
+                subOpsHidden = ' style="display: none;"';
+            }
+            settingsHTML += '<div><label>';
+            switch(value.type){
+                case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'"'+checked+' path="'+path+key+'">'; break;
+                case "text": settingsHTML += '<input type="text" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
+                case "number": settingsHTML += '<input type="number" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
+                case "select": settingsHTML += '<select path="'+path+key+'">'; $.each(value.value.options, function(i,v){settingsHTML += '<option'; if(v == value.value.value){settingsHTML += ' selected';} settingsHTML += '>'+v+'</option>';}); settingsHTML +='</select>'; break;
+            }
+            settingsHTML += value.name+'</label><span class="description">: '+value.description+'</span>';
+            if (value.suboptions !== undefined){
+                settingsHTML += '<div class="suboption-list"'+subOpsHidden+'>' + generateSubOptionHTML(value.suboptions,path+key+'.suboptions.') + '</div>';
+            }
+            settingsHTML += '</div>';
         }
-        settingsHTML += '<div><label>';
-        switch(value.type){
-            case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'"'+checked+' path="'+path+key+'">'; break;
-            case "text": settingsHTML += '<input type="text" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
-            case "number": settingsHTML += '<input type="number" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
-            case "select": settingsHTML += '<select path="'+path+key+'">'; $.each(value.value.options, function(i,v){settingsHTML += '<option'; if(v == value.value.value){settingsHTML += ' selected';} settingsHTML += '>'+v+'</option>';}); settingsHTML +='</select>'; break;
-        }
-        settingsHTML += value.name+'</label><span class="description">: '+value.description+'</span>';
-        if (value.suboptions !== undefined){
-            settingsHTML += '<div class="suboption-list"'+subOpsHidden+'>' + generateSubOptionHTML(value.suboptions,path+key+'.suboptions.') + '</div>';
-        }
-        settingsHTML += '</div>';
     });
     return settingsHTML;
 }
