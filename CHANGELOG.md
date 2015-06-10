@@ -2,6 +2,13 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v28.4:** *(2015-06-10)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.4/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.4/README.md)
+- Made a header bar with the board list, settings menu and the post counter
+- Revamped the post counter options, you can change its placement and whether it displays arbitrary denominators
+- Added an Adjust Replybox option, moved Hide QR Options into it and added a width setting that lets you change the default replybox size
+- fixed bug where board view had a post counter (of zero) inserted into the tab name
+- fixed bug where on page load pageFlow margins set to mascot width were being set to zero because the mascot hadn't loaded
+
 **v28.3:** *(2015-06-09)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.3/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.3/README.md)
 - New Feature: postFlow. This allows you to change the width, placement and alignment of the posts
 - Submitting a post and changing the tab before it goes through will now no longer make the tab title indicate you have an unseen post in that thread (more precisely your posts are no longer added to the list of unseen posts)
