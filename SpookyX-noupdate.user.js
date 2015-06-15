@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       28.5
+// @version       29.0
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -19,6 +19,7 @@
 // @include       https://*not4plebs.org/*
 // @include       http://*not4plebs.org/*
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
+// @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
 // @grant         none
 // @icon          http://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
@@ -306,6 +307,62 @@ var settings = {
                     "description": "Specify how posts are aligned",
                     "type": "select",
                     "value": {"value":"Left","options":["Left","Center","Right"]}
+                },
+                "wordBreak": {
+                    "name": "Word-break",
+                    "description": "Firefox runs into difficulties with breaking really long words, test the options available until you find something that works. On auto this attempts to detect browser and select the most appropriate setting",
+                    "type": "select",
+                    "value": {"value":"Auto","options":["Auto","Break-all","Normal"]}
+                }
+            }
+        },
+        "headerBar": {
+            "name": "Adjust Headerbar behaviour",
+            "description": "Determine whether the headerbar hides and how it does so",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "behaviour": {
+                    "name": "Behaviour",
+                    "description": "Firefox runs into difficulties with breaking really long words, test the options available until you find something that works. On auto this attempts to detect browser and select the most appropriate setting",
+                    "type": "select",
+                    "value": {"value":"Collapse to button","options":["Always show","Full hide","Collapse to button"]},
+                    "suboptions": {
+                        "scroll": {
+                            "name": "Hide on scroll",
+                            "description": "Scrolling up will show the headerbar, scrolling down will hide it again",
+                            "if": ["Full hide","Collapse to button"],
+                            "type": "checkbox",
+                            "value": false
+                        },
+                        "contractedForm": {
+                            "name": "Customise contracted form",
+                            "description": "Specify what the contracted headerbar form contains",
+                            "if": ["Collapse to button"],
+                            "type": "checkbox",
+                            "value": true,
+                            "suboptions": {
+                                "settings": {
+                                    "name": "Settings button",
+                                    "description": "Display the settings button in contracted headerbar",
+                                    "type": "checkbox",
+                                    "value": false
+                                },                        
+                                "postCounter": {
+                                    "name": "Post counter",
+                                    "description": "Display the post counter stats in contracted headerbar",
+                                    "type": "checkbox",
+                                    "value": true
+                                },
+                            }
+                        }
+                    }
+                },                    
+                "shortcut": {
+                    "name": "Hide shortcut",
+                    "description": "Pressing H will toggle the visiblity of the headerbar",
+                    "type": "checkbox",
+                    "value": true
                 }
             }
         }
@@ -469,7 +526,7 @@ function ThreadUpdate(){
  * @param {*} def default value ( if result undefined )
  * @returns {*}
  */
-function path(obj, path, def){
+function objpath(obj, path, def){
     var i, len;
 
     for(i = 0,path = path.split('.'), len = path.length; i < len; i++){
@@ -480,51 +537,6 @@ function path(obj, path, def){
     if(obj === undefined) return def;
     return obj;
 }
-/*
-var escapeRegExp;
-(function () {
-    // Referring to the table here:
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/regexp
-    // these characters should be escaped
-    // \ ^ $ * + ? . ( ) | { } [ ]
-    // These characters only have special meaning inside of brackets
-    // they do not need to be escaped, but they MAY be escaped
-    // without any adverse effects (to the best of my knowledge and casual testing)
-    // : ! , =
-    // my test "~!@#$%^&*(){}[]`/=?+\|-_;:'\",<.>".match(/[\#]/g)
-
-    var specials = [
-        // order matters for these
-        "-",
-        "[",
-        "]",
-        // order doesn't matter for any of these
-        "/",
-        "{",
-        "}",
-        "(",
-        ")",
-        "*",
-        "+",
-        "?",
-        ".",
-        "\\",
-        "^",
-        "$",
-        "|"
-    ],
-
-        // I choose to escape every character with '\'
-        // even though only some strictly require it when inside of []
-        regex = RegExp('[' + specials.join('\\') + ']', 'g')
-    ;
-    escapeRegExp = function (str) {
-        return str.replace(regex, "\\$&");
-    };
-
-    // test escapeRegExp("/path/to/res?search=this.that")
-}());
-*/
 
 shortcut = {
     'all_shortcuts':{},//All the shortcuts are stored in this array
@@ -947,11 +959,13 @@ function imageHover(){
     $('img').on("mouseenter", function(e){
         if($(this)[0].id !== "mascot" && !$(this).hasClass("bigImage")){
             $(this).clone().removeClass("smallImage smallImageOP spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
+            var headerBarHeight = $('#headerFixed')[0].offsetHeight;
+            var visibleHeight = window.innerHeight - headerBarHeight;
             $('#hoverUI > img').css({
-                "max-height":window.innerHeight,
-                "max-width":window.innerWidth - e.clientX - 50,
+                "max-height":visibleHeight,
+                "max-width":$('body').innerWidth() - e.clientX - 50,
                 "top": function(){
-                    return (e.clientY / window.innerHeight)*(window.innerHeight - $('#hoverUI > img')[0].height);
+                    return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
                 },
                 "left":e.clientX + 50
             });
@@ -959,10 +973,13 @@ function imageHover(){
     });
     $('img').on("mousemove", function(e){
         if(!$(this).hasClass("bigImage")){
+            var headerBarHeight = $('#headerFixed')[0].offsetHeight;
+            var visibleHeight = window.innerHeight - headerBarHeight;
             $('#hoverUI > img').css({
-                "max-width":window.innerWidth - e.clientX - 50,
+                "max-height":visibleHeight,
+                "max-width":$('body').innerWidth() - e.clientX - 50,
                 "top": function(){
-                    return (e.clientY / window.innerHeight)*(window.innerHeight - $('#hoverUI > img')[0].height);
+                    return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
                 },
                 "left":e.clientX + 50
             });
@@ -985,18 +1002,23 @@ function videoHover(){
                 if ($('#hoverUI > video').length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
                     $('#hoverUI > video')[0].muted=false;
                     $('#hoverUI > video')[0].play();
+                    var headerBarHeight = $('#headerFixed')[0].offsetHeight;
+                    var visibleHeight = window.innerHeight - headerBarHeight;
                     $('#hoverUI > video').css({
-                        "max-height":window.innerHeight,
-                        "max-width":window.innerWidth - e.clientX - 50,
+                        "max-height":visibleHeight,
+                        "max-width":$('body').innerWidth() - e.clientX - 50,
                         "top": function(){
-                            return (e.clientY / window.innerHeight)*(window.innerHeight - $('#hoverUI > video')[0].videoHeight);
+                            return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > video')[0].videoHeight) + headerBarHeight;
                         },
                         "left":e.clientX + 50
                     });
                     $('video').on("mousemove", function(e){
+                        var headerBarHeight = $('#headerFixed')[0].offsetHeight;
+                        var visibleHeight = window.innerHeight - headerBarHeight;
                         $('#hoverUI > video').css({
+                            "max-height":visibleHeight,
                             "top": function(){
-                                return (e.clientY / window.innerHeight)*(window.innerHeight - $('#hoverUI > video')[0].videoHeight);
+                                return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > video')[0].videoHeight) + headerBarHeight;
                             },
                             "left":e.clientX + 50
                         });
@@ -1178,9 +1200,11 @@ function newPosts(){
                     }
                 });
             }
-            //$('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
-            //$('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
             //console.timeEnd('lastpost');
+        }
+        if (!windowFocus){
+            $('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
+            $('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
         }
         newPostCount = unseenPosts.length;
         if (unseenReplies.length){
@@ -1254,24 +1278,41 @@ function notifyMe(title,icon,body,timeFade){
     };
 }
 
+var lastSeenPosts;
+var yourPosts;
 if (settings.UserSettings.labelYourPosts.value){
-    var yourPosts = localStorage.yourPosts;
-    if (yourPosts === undefined){
-        yourPosts = {};
-        console.log("Created post archive for the first time");
-    }else{
-        yourPosts = JSON.parse(localStorage.yourPosts);
-    }
+    loadYourPosts();
 }
 if (settings.UserSettings.favicon.value){
-    var lastSeenPosts = localStorage.lastSeenPosts;
-    if (lastSeenPosts === undefined){
+    if (localStorage.lastSeenPosts === undefined){
         lastSeenPosts = {};
+        localStorage.lastSeenPosts = "{}";
         console.log("Created unseen replies archive for the first time");
     }else{
         lastSeenPosts = JSON.parse(localStorage.lastSeenPosts);
     }
-    lastSeenPost = lastSeenPosts[threadID];
+    if (lastSeenPosts[board] === undefined){
+        lastSeenPosts[board] = {};
+    }
+    if (lastSeenPosts[board][threadID] === undefined){
+        lastSeenPosts[board][threadID] = threadID;
+    }
+    lastSeenPost = lastSeenPosts[board][threadID];
+}
+function loadYourPosts(){
+    if (localStorage.yourPosts === undefined){
+        yourPosts = {};
+        localStorage.yourPosts = "{}";
+        console.log("Created post archive for the first time");
+    }else{
+        yourPosts = JSON.parse(localStorage.yourPosts);
+    }
+    if (yourPosts[board] === undefined){
+        yourPosts[board] = {};
+    }
+    if (yourPosts[board][threadID] === undefined){
+        yourPosts[board][threadID] = [];
+    }
 }
 function saveYourPosts(){
     if (yourPosts[board][threadID].length){ // If you posted during the thread. Prevents saving of empty arrays
@@ -1310,12 +1351,10 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
     //return confirmationMessage;                            //Webkit, Safari, Chrome
 });
 
-function labelNewPosts(response){
-    var newPosts = Object.keys(response[threadID].posts);
+function labelNewPosts(newPosts, boardView){
     var crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
     localStorage.crosslinkTracker = "{}";
-    yourPosts = JSON.parse(localStorage.yourPosts);
-
+    loadYourPosts();
     for (var boardVal in yourPosts){
         if (crosslinkTracker[boardVal]){
             if (yourPostsLookup[boardVal] === undefined){
@@ -1331,21 +1370,23 @@ function labelNewPosts(response){
     $.each(newPosts, function(i,postID){ // For each post returned by update
         var notificationTriggered = false;
         $('#'+postID+' .backlink').each(function(i, link){ // For each post content backlink
-            var linkID = $(link).attr('data-post').replace(',','_');
             var linkBoard = $(link).attr('data-board');
-            if (yourPostsLookup[linkBoard][linkID]){ // If the link points to your post
-                if (!notificationTriggered){
-                    notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",$('#'+postID+' .text').text().trim(),true);
-                    unseenReplies.push(postID); // add postID to list of unseen replies
-                    notificationTriggered = true;
+            if (yourPostsLookup[linkBoard] !== undefined){
+                var linkID = $(link).attr('data-post').replace(',','_');
+                if (yourPostsLookup[linkBoard][linkID]){ // If the link points to your post
+                    if (!notificationTriggered && !boardView){
+                        notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",$('#'+postID+' .text').text().trim(),true);
+                        unseenReplies.push(postID); // add postID to list of unseen replies
+                        notificationTriggered = true;
+                    }
+                    link.textContent += ' (You)'; // Designate the link as such
                 }
-                link.textContent += ' (You)'; // Designate the link as such
-            }
-            if (yourPostsLookup[linkBoard][postID]){ // If the post is your own
-                var backlink = $('#'+linkID+' .post_backlink [data-post='+postID+']');
-                if (backlink.length && !backlink.data('linkedYou')){
-                    backlink[0].textContent += ' (You)'; // Find your post's new reply backlink and designate it too
-                    backlink.data('linkedYou',true);
+                if (yourPostsLookup[linkBoard][postID] && !boardView){ // If the post is your own
+                    var backlink = $('#'+linkID+' .post_backlink [data-post='+postID+']');
+                    if (backlink.length && !backlink.data('linkedYou')){
+                        backlink.data('linkedYou',true);
+                        backlink[0].textContent += ' (You)'; // Find your post's new reply backlink and designate it too
+                    }
                 }
             }
         });
@@ -1358,9 +1399,7 @@ function postSubmitEvent(){
     window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
     var target =  $('#reply [type=submit]')[0],
         observer = new MutationObserver(function(mutation) {
-            //console.log("Post Submit Event Triggered");
             lastSubmittedContent = $('#reply_chennodiscursus')[0].value;
-            //console.log("Latest LSC:"+lastSubmittedContent);
         }),
         config = {
             attributes: true
@@ -1372,7 +1411,6 @@ function linkHoverEvent(){ // Hook into the native internal link hover
     window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
     var target =  $('#backlink')[0],
         observer = new MutationObserver(function(mutation) {
-            //console.log("Link Hover Event Triggered");
             $('#backlink > article').removeClass('shitpost');
             relativeTimestamps($('#backlink > article'));
             embedImages($('#backlink > article'));
@@ -1467,6 +1505,12 @@ function postFlow(){
         var align = settings.UserSettings.postFlow.suboptions.align.value.value;
         var leftMargin = settings.UserSettings.postFlow.suboptions.leftMargin.value;
         var rightMargin = settings.UserSettings.postFlow.suboptions.rightMargin.value;
+        $('article.thread').each(function(i,threadOP){
+            if ($(threadOP).children('.thread_image_box').length){ // Stop posts for intruding in short OPs
+                var opTextHeight = $(threadOP).children('.thread_image_box')[0].offsetHeight + 10 -20 - $(threadOP).children('header')[0].offsetHeight - $(threadOP).children('.thread_tools_bottom')[0].offsetHeight;
+                $(threadOP).children('.text').css({"min-height":opTextHeight+"px"});
+            }
+        });
         if (settings.UserSettings.mascot.value){
             if (settings.UserSettings.postFlow.suboptions.leftMargin.value < 0){
                 leftMargin = document.getElementById('mascot').offsetWidth; // Make it fit around the mascot if negative value
@@ -1515,6 +1559,18 @@ function postFlow(){
                 "float":"right"
             });
         }
+        var wordBreak = settings.UserSettings.postFlow.suboptions.wordBreak.value.value;
+        if (wordBreak === "Auto"){
+            if( navigator.userAgent.toLowerCase().indexOf('firefox') > -1 ){ // If using Firefox
+                $('#SpookyX-css-word-break').html('.text{word-break:break-all}');
+            }else{
+                $('#SpookyX-css-word-break').html('');
+            }
+        }else if(wordBreak === "Break-all"){
+            $('#SpookyX-css-word-break').html('.text{word-break:break-all}');
+        }else{ // wordBreak == Normal
+            $('#SpookyX-css-word-break').html('.text{word-break:normal}');
+        }
     }else{
         $('#main').css({
             "width":"",
@@ -1536,18 +1592,113 @@ function adjustReplybox(){
     }
 }
 
+function headerBar(){
+    $(window).off('mousewheel');
+    if (settings.UserSettings.headerBar.suboptions.shortcut.value){
+        if (!shortcut.all_shortcuts.h){
+            shortcut.add("h", function(){$('#headerFixed').toggleClass('shortcutHidden');}, {"disable_in_input":true});
+        }
+    }else{
+        if (shortcut.all_shortcuts.h){
+            shortcut.remove("h");
+        }
+    }
+    if (settings.UserSettings.headerBar.suboptions.behaviour.value.value === "Collapse to button"){ // If in collapse mode
+        if ($('#headerFixed a[title="Show headerbar"]:visible').length){
+            if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.settings.value){
+                $('#headerFixed .headerBar > a[title="SpookyX Settings"]').show();
+            }else{
+                $('#headerFixed .headerBar > a[title="SpookyX Settings"]').hide();
+            }
+            if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.postCounter.value){
+                $('#headerFixed .headerBar > .threadStats').show();
+            }else{
+                $('#headerFixed .headerBar > .threadStats').hide();
+            }
+        }
+        if (!$('.collapseButton').length){ // Only add the collapse buttons if they don't already exist
+            $('#headerFixed > .boardList').after('<a class="collapseButton" title="Show headerbar" href="javascript:;" style="float:right; display:none; font-family:monospace;">[+]</a>');
+            $('#headerFixed .headerBar').append('<a class="collapseButton" title="Hide headerbar" href="javascript:;" style="font-family:monospace;">[-]</a>');
+        }
+        $('#headerFixed .headerBar a[title="Hide headerbar"]').on('click', function(){ // Add click events to the buttons
+            $('#headerFixed .boardList').hide();
+            if (!settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.settings.value){
+                $('#headerFixed .headerBar > a[title="SpookyX Settings"]').hide();
+            }
+            if (!settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.postCounter.value){
+                $('#headerFixed .headerBar > .threadStats').hide();
+            }
+            $('#headerFixed .headerBar a[title="Hide headerbar"]').hide();
+            $('#headerFixed a[title="Show headerbar"]').show();
+            $('#headerFixed').css({
+                "left":"initial",
+                "padding":"0 10px"
+            });
+        });
+        $('#headerFixed a[title="Show headerbar"]').on('click', function(){ // Add click events to the buttons
+            $('#headerFixed .boardList').show();
+            $('#headerFixed .headerBar > .threadStats').show();
+            $('#headerFixed .headerBar > a[title="SpookyX Settings"]').show();
+            $('#headerFixed .headerBar a[title="Hide headerbar"]').show();
+            $('#headerFixed a[title="Show headerbar"]').hide();
+            $('#headerFixed').css({
+                "left":"-1px",
+                "padding":"0 10px 0 30px"
+            });
+        });
+        if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.scroll.value){ // Add a scroll event that collapses it
+            $('#headerFixed').removeClass('shortcutHidden');
+            $(window).on('mousewheel', function(e){
+                if (!$(e.target).closest('#settingsMenu').length){
+                    if (e.deltaY > 0){
+                        $('#headerFixed a[title="Show headerbar"]').trigger('click');
+                    }else{
+                        $('#headerFixed .headerBar a[title="Hide headerbar"]').trigger('click');
+                    }
+                }
+            });
+        }
+    }else{ // Else remove any collapse stuff
+        $('.collapseButton').remove();
+        $('#headerFixed .boardList').show();
+        $('#headerFixed .headerBar > .threadStats').show();
+        $('#headerFixed .headerBar > a[title="SpookyX Settings"]').show();
+        $('#headerFixed').css({
+            "left":"-1px",
+            "padding":"0 10px 0 30px"
+        });
+        if (settings.UserSettings.headerBar.suboptions.behaviour.value.value === "Full hide"){ // If full hide mode
+            $('#headerFixed').addClass('shortcutHidden'); // Hide it
+            if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.scroll.value){ // Add scroll event that hides it
+                $(window).on('mousewheel', function(e){
+                    if (!$(e.target).closest('#settingsMenu').length){
+                        if (e.deltaY > 0){
+                            $('#headerFixed').removeClass('shortcutHidden');
+                        }else{
+                            $('#headerFixed').addClass('shortcutHidden');
+                        }
+                    }
+                });
+            }
+        }else{
+            $('#headerFixed').removeClass('shortcutHidden'); // Unhide it if always show mode
+        }
+    }
+}
+
 $(document).ready(function(){
-    $('head').after('<style type="text/css" id="FoolX-css">.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin: 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}</style>');
+    $('head').after('<style type="text/css" id="SpookyX-css"></style>');
+    $('head').after('<style type="text/css" id="SpookyX-css-word-break"></style>'); // Add style element that controls that one thing
+    $('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin:21px 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}');
+    $('#SpookyX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
+    $('#SpookyX-css').append('.last{background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
+    $('#SpookyX-css').append('.shortcutHidden{display:none!important;}.letters{margin-top:0!important;}#headerFixed{position:fixed; left:-1px; right:-1px; top:-1px; padding:0 10px 0 30px; border:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px;}.threadStats{margin-right:20px;}');
     if (settings.UserSettings.favicon.value){
         $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
-    $('body').append('<div id="hoverUI"></div>');
-    $('#FoolX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
-    $('#FoolX-css').append('#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
-    $('#FoolX-css').append('#headerFixed{position:fixed; left:0; right:0; top:0; padding:0 10px 0 30px!important; border-bottom:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px!important;}#headerStatic > .headerBar{position:absolute; right:10px;}.threadStats{margin-right:20px;}');
-    if ($('.letters').length){
-        $('.letters').append('<div class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
+    $('body').append('<div id="hoverUI"></div>');if ($('.letters').length){
+        $('.letters').html('<span class="boardList">'+$('.letters').html()+'</span><span class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;" style="margin-right:10px;">Settings</a></span>');
         $('.letters').clone().hide().insertAfter('.letters');
         $('.letters')[0].id="headerStatic";
         $('.letters')[1].id="headerFixed";
@@ -1556,11 +1707,11 @@ $(document).ready(function(){
     }
     $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
-    $('.headerBar > a, a[title=Close]').on('click', function(){
+    $('.headerBar > a[title="SpookyX Settings"], a[title=Close]').on('click', function(){
         populateSettingsMenu();
     });
     $(window).on('scroll', function(){
-        if (window.scrollY > 42){
+        if (window.scrollY > 40){
             $('#headerFixed').show();            
         }else{
             $('#headerFixed').hide();
@@ -1619,6 +1770,8 @@ $(document).ready(function(){
             settings.FilterSettings[$(e.target).attr('name')].value = store;
         }else{
             var value;
+            var elementPath = $(e.target).attr('path');
+            var settingPath = objpath(settings.UserSettings, elementPath);
             if (e.target.type == "checkbox"){
                 value = e.target.checked;
                 $(e.target).closest('div').find('.suboption-list').toggle(); // Make parent checkboxes collapse the suboptions if they're unticked
@@ -1626,22 +1779,43 @@ $(document).ready(function(){
                 value = e.target.value;
             }
             if (e.target.nodeName == "SELECT"){
-                path(settings.UserSettings, $(e.target).attr('path')).value.value = value;
+                settingPath.value.value = value;
+                var testPatt = new RegExp(value);
+                for (var suboption in settingPath.suboptions){
+                    if (settingPath.suboptions[suboption].if !== undefined){
+                        var ifMet = false;
+                        $.each(settingPath.suboptions[suboption].if, function(i,v){
+                            if (testPatt.test(v)){
+                                ifMet = true;
+                                return false;
+                            }
+                        });
+                        if (ifMet){
+                            $(e.target).closest('div').find('.suboption-list [key='+suboption+']').closest('div').show();
+                        }else{
+                            $(e.target).closest('div').find('.suboption-list [key='+suboption+']').closest('div').hide();
+                        }
+                        $(e.target).closest('div').find('.suboption-list > .last').removeClass('last');
+                        $(e.target).closest('div').find('.suboption-list > :visible:last').addClass('last');
+                    }
+                }
             }else{
-                path(settings.UserSettings, $(e.target).attr('path')).value = value;
+                settingPath.value = value;
             }
-            if ($(e.target).attr('path').substr(0,6) == "mascot"){ // Live update changes in mascot settings
+            if (elementPath.substr(0,6) == "mascot"){ // Live update changes in mascot settings
                 if (e.target.name == "Mascot image" || e.target.name == "Mascot"){
                     mascot(parseMascotImageValue());
                 }else{
                     mascot('');
                 }
-            }else if ($(e.target).attr('path').substr(0,8) == "postFlow"){
+            }else if (elementPath.substr(0,8) == "postFlow"){
                 postFlow();
-            }else if ($(e.target).attr('path').substr(0,14) == "adjustReplybox"){
+            }else if (elementPath.substr(0,14) == "adjustReplybox"){
                 adjustReplybox();
-            }else if ($(e.target).attr('path').substr(0,11) == "postCounter"){
+            }else if (elementPath.substr(0,11) == "postCounter"){
                 postCounter();
+            }else if (elementPath.substr(0,9) == "headerBar"){
+                headerBar();
             }
         }
         settingsStore = {};
@@ -1649,7 +1823,6 @@ $(document).ready(function(){
         settingsStore.FilterSettings = settingsStrip(settings.FilterSettings);
         localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
     });
-
     if (!(/(search|board|other)/).test(threadID)){
         windowFocus = true;
         $(window).focus(function(){
@@ -1658,41 +1831,23 @@ $(document).ready(function(){
         });
         $(window).blur(function(){
             windowFocus = false;
-            $('.unseenPost').removeClass('unseenPost'); // Remove the previous unseen post line
-            $('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
         });
-    }
-    if (settings.UserSettings.favicon.value){
-        if (lastSeenPosts[board] === undefined){
-            lastSeenPosts[board] = {};
-        }
-        if (lastSeenPosts[board][threadID] === undefined){
-            lastSeenPosts[board][threadID] = threadID;
-        }
-        lastSeenPost = lastSeenPosts[board][threadID];
+        $('#'+unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
     }
     if (settings.UserSettings.labelYourPosts.value){
-        if (yourPosts[board] === undefined){
-            yourPosts[board] = {};
-        }
-        if (yourPosts[board][threadID] === undefined){
-            yourPosts[board][threadID] = [];
-        }
-        if (!(/(search|board|other)/).test(threadID)){postSubmitEvent();}
         for (var boardVal in yourPosts){
             yourPostsLookup[boardVal] = {};
             for (var thread in yourPosts[boardVal]){
                 var threadLength = yourPosts[boardVal][thread].length;
+                var threadArray = yourPosts[boardVal][thread];
                 for (var i=0; i < threadLength; i++){
-                    yourPostsLookup[boardVal][yourPosts[boardVal][thread][i]] = true;
+                    yourPostsLookup[boardVal][threadArray[i]] = true;
                 }
             }
         }
         if (!(/(search|board|other)/).test(threadID)){
+            postSubmitEvent();
             $(document).ajaxComplete(function(event, request, ajaxSettings){
-                //console.log(event);
-                //console.log(request);
-                //console.log(ajaxSettings);
                 if (request.responseText !== ""){
                     response = JSON.parse(request.responseText);
                 }else{
@@ -1707,14 +1862,16 @@ $(document).ready(function(){
                                 if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
                                     yourPosts[board][threadID].push(postID);
                                     $('#'+postID+' .post_author').after('<span> (You)</span>');
-                                    break;
                                 }
                             }
                             crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
                             crosslinkTracker[board] = true;
                             localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
                             saveYourPosts();
-                            labelNewPosts(response);
+
+                            var newPosts = Object.keys(response[threadID].posts);
+                            labelNewPosts(newPosts, false);
+                            //labelNewPosts(response);
                         }
                     }else{
                         notifyMe("An error occurred whilst posting", "http://i.imgur.com/HTcKk4Y.png", response.error, false);
@@ -1724,7 +1881,9 @@ $(document).ready(function(){
                         //console.log(response.error);
                     }else{
                         if (response[threadID] !== undefined){
-                            labelNewPosts(response);
+                            var newPosts = Object.keys(response[threadID].posts);
+                            labelNewPosts(newPosts, false);
+                            //labelNewPosts(response);
                         }else{
                             //console.log("Not in a thread");
                         }
@@ -1735,6 +1894,7 @@ $(document).ready(function(){
     }
     var staticPosts = $('article.post');
     var staticPostsAndOP = $('article.post, article.thread:not(.backlink_container)');
+    if (settings.UserSettings.headerBar.value){headerBar();} // Customise headerbar behaviour
     mascot(parseMascotImageValue()); // Insert mascot
     if (settings.UserSettings.adjustReplybox.value){adjustReplybox();} // Adjust reply box
     if (settings.UserSettings.inlineImages.value){inlineImages(staticPostsAndOP);} // Inline images
@@ -1797,8 +1957,8 @@ $(document).ready(function(){
     if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
     if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
 
-    if (!(/(search|board|other)/).test(threadID)){
-        $(document).ajaxComplete(function(event, request, ajaxSettings){
+    if (!(/(search|other)/).test(threadID)){
+        $(document).ajaxComplete(function(event, request, ajaxSettings){ // Parse all GET and POST delivered posts and apply SpookyX features to them
             if (request.responseText !== ""){
                 response = JSON.parse(request.responseText);
             }else{
@@ -1807,28 +1967,42 @@ $(document).ready(function(){
             if (response.error !== undefined){
                 //console.log(response.error);
             }else{
-                if (response[threadID] !== undefined){
-                    for (var post in response[threadID].posts){
-                        var newPost = $('#'+post);
-                        if (settings.UserSettings.inlineReplies.value){
-                            newPost.addClass("base");
+                for (var key in response){
+                    if (response[key] !== null && response[key].posts !== undefined){
+                        var isBoard = (/(board)/).test(threadID);
+                        if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
+                            labelNewPosts(Object.keys(response[key].posts), true);
                         }
-                        if (settings.UserSettings.embedImages.value){embedImages(newPost);}
-                        if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
-                        if (settings.UserSettings.filter.value){filter(newPost);}
-                        if (settings.UserSettings.postQuote.value){
-                            newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
-                        }
-                        if (settings.UserSettings.hidePosts.value){
-                            $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
-                            if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
-                                newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                        for (var post in response[key].posts){
+                            var newPost = $('#'+post);
+                            if (settings.UserSettings.inlineImages.value){inlineImages(newPost);} // Inline images
+                            if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
+                                if (yourPostsLookup[board][post]){
+                                    newPost.find('.post_author').after('<span> (You)</span>');
+                                }
                             }
-                        }
-                        if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
-                    }                
-                }else{
-                    //console.log("Didn't return new posts object");
+                            if (settings.UserSettings.inlineReplies.value){
+                                newPost.addClass("base");
+                            }
+                            if (settings.UserSettings.embedImages.value){embedImages(newPost);}
+                            if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
+                            if (settings.UserSettings.filter.value){filter(newPost);}
+                            if (settings.UserSettings.postQuote.value){
+                                newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
+                            }
+                            if (settings.UserSettings.hidePosts.value){
+                                $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
+                                if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+                                    newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                                }
+                            }
+                            if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
+                        } 
+                        if (settings.UserSettings.inlineImages.value){
+                            if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+                            if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+                        }                   
+                    }
                 }
             }
         });
@@ -2070,10 +2244,11 @@ function populateSettingsMenu(){
         presetFavicons();
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
         settingsHTML += '<div id="Filter">'+generateFilterHTML()+'</div>';
-        $('#settingsContent').html(settingsHTML);        
+        $('#settingsContent').html(settingsHTML);
         $('#settingsContent > div').hide();
         $('#settingsContent #'+$('.sections-list .active').html()).show();
         $('#settingsMenu').show();
+        $('#settingsContent .suboption-list > :visible:last').addClass('last');
     }
 }
 
@@ -2120,12 +2295,29 @@ function generateSubOptionHTML(input, path){
             }else{
                 subOpsHidden = ' style="display: none;"';
             }
-            settingsHTML += '<div><label>';
+            if (value.if !== undefined){
+                var parentPath = objpath(settings.UserSettings, path.substring(0, path.length-'.suboptions.'.length));
+                var pattTest = new RegExp(parentPath.value.value);
+                var ifMet = false;
+                $.each(value.if, function(i,v){
+                    if (pattTest.test(v)){
+                        ifMet = true;
+                        return false;
+                    }
+                });
+                if (ifMet){
+                    settingsHTML += '<div><label>';
+                }else{
+                    settingsHTML += '<div style="display:none;"><label>';
+                }
+            }else{
+                settingsHTML += '<div><label>';
+            }
             switch(value.type){
-                case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'"'+checked+' path="'+path+key+'">'; break;
-                case "text": settingsHTML += '<input type="text" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
-                case "number": settingsHTML += '<input type="number" name="'+value.name+'" value="'+value.value+'" path="'+path+key+'">'; break;
-                case "select": settingsHTML += '<select path="'+path+key+'">'; $.each(value.value.options, function(i,v){settingsHTML += '<option'; if(v == value.value.value){settingsHTML += ' selected';} settingsHTML += '>'+v+'</option>';}); settingsHTML +='</select>'; break;
+                case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'" key="'+key+'"'+checked+' path="'+path+key+'">'; break;
+                case "text": settingsHTML += '<input type="text" name="'+value.name+'" key="'+key+'" value="'+value.value+'" path="'+path+key+'">'; break;
+                case "number": settingsHTML += '<input type="number" name="'+value.name+'" key="'+key+'" value="'+value.value+'" path="'+path+key+'">'; break;
+                case "select": settingsHTML += '<select name="'+value.name+'" key="'+key+'" path="'+path+key+'">'; $.each(value.value.options, function(i,v){settingsHTML += '<option'; if(v == value.value.value){settingsHTML += ' selected';} settingsHTML += '>'+v+'</option>';}); settingsHTML +='</select>'; break;
             }
             settingsHTML += value.name+'</label><span class="description">: '+value.description+'</span>';
             if (value.suboptions !== undefined){
@@ -2164,6 +2356,6 @@ $(function(){
     if (!(/(search|board|other)/).test(threadID)){
         seenPosts();
         ThreadUpdate();
-        window.setInterval(function(){ThreadUpdate();},500);
+        window.setInterval(function(){ThreadUpdate();},250);
     }
 });
