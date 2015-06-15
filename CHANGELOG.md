@@ -2,6 +2,14 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.0:** *(2015-06-10)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.0/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.0/README.md)
+- New Feature: Adjust Headerbar behaviour. This allows you to determine how the headerbar hides or collapses
+- Added Word-break setting under the Adjust post flow category. This should make words that are too long to fit from overflowing in Firefox. Unfortunately Firefox simply isn't capable of doing it in the elegant way that Chrome is - whereas Chrome only breaks in the middle of words where necessary and otherwise just breaks before and after them Firefox can only manage to break each word that doesn't fit or not break too long words at all. This option is to allow user-control over how it behaves
+- Expanding threads in board view (using the diagonal arrow buttons) will now apply SpookyX features to the loaded posts
+- fixed That Bug which has been most noticed as posts failing to have (You) appended. Occurred when entering a thread you'd not posted in before and waiting long enough for someone else to post before trying to post yourself
+- fixed bug with the red line that indicates the unseen post cut-off behaving erratically
+- fixed bug where the media hover features weren't taking the scrollbar or headerbar into account when fitting the media in view
+
 **v28.5:** *(2015-06-10)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v28.5/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v28.5/README.md)
 - Stopped post counter showing on inappropriate moe pages
 - fixed bug when looking at the main page
