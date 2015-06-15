@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.0
+// @version       29.1
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -336,6 +336,13 @@ var settings = {
                             "if": ["Full hide","Collapse to button"],
                             "type": "checkbox",
                             "value": false
+                        },
+                        "defaultHidden": {
+                            "name": "Default state hidden",
+                            "description": "Check to make the headerbar hidden or collapsed by default on pageload",
+                            "if": ["Full hide","Collapse to button"],
+                            "type": "checkbox",
+                            "value": true
                         },
                         "contractedForm": {
                             "name": "Customise contracted form",
@@ -1427,7 +1434,6 @@ function mascot(mascotImageLink){
     if (settings.UserSettings.mascot.value){
         if (!$('#mascotBackground').length){
             $('.container-fluid').prepend('<div id="mascotBackground" style="position:fixed; background-color:'+$('.container-fluid').css('background-color')+'; z-index:-2; top:0; right:0; bottom:0; left:0;"></div>');
-            $('.letters').css({'padding-top':"4px","margin":"0 0 -2px"});
             $('.container-fluid').css({'background-color':'rgba(0, 0, 0, 0)'});
         }
         var cornerCSS;
@@ -1606,6 +1612,7 @@ function headerBar(){
         }
     }
     if (settings.UserSettings.headerBar.suboptions.behaviour.value.value === "Collapse to button"){ // If in collapse mode
+        $('#headerFixed').removeClass('shortcutHidden'); // Un-hide
         if ($('#headerFixed a[title="Show headerbar"]:visible').length){
             if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.settings.value){
                 $('#headerFixed .headerBar > a[title="SpookyX Settings"]').show();
@@ -1660,6 +1667,11 @@ function headerBar(){
                 }
             });
         }
+        if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.defaultHidden.value){ // Collapse on pageload
+            $('#headerFixed .headerBar a[title="Hide headerbar"]').trigger('click');
+        }else{
+            $('#headerFixed a[title="Show headerbar"]').trigger('click');
+        }
     }else{ // Else remove any collapse stuff
         $('.collapseButton').remove();
         $('#headerFixed .boardList').show();
@@ -1670,7 +1682,6 @@ function headerBar(){
             "padding":"0 10px 0 30px"
         });
         if (settings.UserSettings.headerBar.suboptions.behaviour.value.value === "Full hide"){ // If full hide mode
-            $('#headerFixed').addClass('shortcutHidden'); // Hide it
             if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.scroll.value){ // Add scroll event that hides it
                 $(window).on('mousewheel', function(e){
                     if (!$(e.target).closest('#settingsMenu').length){
@@ -1681,6 +1692,11 @@ function headerBar(){
                         }
                     }
                 });
+            }
+            if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.defaultHidden.value){ // Hide on pageload
+                $('#headerFixed').addClass('shortcutHidden');
+            }else{
+                $('#headerFixed').removeClass('shortcutHidden');
             }
         }else{
             $('#headerFixed').removeClass('shortcutHidden'); // Unhide it if always show mode
@@ -1699,7 +1715,8 @@ $(document).ready(function(){
         $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
-    $('body').append('<div id="hoverUI"></div>');if ($('.letters').length){
+    $('body').append('<div id="hoverUI"></div>');
+    if ($('.letters').length){
         $('.letters').html('<span class="boardList">'+$('.letters').html()+'</span><span class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;" style="margin-right:10px;">Settings</a></span>');
         $('.letters').clone().hide().insertAfter('.letters');
         $('.letters')[0].id="headerStatic";
