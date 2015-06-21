@@ -2,6 +2,12 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.2:** *(2015-06-21)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.2/README.md)
+- Added new option, Enable Notification, which has suboption features to make the notifications hide spoilers and in Firefox trim overly long replies
+- Added 'Count unloaded posts' suboption for the post counter. Turning it on will make the post counter display the total number of posts in a thread, not just the ones that are loaded. This comes into play when viewing a thread in 'last x mode'
+- Adjusted the settings menu layout such that descriptions that are longer than one line leave a gap below the setting name to improve clarity
+- fixed bug with toggling options failing to show suboptions on occasion in the settings menu
+
 **v29.1:** *(2015-06-15)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.1/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.1/README.md)
 - Added new option, Default state hidden. Lets you choose how the headerbar appears on pageload
 - fixed bug causing an odd gap to appear above the headerbar
