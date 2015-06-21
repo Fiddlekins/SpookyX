@@ -2,7 +2,8 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.1
+// @version       29.2
+// @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
 // @include       https://archive.moe/*
@@ -150,6 +151,40 @@ var settings = {
             "type": "checkbox",
             "value": true
         },
+        "notifications": {
+            "name": "Enable notifications",
+            "description": "Browser notifications will be enabled, for example to alert you when your post has been replied to or if you encountered a posting error",
+            "type": "checkbox",
+            "value": true,
+            "suboptions": {
+                "spoiler": {
+                    "name": "Hide spoilers",
+                    "description": "When creating a notification to alert you of a reply the spoilered text will be replaced with black boxes since nofications cannot hide them like normal",
+                    "type": "checkbox",
+                    "value": true
+                },
+                "restrict": {
+                    "name": "Restrict size",
+                    "description": "Firefox option only. By default there is no size limit on Firefox notifications, use this option to keep notifications at a sensible size",
+                    "type": "checkbox",
+                    "value": false,
+                    "suboptions": {
+                        "lines": {
+                            "name": "Line count",
+                            "description": "Number of lines the notification is restricted to",
+                            "type": "number",
+                            "value": 5
+                        },
+                        "characters": {
+                            "name": "Character count",
+                            "description": "Number of characters per line the notification is restricted to",
+                            "type": "number",
+                            "value": 50
+                        }
+                    }
+                }
+            }
+        },
         "relativeTimestamps": {
             "name": "Relative Timestamps",
             "description": "Timestamps will be replaced by elapsed time since post",
@@ -219,6 +254,12 @@ var settings = {
                             "value": 250
                         }
                     }                    
+                },
+                "countUnloaded": {
+                    "name": "Count unloaded posts",
+                    "description": "If only viewing the last x posts in a thread use this setting for the post counter to count the total number of posts rather than just the number of posts that have been loaded",
+                    "type": "checkbox",
+                    "value": true
                 }
             }
         },
@@ -477,6 +518,7 @@ if (localStorage.SpookyXsettings !== undefined){
 presetFavicons();
 
 var newPostCount = 0;
+var notLoadedPostCount = 0;
 var DocumentTitle = document.title;
 var ignoreInline = ['v'];
 var rulesBox = $(".rules_box").html();
@@ -1241,19 +1283,20 @@ function newPosts(){
 
 function postCounter(){
     if (!(/other/).test(threadID)){
+        var postCount = notLoadedPostCount + $('.post_wrapper').length;
         if (settings.UserSettings.postCounter.suboptions.location.value.value === "Header bar"){
             $(".rules_box").html(rulesBox);
             if (settings.UserSettings.postCounter.suboptions.limits.value){
-                $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
+                $(".threadStats").html("<span>Posts: " + postCount + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
             }else{
-                $(".threadStats").html("<span>Posts: " + $('.post_wrapper').length + " Images: " + $(".thread_image_box").length + "</span>");
+                $(".threadStats").html("<span>Posts: " + postCount + " Images: " + $(".thread_image_box").length + "</span>");
             }
         }else{
             $(".threadStats").html('');
             if (settings.UserSettings.postCounter.suboptions.limits.value){
-                $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
+                $(".rules_box").html("<h6>Posts: " + postCount + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
             }else{
-                $(".rules_box").html("<h6>Posts: " + $('.post_wrapper').length + "<br> Images: " + $(".thread_image_box").length + "</h6>" + rulesBox);
+                $(".rules_box").html("<h6>Posts: " + postCount + "<br> Images: " + $(".thread_image_box").length + "</h6>" + rulesBox);
             }
         }
     }
@@ -1358,6 +1401,51 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
     //return confirmationMessage;                            //Webkit, Safari, Chrome
 });
 
+function notificationSpoiler(postID){
+    var temp = $('#'+postID+' .text').clone(); // Make a copy of the post text element to avoid changing the original
+    if (settings.UserSettings.notifications.suboptions.spoiler.value){
+        $(temp).find('.spoiler').each(function(i,spoiler){
+            var newSpoilerText = '';
+            for (var j=0, spoilerLength = $(spoiler).text().length; j < spoilerLength; j++){
+                newSpoilerText += "&#x2588"; // Convert spoilered characters into black block characters
+            }
+            spoiler.innerHTML = newSpoilerText;
+        });
+        $(temp).find('br').each(function(i,br){
+            $(br).after('\n');
+        });
+    }
+    if (settings.UserSettings.notifications.suboptions.restrict.value){
+        var lineCount = settings.UserSettings.notifications.suboptions.restrict.suboptions.lines.value;
+        var charCount = settings.UserSettings.notifications.suboptions.restrict.suboptions.characters.value;
+        var restrictedText = temp.text().trim().substr(0, charCount*lineCount); // Dock three extra chars to replace with ellipses
+        console.log(restrictedText);
+        var restTextLines = restrictedText.split('\n');
+        restrictedText = '';
+        for (var i = 0; i < lineCount; i++){
+            if (restTextLines[i] === undefined){break;} // If there's less than five lines break loop
+            if (i !== 0){
+                restrictedText += '\n'; // Add the linebreaks back in
+            }
+            while (restTextLines[i].length > charCount){ // Break up lines that exceed charCount
+                if (i < lineCount){
+                    restrictedText += restTextLines[i].substr(0,charCount);
+                    if (!(/ /).test(restTextLines[i].substr(0,charCount))){ // If there's no space Firefox won't automatically break the chunk onto a new line
+                        restrictedText += '\n';
+                    }
+                    restTextLines[i] = restTextLines[i].substr(charCount);
+                    lineCount--;
+                }
+            }
+            restrictedText += restTextLines[i];
+
+        }
+        return restrictedText + '...';
+    }else{
+        return temp.text().trim();
+    }
+}
+
 function labelNewPosts(newPosts, boardView){
     var crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
     localStorage.crosslinkTracker = "{}";
@@ -1382,7 +1470,9 @@ function labelNewPosts(newPosts, boardView){
                 var linkID = $(link).attr('data-post').replace(',','_');
                 if (yourPostsLookup[linkBoard][linkID]){ // If the link points to your post
                     if (!notificationTriggered && !boardView){
-                        notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",$('#'+postID+' .text').text().trim(),true);
+                        if (settings.UserSettings.notifications.value){
+                            notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",notificationSpoiler(postID),false);
+                        }
                         unseenReplies.push(postID); // add postID to list of unseen replies
                         notificationTriggered = true;
                     }
@@ -1709,6 +1799,7 @@ $(document).ready(function(){
     $('#SpookyX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('#SpookyX-css').append('.last{background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
     $('#SpookyX-css').append('.shortcutHidden{display:none!important;}.letters{margin-top:0!important;}#headerFixed{position:fixed; left:-1px; right:-1px; top:-1px; padding:0 10px 0 30px; border:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px;}.threadStats{margin-right:20px;}');
+    $('#SpookyX-css').append('#settingsMenu .description{margin-left:2px; flex-shrink: 9999;}.selectDescription{margin-top:3px;}#settingsMenu label{margin-bottom:0}.settingsJoinLine{border-left:solid 1px black; position:relative; left:0.7em; top: 1.9em;}.settingsJoinLineCheckbox{top: 1.4em;}.settingFlexContainer{display:flex;}');
     if (settings.UserSettings.favicon.value){
         $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
@@ -1791,7 +1882,8 @@ $(document).ready(function(){
             var settingPath = objpath(settings.UserSettings, elementPath);
             if (e.target.type == "checkbox"){
                 value = e.target.checked;
-                $(e.target).closest('div').find('.suboption-list').toggle(); // Make parent checkboxes collapse the suboptions if they're unticked
+                $(e.target).closest('div:not(.settingFlexContainer)').children('.suboption-list').toggle(); // Make parent checkboxes collapse the suboptions if they're unticked
+                $(e.target).closest('.settingFlexContainer').children('.settingsJoinLine').toggle();
             }else{
                 value = e.target.value;
             }
@@ -1808,12 +1900,17 @@ $(document).ready(function(){
                             }
                         });
                         if (ifMet){
-                            $(e.target).closest('div').find('.suboption-list [key='+suboption+']').closest('div').show();
+                            $(e.target).closest('div:not(.settingFlexContainer)').find('.suboption-list [key='+suboption+']').closest('div:not(.settingFlexContainer)').show();
                         }else{
-                            $(e.target).closest('div').find('.suboption-list [key='+suboption+']').closest('div').hide();
+                            $(e.target).closest('div:not(.settingFlexContainer)').find('.suboption-list [key='+suboption+']').closest('div:not(.settingFlexContainer)').hide();
                         }
-                        $(e.target).closest('div').find('.suboption-list > .last').removeClass('last');
-                        $(e.target).closest('div').find('.suboption-list > :visible:last').addClass('last');
+                        $(e.target).closest('div:not(.settingFlexContainer)').find('.suboption-list > .last').removeClass('last');
+                        $(e.target).closest('div:not(.settingFlexContainer)').find('.suboption-list > :visible:last').addClass('last');
+                        if ($(e.target).closest('div:not(.settingFlexContainer)').find('.suboption-list > :visible').length > 1){
+                            $(e.target).closest('.settingFlexContainer').children('.settingsJoinLine').show();
+                        }else{
+                            $(e.target).closest('.settingFlexContainer').children('.settingsJoinLine').hide();
+                        }
                     }
                 }
             }else{
@@ -1840,6 +1937,24 @@ $(document).ready(function(){
         settingsStore.FilterSettings = settingsStrip(settings.FilterSettings);
         localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
     });
+    if (settings.UserSettings.postCounter.suboptions.countUnloaded.value){
+        if (!(/(search|board|other)/).test(threadID)){ // Count the posts that aren't loaded (eg. in last/50 mode)
+            $.ajax({
+                url:"/_/api/chan/thread/",
+                method:"GET",
+                data:{"board":board,"num":threadID,"inThread":true}
+            }).done(function(response){
+                var firstLoadedPostID = $('article.post')[0].id;
+                var postList = Object.keys(response[threadID].posts);
+                for (var i=0, len=postList.length; i < len; i++){
+                    if (postList[i] !== firstLoadedPostID){
+                        notLoadedPostCount++;
+                    }else{break;}
+                }
+                postCounter();
+            });
+        }
+    }
     if (!(/(search|board|other)/).test(threadID)){
         windowFocus = true;
         $(window).focus(function(){
@@ -1865,44 +1980,46 @@ $(document).ready(function(){
         if (!(/(search|board|other)/).test(threadID)){
             postSubmitEvent();
             $(document).ajaxComplete(function(event, request, ajaxSettings){
-                if (request.responseText !== ""){
-                    response = JSON.parse(request.responseText);
-                }else{
-                    response = {"error":"No responseText"};
-                }
-                if (ajaxSettings.type == "POST"){
-                    if (response.error === undefined){
-                        if (response.captcha){ // If you are required to fill a captcha before posting
-                            //console.log(response);
-                        }else{
-                            for (var postID in response[threadID].posts){
-                                if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
-                                    yourPosts[board][threadID].push(postID);
-                                    $('#'+postID+' .post_author').after('<span> (You)</span>');
+                if (!(/inThread=true/).test(ajaxSettings.url)){
+                    if (request.responseText !== ""){
+                        response = JSON.parse(request.responseText);
+                    }else{
+                        response = {"error":"No responseText"};
+                    }
+                    if (ajaxSettings.type == "POST"){
+                        if (response.error === undefined){
+                            if (response.captcha){ // If you are required to fill a captcha before posting
+                                //console.log(response);
+                            }else{
+                                for (var postID in response[threadID].posts){
+                                    if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
+                                        yourPosts[board][threadID].push(postID);
+                                        $('#'+postID+' .post_author').after('<span> (You)</span>');
+                                    }
                                 }
-                            }
-                            crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
-                            crosslinkTracker[board] = true;
-                            localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
-                            saveYourPosts();
+                                crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+                                crosslinkTracker[board] = true;
+                                localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
+                                saveYourPosts();
 
-                            var newPosts = Object.keys(response[threadID].posts);
-                            labelNewPosts(newPosts, false);
-                            //labelNewPosts(response);
+                                var newPosts = Object.keys(response[threadID].posts);
+                                labelNewPosts(newPosts, false);
+                            }
+                        }else{
+                            if (settings.UserSettings.notifications.value){
+                                notifyMe("An error occurred whilst posting", "http://i.imgur.com/HTcKk4Y.png", response.error, false);
+                            }
                         }
                     }else{
-                        notifyMe("An error occurred whilst posting", "http://i.imgur.com/HTcKk4Y.png", response.error, false);
-                    }
-                }else{
-                    if (response.error !== undefined){
-                        //console.log(response.error);
-                    }else{
-                        if (response[threadID] !== undefined){
-                            var newPosts = Object.keys(response[threadID].posts);
-                            labelNewPosts(newPosts, false);
-                            //labelNewPosts(response);
+                        if (response.error !== undefined){
+                            //console.log(response.error);
                         }else{
-                            //console.log("Not in a thread");
+                            if (response[threadID] !== undefined){
+                                var newPosts = Object.keys(response[threadID].posts);
+                                labelNewPosts(newPosts, false);
+                            }else{
+                                //console.log("Not in a thread");
+                            }
                         }
                     }
                 }
@@ -1976,49 +2093,51 @@ $(document).ready(function(){
 
     if (!(/(search|other)/).test(threadID)){
         $(document).ajaxComplete(function(event, request, ajaxSettings){ // Parse all GET and POST delivered posts and apply SpookyX features to them
-            if (request.responseText !== ""){
-                response = JSON.parse(request.responseText);
-            }else{
-                response = {"error":"No responseText"};
-            }
-            if (response.error !== undefined){
-                //console.log(response.error);
-            }else{
-                for (var key in response){
-                    if (response[key] !== null && response[key].posts !== undefined){
-                        var isBoard = (/(board)/).test(threadID);
-                        if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
-                            labelNewPosts(Object.keys(response[key].posts), true);
-                        }
-                        for (var post in response[key].posts){
-                            var newPost = $('#'+post);
-                            if (settings.UserSettings.inlineImages.value){inlineImages(newPost);} // Inline images
+            if (!(/inThread=true/).test(ajaxSettings.url)){
+                if (request.responseText !== ""){
+                    response = JSON.parse(request.responseText);
+                }else{
+                    response = {"error":"No responseText"};
+                }
+                if (response.error !== undefined){
+                    //console.log(response.error);
+                }else{
+                    for (var key in response){
+                        if (response[key] !== null && response[key].posts !== undefined){
+                            var isBoard = (/(board)/).test(threadID);
                             if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
-                                if (yourPostsLookup[board][post]){
-                                    newPost.find('.post_author').after('<span> (You)</span>');
+                                labelNewPosts(Object.keys(response[key].posts), true);
+                            }
+                            for (var post in response[key].posts){
+                                var newPost = $('#'+post);
+                                if (settings.UserSettings.inlineImages.value){inlineImages(newPost);} // Inline images
+                                if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
+                                    if (yourPostsLookup[board][post]){
+                                        newPost.find('.post_author').after('<span> (You)</span>');
+                                    }
                                 }
-                            }
-                            if (settings.UserSettings.inlineReplies.value){
-                                newPost.addClass("base");
-                            }
-                            if (settings.UserSettings.embedImages.value){embedImages(newPost);}
-                            if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
-                            if (settings.UserSettings.filter.value){filter(newPost);}
-                            if (settings.UserSettings.postQuote.value){
-                                newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
-                            }
-                            if (settings.UserSettings.hidePosts.value){
-                                $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
-                                if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
-                                    newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                                if (settings.UserSettings.inlineReplies.value){
+                                    newPost.addClass("base");
                                 }
-                            }
-                            if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
-                        } 
-                        if (settings.UserSettings.inlineImages.value){
-                            if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-                            if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
-                        }                   
+                                if (settings.UserSettings.embedImages.value){embedImages(newPost);}
+                                if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
+                                if (settings.UserSettings.filter.value){filter(newPost);}
+                                if (settings.UserSettings.postQuote.value){
+                                    newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
+                                }
+                                if (settings.UserSettings.hidePosts.value){
+                                    $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
+                                    if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+                                        newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                                    }
+                                }
+                                if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
+                            } 
+                            if (settings.UserSettings.inlineImages.value){
+                                if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+                                if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+                            }                   
+                        }
                     }
                 }
             }
@@ -2262,6 +2381,16 @@ function populateSettingsMenu(){
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
         settingsHTML += '<div id="Filter">'+generateFilterHTML()+'</div>';
         $('#settingsContent').html(settingsHTML);
+        $('#settingsContent select, #settingsContent input').each(function(i,el){
+            if (el.type !== "checkbox"){ // Add the top margins for non-checkboxes to align description with name
+                $(el).parent().next().addClass('selectDescription');
+            }
+            if (el.nodeName === "SELECT"){ // Hide the settings join line for select options that start with one or less visible suboptions
+                if ($(el).closest('div:not(.settingFlexContainer)').find('.suboption-list > :visible').length <= 1){
+                    $(el).closest('.settingFlexContainer').children('.settingsJoinLine').hide();
+                }                
+            }
+        });
         $('#settingsContent > div').hide();
         $('#settingsContent #'+$('.sections-list .active').html()).show();
         $('#settingsMenu').show();
@@ -2306,9 +2435,11 @@ function generateSubOptionHTML(input, path){
     $.each(input, function(key, value){
         if (value.name !== undefined){
             var checked = '';
+            var joinLineCheckbox = '';
             var subOpsHidden = '';
             if (value.value){
                 checked = ' checked';
+                joinLineCheckbox = " settingsJoinLineCheckbox";
             }else{
                 subOpsHidden = ' style="display: none;"';
             }
@@ -2323,20 +2454,29 @@ function generateSubOptionHTML(input, path){
                     }
                 });
                 if (ifMet){
-                    settingsHTML += '<div><label>';
+                    settingsHTML += '<div>';
                 }else{
-                    settingsHTML += '<div style="display:none;"><label>';
+                    settingsHTML += '<div style="display:none;">';
                 }
             }else{
-                settingsHTML += '<div><label>';
+                settingsHTML += '<div>';
             }
+            settingsHTML += '<div class="settingFlexContainer">';
+            if (value.suboptions !== undefined && Object.keys(value.suboptions).length > 1){
+                settingsHTML += '<div class="settingsJoinLine';
+                if (value.type === "checkbox"){
+                    settingsHTML += ' settingsJoinLineCheckbox';
+                }
+                settingsHTML += '"'+subOpsHidden+'></div>';
+            }
+            settingsHTML += '<label>';
             switch(value.type){
                 case "checkbox": settingsHTML += '<input type="checkbox" name="'+value.name+'" key="'+key+'"'+checked+' path="'+path+key+'">'; break;
                 case "text": settingsHTML += '<input type="text" name="'+value.name+'" key="'+key+'" value="'+value.value+'" path="'+path+key+'">'; break;
                 case "number": settingsHTML += '<input type="number" name="'+value.name+'" key="'+key+'" value="'+value.value+'" path="'+path+key+'">'; break;
                 case "select": settingsHTML += '<select name="'+value.name+'" key="'+key+'" path="'+path+key+'">'; $.each(value.value.options, function(i,v){settingsHTML += '<option'; if(v == value.value.value){settingsHTML += ' selected';} settingsHTML += '>'+v+'</option>';}); settingsHTML +='</select>'; break;
             }
-            settingsHTML += value.name+'</label><span class="description">: '+value.description+'</span>';
+            settingsHTML += value.name+': </label><span class="description">'+value.description+'</span></div>';
             if (value.suboptions !== undefined){
                 settingsHTML += '<div class="suboption-list"'+subOpsHidden+'>' + generateSubOptionHTML(value.suboptions,path+key+'.suboptions.') + '</div>';
             }
