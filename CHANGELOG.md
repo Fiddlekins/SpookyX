@@ -2,6 +2,11 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.3:** *(2015-06-23)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.3/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.3/README.md)
+- Added the Feedback link in the settings menu. It takes you to a moe archive thread so that you don't need to register to submit bug reports, feature requests, or other forms of feedback
+- Added 'Remove Reset' option under the 'Adjust Replybox' setting that allows you to remove the Reset button
+- fixed bug where I accidentally left reply notifications not automatically closing
+
 **v29.2:** *(2015-06-21)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.2/README.md)
 - Added new option, Enable Notification, which has suboption features to make the notifications hide spoilers and in Firefox trim overly long replies
 - Added 'Count unloaded posts' suboption for the post counter. Turning it on will make the post counter display the total number of posts in a thread, not just the ones that are loaded. This comes into play when viewing a thread in 'last x mode'
