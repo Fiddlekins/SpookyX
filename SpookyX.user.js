@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.2
+// @version       29.3
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -222,6 +222,12 @@ var settings = {
                     "description": "Make the reply options hidden by default in the quick reply",
                     "type": "checkbox",
                     "value": true
+                },
+                "removeReset": {
+                    "name": "Remove Reset",
+                    "description": "Remove the reset button from the reply box to prevent unwanted usage",
+                    "type": "checkbox",
+                    "value": false
                 }
             }
         },
@@ -1473,7 +1479,7 @@ function labelNewPosts(newPosts, boardView){
                 if (yourPostsLookup[linkBoard][linkID]){ // If the link points to your post
                     if (!notificationTriggered && !boardView){
                         if (settings.UserSettings.notifications.value){
-                            notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",notificationSpoiler(postID),false);
+                            notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",notificationSpoiler(postID),true);
                         }
                         unseenReplies.push(postID); // add postID to list of unseen replies
                         notificationTriggered = true;
@@ -1688,6 +1694,9 @@ function adjustReplybox(){
             "width":"320"
         });
     }
+    if (settings.UserSettings.adjustReplybox.suboptions.removeReset.value){
+        $('#reply .btn[type=reset]').remove();
+    }
 }
 
 function headerBar(){
@@ -1815,7 +1824,7 @@ $(document).ready(function(){
     }else{ // Insert settings link when on board index
         $('.container-fluid').append('<div class="headerBar" style="position: fixed; right: 0; top: 0;"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
     }
-    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
+    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a target="_blank" href="https://archive.moe/a/thread/126054592" style="text-decoration: underline;">Feedback</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
     $('.headerBar > a[title="SpookyX Settings"], a[title=Close]').on('click', function(){
         populateSettingsMenu();
