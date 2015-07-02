@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.3
+// @version       29.4
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -411,7 +411,7 @@ var settings = {
                             }
                         }
                     }
-                },                    
+                },
                 "shortcut": {
                     "name": "Hide shortcut",
                     "description": "Pressing H will toggle the visiblity of the headerbar",
@@ -419,6 +419,12 @@ var settings = {
                     "value": true
                 }
             }
+        },
+        "removeJfont": {
+            "name": "Remove Japanese Font",
+            "description": "Enabling this will make the addition of japanese characters to a post cease to change the post font and size. Presumably will cause issues for people whose default font doesn't support japanese characters",
+            "type": "checkbox",
+            "value": false
         }
     },
     "FilterSettings": {
@@ -1824,6 +1830,9 @@ $(document).ready(function(){
     }
     $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a target="_blank" href="https://archive.moe/a/thread/126054592" style="text-decoration: underline;">Feedback</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
+    if (!(/(search|board|other)/).test(threadID)){
+        $($('.navbar .nav')[1]).append('<li><a href="//boards.4chan.org/'+board+'/thread/'+threadID+'">View thread on 4chan</a></li>'); // Add view thread on 4chan link
+    }
     $('.headerBar > a[title="SpookyX Settings"], a[title=Close]').on('click', function(){
         populateSettingsMenu();
     });
@@ -2041,6 +2050,7 @@ $(document).ready(function(){
     mascot(parseMascotImageValue()); // Insert mascot
     if (settings.UserSettings.adjustReplybox.value){adjustReplybox();} // Adjust reply box
     if (settings.UserSettings.inlineImages.value){inlineImages(staticPostsAndOP);} // Inline images
+    if (settings.UserSettings.removeJfont.value){$('.shift-jis').removeClass('shift-jis');} // Remove japanese font formatting
     if (settings.UserSettings.inlineReplies.value){ // Inline replies
         staticPosts.each(function(i, post){
             $(post).addClass("base");
@@ -2141,6 +2151,7 @@ $(document).ready(function(){
                                     }
                                 }
                                 if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
+                                if (settings.UserSettings.removeJfont.value){newPost.find('.text').removeClass('shift-jis');} // Remove japanese font formatting
                             } 
                             if (settings.UserSettings.inlineImages.value){
                                 if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
