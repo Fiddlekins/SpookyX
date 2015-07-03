@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.4
+// @version       29.5
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -44,6 +44,18 @@ var settings = {
                     "description": "Hovering over videos with the mouse brings a full or window scaled version in view",
                     "type": "checkbox",
                     "value": true
+                },
+                "autoplayGifs": {
+                    "name": "Autoplay embedded gifs",
+                    "description": "Make embedded gifs play automatically",
+                    "type": "checkbox",
+                    "value": true
+                },
+                "autoplayVids": {
+                    "name": "Autoplay embedded videos",
+                    "description": "Make embedded videos play automatically (they start muted, expanding unmutes)",
+                    "type": "checkbox",
+                    "value": false
                 }
             }
         },
@@ -58,12 +70,6 @@ var settings = {
                     "description": "The maximum number of images (or other media) to embed in each post",
                     "type": "number",
                     "value": 1
-                },
-                "autoplayVids": {
-                    "name": "Autoplay embedded videos",
-                    "description": "Make embedded videos play automatically (they start muted, expanding unmutes)",
-                    "type": "checkbox",
-                    "value": false
                 }
             }
         },
@@ -534,7 +540,7 @@ var notLoadedPostCount = 0;
 var DocumentTitle = document.title;
 var ignoreInline = ['v'];
 var rulesBox = $(".rules_box").html();
-if(settings.UserSettings.embedImages.suboptions.autoplayVids.value){var autoplayVid = "autoplay";}else{var autoplayVid="";}
+if(settings.UserSettings.inlineImages.suboptions.autoplayVids.value){var autoplayVid = "autoplay";}else{var autoplayVid = "";}
 
 var threadID; // Returns undefined if there's no thread
 var splitURL = (document.URL).split("/");
@@ -954,7 +960,8 @@ var embedImages = function(posts){
                             $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
                             $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
                         });
-                        if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+                        imageHover();
+                        canvasHover();
                     }else if (mediaType == "video"){
                         mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
                         elem.append('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
@@ -990,7 +997,8 @@ var embedImages = function(posts){
                             });
                         });
                         removeLink(currentLink);
-                        if(settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
+                        imageHover();
+                        canvasHover();
                     }
                 }else{
                     if(!(/&gt;&gt;/).test(mediaLink)){
@@ -1013,84 +1021,143 @@ function removeLink(currentLink){
     $(currentLink).remove();
 }
 
-function imageHover(){
-    $('img').off("mouseenter");
-    $('img').off("mousemove");
-    $('img').off("mouseout");
-    $('img').on("mouseenter", function(e){
-        if($(this)[0].id !== "mascot" && !$(this).hasClass("bigImage")){
-            $(this).clone().removeClass("smallImage smallImageOP spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
-            var headerBarHeight = $('#headerFixed')[0].offsetHeight;
-            var visibleHeight = window.innerHeight - headerBarHeight;
-            $('#hoverUI > img').css({
-                "max-height":visibleHeight,
-                "max-width":$('body').innerWidth() - e.clientX - 50,
-                "top": function(){
-                    return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
-                },
-                "left":e.clientX + 50
+function pauseGifs(posts){
+    posts.each(function(i,img){
+        if ((/\.gif/).test(img.src)){
+            $(img).on('load',function(){
+                $(img).after('<canvas class="smallImage" width="'+img.naturalWidth+'" height="'+img.naturalHeight+'"></canvas>');
+                $(img).attr('gif',true).toggle();
+                $(img).addClass("bigImage").removeClass("smallImage");
+                var canvas = $(img).next('canvas');
+                canvas[0].getContext("2d").drawImage(img,0,0);
+                canvasHover();
             });
         }
-    });
-    $('img').on("mousemove", function(e){
-        if(!$(this).hasClass("bigImage")){
-            var headerBarHeight = $('#headerFixed')[0].offsetHeight;
-            var visibleHeight = window.innerHeight - headerBarHeight;
-            $('#hoverUI > img').css({
-                "max-height":visibleHeight,
-                "max-width":$('body').innerWidth() - e.clientX - 50,
-                "top": function(){
-                    return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
-                },
-                "left":e.clientX + 50
-            });
-        }
-    });
-    $('img').on("mouseout", function(e){
-        $('#hoverUI').html('');
     });
 }
 
+function imageHover(){
+    if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.imageHover.value){
+        $('img').off("mouseenter");
+        $('img').off("mousemove");
+        $('img').off("mouseout");
+        $('img').on("mouseenter", function(e){
+            if(e.target.id !== "mascot" && !$(e.target).hasClass("bigImage")){
+                $(e.target).clone().removeClass("smallImage smallImageOP spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
+                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
+                var visibleHeight = window.innerHeight - headerBarHeight;
+                $('#hoverUI > img').css({
+                    "max-height":visibleHeight,
+                    "max-width":$('body').innerWidth() - e.clientX - 50,
+                    "top": function(){
+                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                    },
+                    "left":e.clientX + 50
+                });
+            }
+        });
+        $('img').on("mousemove", function(e){
+            if(!$(this).hasClass("bigImage")){
+                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
+                var visibleHeight = window.innerHeight - headerBarHeight;
+                $('#hoverUI > img').css({
+                    "max-height":visibleHeight,
+                    "max-width":$('body').innerWidth() - e.clientX - 50,
+                    "top": function(){
+                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                    },
+                    "left":e.clientX + 50
+                });
+            }
+        });
+        $('img').on("mouseout", function(e){
+            $('#hoverUI').html('');
+        });
+    }
+}
+
+function canvasHover(){
+    if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.imageHover.value){
+        $('canvas').off("mouseenter");
+        $('canvas').off("mousemove");
+        $('canvas').off("mouseout");
+        $('canvas').on("mouseenter", function(e){
+            if(e.target.id !== "myCanvas"){
+                $(e.target.previousSibling).clone().show().removeClass("spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
+                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
+                var visibleHeight = window.innerHeight - headerBarHeight;
+                $('#hoverUI > img').css({
+                    "max-height":visibleHeight,
+                    "max-width":$('body').innerWidth() - e.clientX - 50,
+                    "top": function(){
+                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                    },
+                    "left":e.clientX + 50
+                });
+            }
+        });
+        $('canvas').on("mousemove", function(e){
+            if(!$(e.target).hasClass("bigImage")){
+                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
+                var visibleHeight = window.innerHeight - headerBarHeight;
+                $('#hoverUI > img').css({
+                    "max-height":visibleHeight,
+                    "max-width":$('body').innerWidth() - e.clientX - 50,
+                    "top": function(){
+                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                    },
+                    "left":e.clientX + 50
+                });
+            }
+        });
+        $('canvas').on("mouseout", function(e){
+            $('#hoverUI').html('');
+        });
+    }
+}
+
 function videoHover(){
-    $('video').off("mouseenter");
-    $('video').off("mousemove");
-    $('video').off("mouseout");
-    $('video').on("mouseenter", function(e){
-        if($(this)[0].id !== "mascot" && !$(this).hasClass("fullVideo")){
-            $(this).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
-            $('#hoverUI > video').removeAttr('width');
-            $('#hoverUI > video')[0].oncanplay = function(){
-                if ($('#hoverUI > video').length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
-                    $('#hoverUI > video')[0].muted=false;
-                    $('#hoverUI > video')[0].play();
-                    var headerBarHeight = $('#headerFixed')[0].offsetHeight;
-                    var visibleHeight = window.innerHeight - headerBarHeight;
-                    $('#hoverUI > video').css({
-                        "max-height":visibleHeight,
-                        "max-width":$('body').innerWidth() - e.clientX - 50,
-                        "top": function(){
-                            return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > video')[0].videoHeight) + headerBarHeight;
-                        },
-                        "left":e.clientX + 50
-                    });
-                    $('video').on("mousemove", function(e){
-                        var headerBarHeight = $('#headerFixed')[0].offsetHeight;
+    if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.videoHover.value){
+        $('video').off("mouseenter");
+        $('video').off("mousemove");
+        $('video').off("mouseout");
+        $('video').on("mouseenter", function(e){
+            if(e.target.id !== "mascot" && !$(e.target).hasClass("fullVideo")){
+                $(e.target).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
+                $('#hoverUI > video').removeAttr('width');
+                $('#hoverUI > video')[0].oncanplay = function(){
+                    if ($('#hoverUI > video').length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
+                        $('#hoverUI > video')[0].muted=false;
+                        $('#hoverUI > video')[0].play();
+                        var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
                         var visibleHeight = window.innerHeight - headerBarHeight;
                         $('#hoverUI > video').css({
                             "max-height":visibleHeight,
+                            "max-width":$('body').innerWidth() - e.clientX - 50,
                             "top": function(){
                                 return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > video')[0].videoHeight) + headerBarHeight;
                             },
                             "left":e.clientX + 50
                         });
-                    });
-                }
-            };
-        }
-    });
-    $('video').on("mouseout", function(e){
-        $('#hoverUI').html('');
-    });
+                        $('video').on("mousemove", function(e){
+                            var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
+                            var visibleHeight = window.innerHeight - headerBarHeight;
+                            $('#hoverUI > video').css({
+                                "max-height":visibleHeight,
+                                "top": function(){
+                                    return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > video')[0].videoHeight) + headerBarHeight;
+                                },
+                                "left":e.clientX + 50
+                            });
+                        });
+                    }
+                };
+            }
+        });
+        $('video').on("mouseout", function(e){
+            $('#hoverUI').html('');
+        });
+    }
 }
 
 function relativeTimestamps(posts){
@@ -2084,6 +2151,7 @@ $(document).ready(function(){
         });
     }
     if (settings.UserSettings.embedImages.value){embedImages(staticPosts);} // Embed images
+    if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs($('img'));} // Stop gifs autoplaying
     if (!(/(other)/).test(threadID) && settings.UserSettings.relativeTimestamps.value){relativeTimestamps(staticPostsAndOP);linkHoverEvent();} // Initiate relative timestamps
     if (!(/(search|board|other)/).test(threadID) && settings.UserSettings.postQuote.value){
         $('.post_data > [data-function=quote]').each(function(){
@@ -2107,8 +2175,9 @@ $(document).ready(function(){
     }
     if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
     if (settings.UserSettings.filter.value){filter(staticPostsAndOP);}
-    if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-    if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+    imageHover();
+    canvasHover();
+    videoHover();
 
     if (!(/(search|other)/).test(threadID)){
         $(document).ajaxComplete(function(event, request, ajaxSettings){ // Parse all GET and POST delivered posts and apply SpookyX features to them
@@ -2138,9 +2207,10 @@ $(document).ready(function(){
                                 if (settings.UserSettings.inlineReplies.value){
                                     newPost.addClass("base");
                                 }
-                                if (settings.UserSettings.embedImages.value){embedImages(newPost);}
-                                if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);}
-                                if (settings.UserSettings.filter.value){filter(newPost);}
+                                if (settings.UserSettings.embedImages.value){embedImages(newPost);} // Embed images
+                                if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs(newPost.find('img'));} // Stop gifs autoplaying
+                                if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);} // Add relative timestamps
+                                if (settings.UserSettings.filter.value){filter(newPost);} // Apply filter
                                 if (settings.UserSettings.postQuote.value){
                                     newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
                                 }
@@ -2153,10 +2223,9 @@ $(document).ready(function(){
                                 if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
                                 if (settings.UserSettings.removeJfont.value){newPost.find('.text').removeClass('shift-jis');} // Remove japanese font formatting
                             } 
-                            if (settings.UserSettings.inlineImages.value){
-                                if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-                                if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
-                            }                   
+                            imageHover();
+                            canvasHover();
+                            videoHover();
                         }
                     }
                 }
@@ -2188,8 +2257,9 @@ $(document).ready(function(){
                         });
                         $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
                         if (settings.UserSettings.inlineImages.value){inlineImages($('#r'+postID));} // Inline images
-                        if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-                        if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+                        imageHover();
+                        canvasHover();
+                        videoHover();
                     }
                 }else{
                     if ($(e.target).hasClass("inlined")){
@@ -2209,8 +2279,9 @@ $(document).ready(function(){
                         });
                         $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
                         if (settings.UserSettings.inlineImages.value){inlineImages($('#r'+postID));} // Inline images
-                        if (settings.UserSettings.inlineImages.suboptions.imageHover.value){imageHover();}
-                        if (settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
+                        imageHover();
+                        canvasHover();
+                        videoHover();
                     }
                 }
             }
@@ -2243,12 +2314,29 @@ $(document).ready(function(){
                 e.preventDefault();
                 var image = $(e.target);
                 image.closest('.thread_image_box').find('.spoilerText').toggle(); // Toggle the Spoiler text
-                if (image.hasClass("thread_image")){
-                    image.toggleClass("smallImageOP"); // If OP image
+                if (image.attr('gif')){
+                    var canvas = image.next('canvas');
+                    canvas.toggle();
+                    image.toggle();
                 }else{
-                    image.toggleClass("smallImage");
+                    if (image.hasClass("thread_image")){
+                        image.toggleClass("smallImageOP"); // If OP image
+                    }else{
+                        image.toggleClass("smallImage");
+                    }
+                    image.toggleClass("bigImage");
+                    $('#hoverUI').html('');
+                    image.trigger("mouseenter");
                 }
-                image.toggleClass("bigImage");
+            }
+        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName == "CANVAS"){ // Expand images
+            if (!e.originalEvent.ctrlKey && e.which == 1){
+                e.preventDefault();
+                var canvas = $(e.target);
+                var image = canvas.prev('img');
+                canvas.closest('.thread_image_box').find('.spoilerText').toggle(); // Toggle the Spoiler text
+                canvas.toggle();
+                image.toggle();
                 $('#hoverUI').html('');
                 image.trigger("mouseenter");
             }
@@ -2401,19 +2489,19 @@ function populateSettingsMenu(){
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
         settingsHTML += '<div id="Filter">'+generateFilterHTML()+'</div>';
         $('#settingsContent').html(settingsHTML);
+        $('#settingsContent > div').hide();
+        $('#settingsContent #'+$('.sections-list .active').html()).show();
+        $('#settingsMenu').show();
         $('#settingsContent select, #settingsContent input').each(function(i,el){
             if (el.type !== "checkbox"){ // Add the top margins for non-checkboxes to align description with name
                 $(el).parent().next().addClass('selectDescription');
             }
             if (el.nodeName === "SELECT"){ // Hide the settings join line for select options that start with one or less visible suboptions
-                if ($(el).closest('div:not(.settingFlexContainer)').find('.suboption-list > :visible').length <= 1){
+                if ($(el).closest('div:not(.settingFlexContainer)').children('.suboption-list').children(':visible').length <= 1){
                     $(el).closest('.settingFlexContainer').children('.settingsJoinLine').hide();
                 }                
             }
         });
-        $('#settingsContent > div').hide();
-        $('#settingsContent #'+$('.sections-list .active').html()).show();
-        $('#settingsMenu').show();
         $('#settingsContent .suboption-list > :visible:last').addClass('last');
     }
 }
@@ -2455,14 +2543,12 @@ function generateSubOptionHTML(input, path){
     $.each(input, function(key, value){
         if (value.name !== undefined){
             var checked = '';
-            var joinLineCheckbox = '';
             var subOpsHidden = '';
-            if (value.value){
-                checked = ' checked';
-                joinLineCheckbox = " settingsJoinLineCheckbox";
-            }else{
-                subOpsHidden = ' style="display: none;"';
-            }
+                if (value.value){
+                    checked = ' checked';
+                }else{
+                    subOpsHidden = ' style="display: none;"';
+                }
             if (value.if !== undefined){
                 var parentPath = objpath(settings.UserSettings, path.substring(0, path.length-'.suboptions.'.length));
                 var pattTest = new RegExp(parentPath.value.value);
