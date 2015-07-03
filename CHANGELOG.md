@@ -2,6 +2,11 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.5:** *(2015-07-03)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.5/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.5/README.md)
+- New Feature: Added setting to control whether gifs autoplay, found under inline images
+- Moved autoplay video setting to a more appropriate location
+- fixed bug with settings menu generation where settings join lines were only showing after changing the value of the select
+
 **v29.4:** *(2015-07-02)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.4/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.4/README.md)
 - New Feature: Remove Japanese Font. Enabling this stops posts containing japanese characters from being formatted differently to normal posts. Turned off by default since it will presumably not work for some people
 - Added a 'View thread on 4chan' link to the navbar
