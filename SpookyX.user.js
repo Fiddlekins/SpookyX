@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.6
+// @version       29.61
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -843,6 +843,7 @@ function delayedLoad(posts){
                     $target.removeData('dontHover');
                     $target.off('click'); // Remove event listener now that it's served its purpose
                     inlineImages($target.closest('article'));
+                    if (!settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs($target);} // Stop gifs autoplaying
                 }
             });
         });
