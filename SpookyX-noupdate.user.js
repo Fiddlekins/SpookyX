@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.5
+// @version       29.6
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -33,6 +33,12 @@ var settings = {
             "type": "checkbox",
             "value": true,
             "suboptions": {
+                "delayedLoad": {
+                    "name": "Delayed Load",
+                    "description": "Fullsize images are not automatically retrieved and used to replace the thumbnails. Instead this occurs on an individual basis when the thumbnails are clicked on",
+                    "type": "checkbox",
+                    "value": false
+                },
                 "imageHover": {
                     "name": "Image Hover",
                     "description": "Hovering over images with the mouse brings a full or window scaled version in view",
@@ -309,7 +315,7 @@ var settings = {
                     "name": "Click-through",
                     "description": "Allow you to click through the mascot if it is on top of buttons, etc",
                     "type": "checkbox",
-                    "value": true,
+                    "value": true
                 },
                 "width": {
                     "name": "Width",
@@ -333,7 +339,7 @@ var settings = {
                     "name": "Mute videos",
                     "description": "If using a video for a mascot the sound will be muted",
                     "type": "checkbox",
-                    "value": true,
+                    "value": true
                 }
             }
         },
@@ -347,13 +353,13 @@ var settings = {
                     "name": "Left margin",
                     "description": "Specify the width in pixels of the gap between the start of the posts and the left side of the screen. Negative values set it to equal the mascot width",
                     "type": "number",
-                    "value": 0,
+                    "value": 0
                 },
                 "rightMargin": {
                     "name": "Right margin",
                     "description": "Specify the width in pixels of the gap between the end of the posts and the right side of the screen. Negative values set it to equal the mascot width",
                     "type": "number",
-                    "value": 0,
+                    "value": 0
                 },
                 "align": {
                     "name": "Align",
@@ -552,7 +558,7 @@ if ((/\/search\//).test(document.URL)){
 }else if ((/\/last\//).test(document.URL)){
     threadID = splitURL[6];
 }else{
-    if (board === "_" || splitURL[4] === "" || splitURL[4] === undefined || splitURL[4] === "ghost"){
+    if (board === "_" || splitURL[4] === "" || splitURL[4] === undefined || splitURL[4] === "ghost" || splitURL[4] === "page"){
         if (board !== "" && board !== undefined && board !== "_"){
             threadID = "board";
         }else{
@@ -823,41 +829,61 @@ shortcut = {
     }
 };
 
-var inlineImages = function(posts){
+function delayedLoad(posts){
     posts.each(function(i, post){
-        if (!$(post).data('inlineImages')){
-            $(post).data('inlineImages', true);
-            $(post).find('.thread_image_box').each(function(index,currentImage){
-                $(currentImage).find('>a').each(function(){
-                    var fullImage = $(this).attr('href');
-                    if (fullImage.match(/\.webm$/)){ // Handle post webms
-                        $(currentImage).html('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
-                    }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
-                        $(currentImage).find('img').each(function(){
-                            var thumbImage = $(this).attr('src');
-                            $(this).attr('src',fullImage);
-                            $(this).error(function(e){ // Handle images that won't load
-                                if (!$(this).data("triedThumb")){
-                                    $(this).data("triedThumb", true);
-                                    if (fullImage !== thumbImage){ // If the image has a thumbnail aka was 4chan native then use that
-                                        $(this).attr('src',thumbImage);
-                                    }
+        ($(post).hasClass('thread') ? $(post).children('.thread_image_box').find('img') : $(post).find('img')).each(function(i,image){
+            var $image = $(image);
+            $image.data('dontHover',true); // Stop imageHover displaying the thumbnails
+            $image.on('click', function(e){ // Stop the OP from returning all the sub images and thus duplicating them
+                if (!e.originalEvent.ctrlKey && e.which == 1){
+                    e.preventDefault();
+                    var $target = $(e.target);
+                    $target.removeData('dontHover');
+                    $target.off('click'); // Remove event listener now that it's served its purpose
+                    inlineImages($target.closest('article'));
+                }
+            });
+        });
+    });
+}
+
+function inlineImages(posts){
+    posts.each(function(i, post){
+        ($(post).hasClass('thread') ? $(post).children('.thread_image_box') : $(post).find('.thread_image_box')).each(function(i,currentImage){
+            $(currentImage).find('>a').each(function(j,imgLink){
+                var fullImage = imgLink.href;
+                if (fullImage.match(/\.webm$/)){ // Handle post webms
+                    $(currentImage).prepend('<video width="'+($(post).hasClass('thread') ? 250 : 125)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
+                    $(imgLink).remove();
+                    if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
+                        videoHover();
+                    }
+                }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
+                    $(currentImage).find('img').each(function(k, image){
+                        var $image = $(image);
+                        var thumbImage = $(image).attr('src');
+                        $image.attr('src',fullImage);
+                        $image.error(function(e){ // Handle images that won't load
+                            if (!$image.data("triedThumb")){
+                                $image.data("triedThumb", true);
+                                if (fullImage !== thumbImage){ // If the image has a thumbnail aka was 4chan native then use that
+                                    $image.attr('src',thumbImage);
                                 }
-                            });
-                            $(this).removeAttr('width');
-                            $(this).removeAttr('height');
-                            if ($(this).hasClass("thread_image")){ // Handle OP images
-                                $(this).addClass("smallImageOP");
-                            }else{ // Handle post images
-                                $(this).addClass("smallImage");
                             }
                         });
-                    }
-                });
+                        $image.removeAttr('width');
+                        $image.removeAttr('height');
+                        if ($image.hasClass("thread_image")){ // Handle OP images
+                            $image.addClass("smallImageOP");
+                        }else{ // Handle post images
+                            $image.addClass("smallImage");
+                        }
+                    });
+                }
             });
-        }
+        });
     });
-};
+}
 
 function getSelectionText() {
     var text = "";
@@ -881,6 +907,7 @@ function togglePost(postID, mode){
         $('#'+postID).prev().toggle();
     }
 }
+
 function recursiveToggle(postID, mode){
     var checkedPostCollection = {};
     var postList = [postID];
@@ -1042,7 +1069,7 @@ function imageHover(){
         $('img').off("mousemove");
         $('img').off("mouseout");
         $('img').on("mouseenter", function(e){
-            if(e.target.id !== "mascot" && !$(e.target).hasClass("bigImage")){
+            if(e.target.id !== "mascot" && !$(e.target).hasClass("bigImage") && !$(e.target).data('dontHover')){
                 $(e.target).clone().removeClass("smallImage smallImageOP spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
                 var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
                 var visibleHeight = window.innerHeight - headerBarHeight;
@@ -1050,7 +1077,7 @@ function imageHover(){
                     "max-height":visibleHeight,
                     "max-width":$('body').innerWidth() - e.clientX - 50,
                     "top": function(){
-                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
                     },
                     "left":e.clientX + 50
                 });
@@ -1064,7 +1091,7 @@ function imageHover(){
                     "max-height":visibleHeight,
                     "max-width":$('body').innerWidth() - e.clientX - 50,
                     "top": function(){
-                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
                     },
                     "left":e.clientX + 50
                 });
@@ -1090,7 +1117,7 @@ function canvasHover(){
                     "max-height":visibleHeight,
                     "max-width":$('body').innerWidth() - e.clientX - 50,
                     "top": function(){
-                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
                     },
                     "left":e.clientX + 50
                 });
@@ -1104,7 +1131,7 @@ function canvasHover(){
                     "max-height":visibleHeight,
                     "max-width":$('body').innerWidth() - e.clientX - 50,
                     "top": function(){
-                        return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > img')[0].height) + headerBarHeight;
+                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
                     },
                     "left":e.clientX + 50
                 });
@@ -1125,7 +1152,7 @@ function videoHover(){
             if(e.target.id !== "mascot" && !$(e.target).hasClass("fullVideo")){
                 $(e.target).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
                 $('#hoverUI > video').removeAttr('width');
-                $('#hoverUI > video')[0].oncanplay = function(){
+                $('#hoverUI > video').on('canplaythrough', function(){
                     if ($('#hoverUI > video').length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
                         $('#hoverUI > video')[0].muted=false;
                         $('#hoverUI > video')[0].play();
@@ -1135,7 +1162,7 @@ function videoHover(){
                             "max-height":visibleHeight,
                             "max-width":$('body').innerWidth() - e.clientX - 50,
                             "top": function(){
-                                return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > video')[0].videoHeight) + headerBarHeight;
+                                return (visibleHeight - $('#hoverUI > video')[0].clientHeight)*(e.clientY / visibleHeight) + headerBarHeight;
                             },
                             "left":e.clientX + 50
                         });
@@ -1145,13 +1172,13 @@ function videoHover(){
                             $('#hoverUI > video').css({
                                 "max-height":visibleHeight,
                                 "top": function(){
-                                    return (e.clientY / visibleHeight)*(visibleHeight - $('#hoverUI > video')[0].videoHeight) + headerBarHeight;
+                                    return (visibleHeight - $('#hoverUI > video')[0].clientHeight)*(e.clientY / visibleHeight) + headerBarHeight;
                                 },
                                 "left":e.clientX + 50
                             });
                         });
                     }
-                };
+                });
             }
         });
         $('video').on("mouseout", function(e){
@@ -1498,7 +1525,6 @@ function notificationSpoiler(postID){
         var lineCount = settings.UserSettings.notifications.suboptions.restrict.suboptions.lines.value;
         var charCount = settings.UserSettings.notifications.suboptions.restrict.suboptions.characters.value;
         var restrictedText = temp.text().trim().substr(0, charCount*lineCount); // Dock three extra chars to replace with ellipses
-        console.log(restrictedText);
         var restTextLines = restrictedText.split('\n');
         restrictedText = '';
         for (var i = 0; i < lineCount; i++){
@@ -2112,11 +2138,18 @@ $(document).ready(function(){
         }
     }
     var staticPosts = $('article.post');
-    var staticPostsAndOP = $('article.post, article.thread:not(.backlink_container)');
+    var onlyOP = $('article.thread:not(.backlink_container)');
+    var staticPostsAndOP = staticPosts.add(onlyOP); // Save querying the staticPosts twice by extending the first query with the OP
     if (settings.UserSettings.headerBar.value){headerBar();} // Customise headerbar behaviour
     mascot(parseMascotImageValue()); // Insert mascot
     if (settings.UserSettings.adjustReplybox.value){adjustReplybox();} // Adjust reply box
-    if (settings.UserSettings.inlineImages.value){inlineImages(staticPostsAndOP);} // Inline images
+    if (settings.UserSettings.inlineImages.value){ // Inline images
+        if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
+            delayedLoad(staticPostsAndOP);
+        }else{
+            inlineImages(staticPostsAndOP);
+        }
+    }
     if (settings.UserSettings.removeJfont.value){$('.shift-jis').removeClass('shift-jis');} // Remove japanese font formatting
     if (settings.UserSettings.inlineReplies.value){ // Inline replies
         staticPosts.each(function(i, post){
@@ -2128,16 +2161,20 @@ $(document).ready(function(){
             if (board === "_"){ // Handle finding the board per post for all-board searches
                 $('article.post').each(function(i,post){
                     var postBoard = $(post).find('.post_show_board').html().replace(/\//g,'');
-                    if (yourPostsLookup[postBoard][post.id]){
-                        $(post).find('.post_author').after('<span> (You)</span>');
+                    if (yourPostsLookup[postBoard] !== undefined){
+                        if (yourPostsLookup[postBoard][post.id]){
+                            $(post).find('.post_author').after('<span> (You)</span>');
+                        }
                     }
                 });
             }else{ // Handle the lack of threadID for board indexes and single-board searches
-                $('article.post, article.thread').each(function(i,post){
-                    if (yourPostsLookup[board][post.id]){
-                        $(post).find('.post_author').after('<span> (You)</span>');
-                    }
-                });
+                if (yourPostsLookup[board] !== undefined){
+                    $('article.post, article.thread').each(function(i,post){
+                        if (yourPostsLookup[board][post.id]){
+                            $(post).find('.post_author').after('<span> (You)</span>');
+                        }
+                    });
+                }
             }
         }else{ // Handle regular threads by iterating over the yourPosts values for that specific thread (better performance than per each post parsing)
             $.each(yourPosts[board][threadID], function(i,v){ // Parse all backlinks present on pageload
@@ -2347,7 +2384,7 @@ $(document).ready(function(){
             if (video.hasClass("fullVideo")){
                 video[0].pause();
                 video[0].muted=true;
-                video.attr('width',"125");
+                video.attr('width',(video.closest('article').hasClass('thread') ? 250 : 125));
                 video.removeAttr('controls');
                 video.removeClass("fullVideo");
             }else{
@@ -2544,11 +2581,11 @@ function generateSubOptionHTML(input, path){
         if (value.name !== undefined){
             var checked = '';
             var subOpsHidden = '';
-                if (value.value){
-                    checked = ' checked';
-                }else{
-                    subOpsHidden = ' style="display: none;"';
-                }
+            if (value.value){
+                checked = ' checked';
+            }else{
+                subOpsHidden = ' style="display: none;"';
+            }
             if (value.if !== undefined){
                 var parentPath = objpath(settings.UserSettings, path.substring(0, path.length-'.suboptions.'.length));
                 var pattTest = new RegExp(parentPath.value.value);
