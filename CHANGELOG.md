@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.61:** *(2015-07-12)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.61/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.61/README.md)
+- fixed bug where using delayed load would autoplay gifs regardless of how the gif autoplay setting is set
+
 **v29.6:** *(2015-07-12)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.6/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.6/README.md)
 - New Feature: Delayed Load is a suboption of Inline Images that makes the script only load the fullsize image when clicked upon
 - fixed bug where board page urls weren't being identified properly
