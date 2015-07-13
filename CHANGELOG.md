@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.62:** *(2015-07-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.62/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.62/README.md)
+- fixed bug where non-ghost posts were being given a silly white border-right in Midnight theme
+
 **v29.61:** *(2015-07-12)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.61/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.61/README.md)
 - fixed bug where using delayed load would autoplay gifs regardless of how the gif autoplay setting is set
 
