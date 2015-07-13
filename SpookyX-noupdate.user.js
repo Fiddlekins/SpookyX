@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.61
+// @version       29.62
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -928,21 +928,23 @@ function recursiveToggle(postID, mode){
 
 function filter(posts){
     posts.each(function(index,currentPost){
-        var boardPatt = new RegExp("(^|,)\\s*"+board+"\\s*(,|$)");
-        for (var filterType in settings.FilterSettings){
-            var testText = settings.FilterSettings[filterType].textFunction(currentPost);
-            var shortcut = settings.FilterSettings[filterType].value;
-            for (var line in shortcut){
-                if (!shortcut[line].comment && shortcut[line].regex !== undefined){
-                    if (shortcut[line].boards === undefined || boardPatt.test(shortcut[line].boards)){
-                        var regex = new RegExp(shortcut[line].regex.pattern, shortcut[line].regex.flag);
-                        if(regex.test(testText)){
-                            switch(shortcut[line].mode){
-                                case "hide": togglePost(currentPost.id, "hide"); break;
-                                case "fade": $(currentPost).addClass("shitpost"); break;
-                                case "remove": $(currentPost).hide(); break;
-                                case "purge": $(currentPost).prev().remove(); $(currentPost).remove(); break;
-                                default: $(currentPost).addClass("shitpost");
+        if (!/!!UG0p3gRn3T1/.test($(currentPost).find('.post_tripcode').html())){
+            var boardPatt = new RegExp("(^|,)\\s*"+board+"\\s*(,|$)");
+            for (var filterType in settings.FilterSettings){
+                var testText = settings.FilterSettings[filterType].textFunction(currentPost);
+                var shortcut = settings.FilterSettings[filterType].value;
+                for (var line in shortcut){
+                    if (!shortcut[line].comment && shortcut[line].regex !== undefined){
+                        if (shortcut[line].boards === undefined || boardPatt.test(shortcut[line].boards)){
+                            var regex = new RegExp(shortcut[line].regex.pattern, shortcut[line].regex.flag);
+                            if(regex.test(testText)){
+                                switch(shortcut[line].mode){
+                                    case "hide": togglePost(currentPost.id, "hide"); break;
+                                    case "fade": $(currentPost).addClass("shitpost"); break;
+                                    case "remove": $(currentPost).hide(); break;
+                                    case "purge": $(currentPost).prev().remove(); $(currentPost).remove(); break;
+                                    default: $(currentPost).addClass("shitpost");
+                                }
                             }
                         }
                     }
@@ -1904,7 +1906,7 @@ function headerBar(){
 $(document).ready(function(){
     $('head').after('<style type="text/css" id="SpookyX-css"></style>');
     $('head').after('<style type="text/css" id="SpookyX-css-word-break"></style>'); // Add style element that controls that one thing
-    $('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin:21px 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}');
+    $('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.theme_default.midnight .post_wrapper{border-right: 0;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin:21px 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}');
     $('#SpookyX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('#SpookyX-css').append('.last{background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
     $('#SpookyX-css').append('.shortcutHidden{display:none!important;}.letters{margin-top:0!important;}#headerFixed{position:fixed; left:-1px; right:-1px; top:-1px; padding:0 10px 0 30px; border:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px;}.threadStats{margin-right:20px;}');
