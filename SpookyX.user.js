@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.62
+// @version       29.7
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -64,6 +64,38 @@ var settings = {
                     "description": "Make embedded videos play automatically (they start muted, expanding unmutes)",
                     "type": "checkbox",
                     "value": false
+                },
+                "customSize": {
+                    "name": "Custom thumbnail size",
+                    "description": "Specify the thumbnail dimensions",
+                    "type": "checkbox",
+                    "value": false,
+                    "suboptions": {
+                        "widthOP": {
+                            "name": "OP image width",
+                            "description": "The maximum width of OP images in pixels",
+                            "type": "number",
+                            "value": 250
+                        },
+                        "heightOP": {
+                            "name": "OP image height",
+                            "description": "The maximum height of OP images in pixels",
+                            "type": "number",
+                            "value": 250
+                        },
+                        "width": {
+                            "name": "Post image width",
+                            "description": "The maximum width of post images in pixels",
+                            "type": "number",
+                            "value": 125
+                        },
+                        "height": {
+                            "name": "Post image height",
+                            "description": "The maximum height of post images in pixels",
+                            "type": "number",
+                            "value": 125
+                        }
+                    }
                 }
             }
         },
@@ -215,7 +247,21 @@ var settings = {
             "name": "Filter",
             "description": "Hide undesirable posts from view",
             "type": "checkbox",
-            "value": false
+            "value": false,
+            "suboptions": {
+                "filterNotifications": {
+                    "name": "Filter Notifications",
+                    "description": "Enabling this will stop creating reply notifications if the reply is filtered with hide or remove mode. Purge mode filtered replies will never create notifications",
+                    "type": "checkbox",
+                    "value": true
+                },
+                "recursiveFiltering": {
+                    "name": "Recursive Filtering",
+                    "description": "Posts that reply to filtered posts will also be filtered",
+                    "type": "checkbox",
+                    "value": false
+                }
+            }
         },
         "adjustReplybox": {
             "name": "Adjust Replybox",
@@ -447,7 +493,8 @@ var settings = {
             "value":[
                 {"comment": "#/久保島のミズゴロウ/;"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.post_author').html();}
+            "threadPostFunction":function(currentPost){return $(currentPost).find('.post_author').html();},
+            "responseObjFunction":function(response){return response.name_processed;}
         },
         "tripcode":{
             "name":"Tripcode",
@@ -455,7 +502,8 @@ var settings = {
                 {"comment": "#/!!/90sanF9F3Z/;"},
                 {"comment": "#/!!T2TCnNZDvZu/;"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.post_tripcode').html();}
+            "threadPostFunction":function(currentPost){return $(currentPost).find('.post_tripcode').html();},
+            "responseObjFunction":function(response){return response.trip_processed;}
         },
         "uniqueID":{
             "name":"Unique ID",
@@ -465,9 +513,11 @@ var settings = {
                 {"comment": "#/bUAl\\+t9X/;"},
                 {"comment": "#/ID:bUAl\\+t9X/;"},
                 {"comment": "# But this fails:"},
-                {"comment": "#/bUAl+t9X/; "}
+                {"comment": "#/bUAl+t9X/; "},
+                {"comment": "# It's also worth noting that prefixing it with 'ID:' can cause the filter to fail to accurately detect when using recursive filtering. To assure it works fully stick to just using the hash like 'bUAl+t9X'"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.poster_hash').html();}
+            "threadPostFunction":function(currentPost){return $(currentPost).find('.poster_hash').html();},
+            "responseObjFunction":function(response){return response.poster_hash_processed;}
         },
         "capcode":{
             "name":"Capcode",
@@ -476,23 +526,28 @@ var settings = {
                 {"comment": "#/Mod$/;highlight:mod;"},
                 {"comment": "# Set a custom class for moot:"},
                 {"comment": "#/Admin$/;highlight:moot;"},
-                {"comment": "# (highlighting isn't implemented yet)"}
+                {"comment": "# (highlighting isn't implemented yet)"},
+                {"comment": "# For recursive filter to always work you will need to add regex lines for M, A & D for Moderators, Admins and Developers respectively"},
+                {"comment": "# e.g. /A/; will filter Admins accurately always whilst /Admin/; won't always work for recursively filtered posts"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.post_level').html();}
+            "threadPostFunction":function(currentPost){return $(currentPost).find('.post_level').html();},
+            "responseObjFunction":function(response){return response.capcode;}
         },
         "subject":{
             "name":"Subject",
             "value":[
                 {"comment": "#/(^|[^A-z])quest([^A-z]|$)/i;boards:tg;"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.post_title').html();}
+            "threadPostFunction":function(currentPost){return $(currentPost).find('.post_title').html();},
+            "responseObjFunction":function(response){return response.title_processed;}
         },
         "comment":{
             "name":"Comment",
             "value":[
                 {"comment": "#/daki[\\\\S]*/i; boards:tg;"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.text').html();}
+            "threadPostFunction":function(currentPost){return $(currentPost).find('.text').html();},
+            "responseObjFunction":function(response){return response.comment;}
         },
         "flag":{
             "name":"Flag",
@@ -500,12 +555,14 @@ var settings = {
                 {"comment": "#Remove kebob"},
                 {"comment": "#/turkey/i;mode:remove;"}
             ],
-            "textFunction":function(currentPost){return $(currentPost).find('.flag').attr('title');}
+            "threadPostFunction":function(currentPost){return $(currentPost).find('.flag').attr('title');},
+            "responseObjFunction":function(response){return response.poster_country_name_processed;}
         },
         "filename":{
             "name":"Filename",
             "value":[],
-            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename').html();}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.innerHTML;});} return combined;}
+            "threadPostFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename').html();}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.innerHTML;});} return combined;},
+            "responseObjFunction":function(response){if(response.media === null || response.media === undefined){return "";} return response.media.media_filename_processed;}
         },
         "fileurl":{
             "name":"File URL",
@@ -513,7 +570,8 @@ var settings = {
                 {"comment": "# Filter by site for example:"},
                 {"comment": "#/tumblr/;"}
             ],
-            "textFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename')[0].href;}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.href;});} return combined;}
+            "threadPostFunction":function(currentPost){var combined = ''; if($(currentPost).hasClass('thread')){combined = $(currentPost).find('.post_file_filename')[0].href;}else{$.each($(currentPost).find('.post_file_filename'), function(){combined += this.href;});} return combined;},
+            "responseObjFunction":function(response){if(response.media === null || response.media === undefined){return "";} return response.media.remote_media_link;}
         }
     }
 };
@@ -572,6 +630,17 @@ if ((/\/search\//).test(document.URL)){
 console.log(splitURL);
 console.log(threadID);
 console.log(board);*/
+
+var imageWidthOP = 250;
+var imageHeightOP = 250;
+var imageWidth = 125;
+var imageHeight = 125;
+if (settings.UserSettings.inlineImages.suboptions.customSize.value){
+    imageWidthOP = settings.UserSettings.inlineImages.suboptions.customSize.suboptions.widthOP.value;
+    imageHeightOP = settings.UserSettings.inlineImages.suboptions.customSize.suboptions.heightOP.value;
+    imageWidth = settings.UserSettings.inlineImages.suboptions.customSize.suboptions.width.value;
+    imageHeight = settings.UserSettings.inlineImages.suboptions.customSize.suboptions.height.value;
+}
 
 var yourPostsLookup = {};
 var crosslinkTracker = {};
@@ -856,7 +925,7 @@ function inlineImages(posts){
             $(currentImage).find('>a').each(function(j,imgLink){
                 var fullImage = imgLink.href;
                 if (fullImage.match(/\.webm$/)){ // Handle post webms
-                    $(currentImage).prepend('<video width="'+($(post).hasClass('thread') ? 250 : 125)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
+                    $(currentImage).prepend('<video width="'+($(post).hasClass('thread') ? imageWidthOP : imageWidth)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
                     $(imgLink).remove();
                     if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
                         videoHover();
@@ -929,47 +998,98 @@ function recursiveToggle(postID, mode){
 }
 
 function filter(posts){
+    var boardPatt = new RegExp("(^|,)\\s*"+board+"\\s*(,|$)");
     posts.each(function(index,currentPost){
-        if (!/!!UG0p3gRn3T1/.test($(currentPost).find('.post_tripcode').html())){
-            var boardPatt = new RegExp("(^|,)\\s*"+board+"\\s*(,|$)");
-            for (var filterType in settings.FilterSettings){
-                var testText = settings.FilterSettings[filterType].textFunction(currentPost);
-                var shortcut = settings.FilterSettings[filterType].value;
-                for (var line in shortcut){
-                    if (!shortcut[line].comment && shortcut[line].regex !== undefined){
-                        if (shortcut[line].boards === undefined || boardPatt.test(shortcut[line].boards)){
-                            var regex = new RegExp(shortcut[line].regex.pattern, shortcut[line].regex.flag);
-                            if(regex.test(testText)){
-                                switch(shortcut[line].mode){
-                                    case "hide": togglePost(currentPost.id, "hide"); break;
-                                    case "fade": $(currentPost).addClass("shitpost"); break;
-                                    case "remove": $(currentPost).hide(); break;
-                                    case "purge": $(currentPost).prev().remove(); $(currentPost).remove(); break;
-                                    default: $(currentPost).addClass("shitpost");
+        var $currentPost = $(currentPost);
+        if (!/!!UG0p3gRn3T1/.test($currentPost.find('.post_tripcode').html())){
+            if (settings.UserSettings.filter.suboptions.recursiveFiltering.value && !$currentPost.hasClass('thread')){ // Recursive filter and not OP
+                var checkedBacklinks = {};
+                $currentPost.find('.text .backlink').each(function(i,backlink){
+                    if (!checkedBacklinks[backlink.dataset.board+backlink.dataset.post]){ // Prevent reprocessing duplicate links
+                        checkedBacklinks[backlink.dataset.board+backlink.dataset.post] = true;
+                        var backlinkPost = $('#'+backlink.dataset.post);
+                        if (backlink.dataset.board === board && backlinkPost.length){ // If linked post is present in thread
+                            if (backlinkPost.is(':visible')){ // If linked post is visible
+                                if (backlinkPost.hasClass('shitpost')){ // If linked post is a shitpost
+                                    $currentPost.addClass('shitpost');
+                                }
+                            }else{ // Linked post isn't visible
+                                if (backlinkPost.prev().is(':visible')){ // If the hide post stub is visible (and thus the linked post is hidden)
+                                    togglePost(currentPost.id, "hide");
+                                }else{ // The linked post has been filtered with mode remove
+                                    $currentPost.hide();
                                 }
                             }
+                        }else{ // Linked post isn't present in thread
+                            $.ajax({
+                                url: "/_/api/chan/post/",
+                                data:{"board":backlink.dataset.board,"num":backlink.dataset.post},
+                                type:"GET"
+                            }).done(function(response){
+                                processPosts(checkFilter(response, false), $currentPost, currentPost);
+                                $currentPost.find('.backlink_list .backlink').each(function(j,replyBacklink){ // Filter replies
+                                    filter($('#'+replyBacklink.dataset.post));
+                                });
+                            });                        
                         }
                     }
-                }
+                });
+            }
+            if ($(currentPost).length){ // If after all that the post hasn't been purged
+                processPosts(checkFilter(currentPost, true), $currentPost, currentPost);
             }
         }
     });
 }
 
+function processPosts(type, $currentPost, currentPost){
+    switch(type){
+        case 1: $currentPost.addClass("shitpost"); break;
+        case 2: togglePost(currentPost.id, "hide"); break;
+        case 3: $currentPost.hide(); break;
+        case 4: $currentPost.prev().remove(); $currentPost.remove();
+    }
+}
+
+function checkFilter(input, inThreadPost){
+    var output = 0;
+    for (var filterType in settings.FilterSettings){
+        var testText = inThreadPost ? settings.FilterSettings[filterType].threadPostFunction(input) : settings.FilterSettings[filterType].responseObjFunction(input);
+        var shortcut = settings.FilterSettings[filterType].value;
+        for (var line in shortcut){
+            if (!shortcut[line].comment && shortcut[line].regex !== undefined){
+                if (shortcut[line].boards === undefined || boardPatt.test(shortcut[line].boards)){
+                    var regex = new RegExp(shortcut[line].regex.pattern, shortcut[line].regex.flag);
+                    if(regex.test(testText)){
+                        switch(shortcut[line].mode){
+                            case "fade": if (output < 1){output = 1}; break;
+                            case "hide": if (output < 2){output = 2}; break;
+                            case "remove": output = 3; break;
+                            case "purge": return 4;
+                            default: if (output < 1){output = 1};
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return output;
+}
+
 var embedImages = function(posts){
+    var imageFiletypes = new RegExp("\\.(jpg|jpeg|png|gif)($|(\\?|:)[\\S]+$)",'i');
+    var videoFiletypes = new RegExp("\\.(webm|gifv|mp4)($|(\\?|:)[\\S]+$)",'i');
+    var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
     posts.each(function(index, currentArticle){
         if (!$(currentArticle).data('imgEmbed')){
             $(currentArticle).data('imgEmbed',true);
-            var imageFiletypes = new RegExp(".(jpg|jpeg|png|gif)($|(\\?|:)[\\S]+$)",'i');
-            var videoFiletypes = new RegExp(".(webm|gifv|mp4)($|(\\?|:)[\\S]+$)",'i');
-            var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
             var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $(currentArticle).find('.thread_image_box').length;
             $(currentArticle).find(".text a").each(function(index, currentLink){
                 if (imgNum === 0){
                     return false;
                 }
                 var mediaType = "notMedia";
-                var mediaLink = currentLink.href;//$(this).html();
+                var mediaLink = currentLink.href;
                 if (imageFiletypes.test(mediaLink)){
                     mediaType = "image";
                 }else if (videoFiletypes.test(mediaLink)){
@@ -996,7 +1116,7 @@ var embedImages = function(posts){
                         canvasHover();
                     }else if (mediaType == "video"){
                         mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
-                        elem.append('<video width="125" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
+                        elem.append('<video width="'+imageWidth+'" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
                         removeLink(currentLink);
                         elem.find('video')[0].onloadedmetadata = function(e){
                             $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
@@ -1580,11 +1700,13 @@ function labelNewPosts(newPosts, boardView){
                 var linkID = $(link).attr('data-post').replace(',','_');
                 if (yourPostsLookup[linkBoard][linkID]){ // If the link points to your post
                     if (!notificationTriggered && !boardView){
-                        if (settings.UserSettings.notifications.value){
-                            notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",notificationSpoiler(postID),true);
+                        if (!settings.UserSettings.filter.value || !settings.UserSettings.filter.suboptions.filterNotifications.value || $('#'+postID+':visible').length){ // Filter notifications
+                            if (settings.UserSettings.notifications.value){
+                                notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",notificationSpoiler(postID),true);
+                            }
+                            unseenReplies.push(postID); // add postID to list of unseen replies
+                            notificationTriggered = true;
                         }
-                        unseenReplies.push(postID); // add postID to list of unseen replies
-                        notificationTriggered = true;
                     }
                     link.textContent += ' (You)'; // Designate the link as such
                 }
@@ -1597,7 +1719,9 @@ function labelNewPosts(newPosts, boardView){
                 }
             }
         });
-        unseenPosts.push(postID); // add postID to list of unseen posts
+        if (document.getElementById(postID) !== null){ // Don't add to unseen posts if filter has purged the post
+            unseenPosts.push(postID); // add postID to list of unseen posts
+        }
     });
 }
 
@@ -1908,7 +2032,7 @@ function headerBar(){
 $(document).ready(function(){
     $('head').after('<style type="text/css" id="SpookyX-css"></style>');
     $('head').after('<style type="text/css" id="SpookyX-css-word-break"></style>'); // Add style element that controls that one thing
-    $('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:125px; max-height:125px}.smallImageOP{max-width:250px; max-height:250px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.theme_default.midnight .post_wrapper{border-right: 0;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin:21px 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}');
+    $('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:'+imageWidth+'px; max-height:'+imageHeight+'px}.smallImageOP{max-width:'+imageWidthOP+'px; max-height:'+imageHeightOP+'px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.theme_default.midnight .post_wrapper{border-right: 0;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin:21px 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: '+imageWidth+'px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}');
     $('#SpookyX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
     $('#SpookyX-css').append('.last{background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
     $('#SpookyX-css').append('.shortcutHidden{display:none!important;}.letters{margin-top:0!important;}#headerFixed{position:fixed; left:-1px; right:-1px; top:-1px; padding:0 10px 0 30px; border:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px;}.threadStats{margin-right:20px;}');
@@ -1996,7 +2120,14 @@ $(document).ready(function(){
             var value;
             var elementPath = $(e.target).attr('path');
             var settingPath = objpath(settings.UserSettings, elementPath);
-            if (e.target.type == "checkbox"){
+            if (e.target.type === "checkbox"){
+                if (e.target.name === "Filter"){
+                    if (settings.UserSettings.filter.value){
+                        $('#filterDisabledMessage').show();
+                    }else{
+                        $('#filterDisabledMessage').hide();
+                    }
+                }
                 value = e.target.checked;
                 $(e.target).closest('div:not(.settingFlexContainer)').children('.suboption-list').toggle(); // Make parent checkboxes collapse the suboptions if they're unticked
                 $(e.target).closest('.settingFlexContainer').children('.settingsJoinLine').toggle();
@@ -2110,7 +2241,9 @@ $(document).ready(function(){
                                 for (var postID in response[threadID].posts){
                                     if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
                                         yourPosts[board][threadID].push(postID);
-                                        $('#'+postID+' .post_author').after('<span> (You)</span>');
+                                        var newPost = $('#'+postID);
+                                        newPost.find('.post_author').after('<span> (You)</span>');
+                                        if (settings.UserSettings.filter.value){filter(newPost);} // Apply filter
                                     }
                                 }
                                 crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
@@ -2118,8 +2251,7 @@ $(document).ready(function(){
                                 localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
                                 saveYourPosts();
 
-                                var newPosts = Object.keys(response[threadID].posts);
-                                labelNewPosts(newPosts, false);
+                                labelNewPosts(Object.keys(response[threadID].posts), false);
                             }
                         }else{
                             if (settings.UserSettings.notifications.value){
@@ -2131,8 +2263,10 @@ $(document).ready(function(){
                             //console.log(response.error);
                         }else{
                             if (response[threadID] !== undefined){
-                                var newPosts = Object.keys(response[threadID].posts);
-                                labelNewPosts(newPosts, false);
+                                for (var postID in response[threadID].posts){
+                                    if (settings.UserSettings.filter.value){filter($('#'+postID));} // Apply filter
+                                }
+                                labelNewPosts(Object.keys(response[threadID].posts), false);
                             }else{
                                 //console.log("Not in a thread");
                             }
@@ -2238,33 +2372,35 @@ $(document).ready(function(){
                             if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
                                 labelNewPosts(Object.keys(response[key].posts), true);
                             }
-                            for (var post in response[key].posts){
-                                var newPost = $('#'+post);
-                                if (settings.UserSettings.inlineImages.value){inlineImages(newPost);} // Inline images
-                                if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
-                                    if (yourPostsLookup[board][post]){
-                                        newPost.find('.post_author').after('<span> (You)</span>');
+                            for (var postID in response[key].posts){
+                                if (document.getElementById(postID) !== null){ // Don't process post if filter has purged it
+                                    var newPost = $('#'+postID);
+                                    if (settings.UserSettings.inlineImages.value){inlineImages(newPost);} // Inline images
+                                    if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
+                                        if (yourPostsLookup[board][postID]){
+                                            newPost.find('.post_author').after('<span> (You)</span>');
+                                        }
                                     }
-                                }
-                                if (settings.UserSettings.inlineReplies.value){
-                                    newPost.addClass("base");
-                                }
-                                if (settings.UserSettings.embedImages.value){embedImages(newPost);} // Embed images
-                                if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs(newPost.find('img'));} // Stop gifs autoplaying
-                                if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);} // Add relative timestamps
-                                if (settings.UserSettings.filter.value){filter(newPost);} // Apply filter
-                                if (settings.UserSettings.postQuote.value){
-                                    newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
-                                }
-                                if (settings.UserSettings.hidePosts.value){
-                                    $('#'+post+' > .pull-left').removeClass('stub'); // Show hide post buttons
-                                    if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
-                                        newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                                    if (settings.UserSettings.inlineReplies.value){
+                                        newPost.addClass("base");
                                     }
+                                    if (settings.UserSettings.embedImages.value){embedImages(newPost);} // Embed images
+                                    if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs(newPost.find('img'));} // Stop gifs autoplaying
+                                    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);} // Add relative timestamps
+                                    if (isBoard && settings.UserSettings.filter.value){filter(newPost);} // Apply filter
+                                    if (settings.UserSettings.postQuote.value){
+                                        newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
+                                    }
+                                    if (settings.UserSettings.hidePosts.value){
+                                        newPost.children('.pull-left').removeClass('stub'); // Show hide post buttons
+                                        if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+                                            newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                                        }
+                                    }
+                                    if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
+                                    if (settings.UserSettings.removeJfont.value){newPost.find('.text').removeClass('shift-jis');} // Remove japanese font formatting
                                 }
-                                if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
-                                if (settings.UserSettings.removeJfont.value){newPost.find('.text').removeClass('shift-jis');} // Remove japanese font formatting
-                            } 
+                            }
                             imageHover();
                             canvasHover();
                             videoHover();
@@ -2389,7 +2525,7 @@ $(document).ready(function(){
             if (video.hasClass("fullVideo")){
                 video[0].pause();
                 video[0].muted=true;
-                video.attr('width',(video.closest('article').hasClass('thread') ? 250 : 125));
+                video.attr('width',(video.closest('article').hasClass('thread') ? imageWidthOP : imageWidth));
                 video.removeAttr('controls');
                 video.removeClass("fullVideo");
             }else{
@@ -2438,13 +2574,13 @@ function quickReply(){
     $('#reply').toggleClass("quickReply");
     $('#reply fieldset > div:nth-child(1)').css("width","");
     if ($('#reply').hasClass("showQROptions")){
-        $('#reply fieldset > div:nth-child(3)').toggle();
+        $('#reply .pull-left:not(.input-append)').toggle();
     }
 }
 
 function quickReplyOptions(){
     $('#reply').toggleClass("showQROptions");
-    $('#reply.quickReply fieldset > div:nth-child(3)').toggle();
+    $('#reply.quickReply .pull-left:not(.input-append)').toggle();
 }
 
 var favican = document.createElement("IMG");
@@ -2531,9 +2667,12 @@ function populateSettingsMenu(){
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
         settingsHTML += '<div id="Filter">'+generateFilterHTML()+'</div>';
         $('#settingsContent').html(settingsHTML);
-        $('#settingsContent > div').hide();
-        $('#settingsContent #'+$('.sections-list .active').html()).show();
-        $('#settingsMenu').show();
+        if (!settings.UserSettings.filter.value){
+            $('#filterDisabledMessage').show(); // Show filter disabled message if the filter is disabled
+        }
+        $('#settingsContent > div').hide(); //  Hide all tabs
+        $('#settingsContent #'+$('.sections-list .active').html()).show(); // Show active tab
+        $('#settingsMenu').show(); // Show the menu
         $('#settingsContent select, #settingsContent input').each(function(i,el){
             if (el.type !== "checkbox"){ // Add the top margins for non-checkboxes to align description with name
                 $(el).parent().next().addClass('selectDescription');
@@ -2555,7 +2694,7 @@ function generateFilterHTML(){
         settingsHTML += ' | <a href="javascript:;" name="'+type+'">'+settings.FilterSettings[type].name+'</a>';
     }
     settingsHTML += '</div>';
-    settingsHTML += '<div id="filter_guide" style="padding:4px;"><p>Use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" style="text-decoration: underline;">regular expressions</a>, one per line. <br>Lines starting with a <code>#</code> will be ignored. <br>For example, <code>/weeaboo/i</code> will filter posts containing the string <code>weeaboo</code>, case-insensitive. <br><br>You can use these settings with each regular expression, separate them with semicolons: </p><ul> <li>Per boards, separate them with commas. It is global if not specified. <br>For example: <code>boards:a,tg;</code></li><li> Set the way the filter will handle the post with <code>mode</code><br>For example: <code>mode:hide;</code><br>Valid options are: <ul> <li><code>purge</code>: Remove the post from the page entirely, the site will need to reload the post for hoverlinks and such to work.</li><li><code>remove</code>: Remove the post from view but leave it in the page.</li><li><code>hide</code>: Collapse the post, leave a button to restore it.</li><li><code>fade</code>: Simply halve the opacity of the post. This is the default if the mode isn\'t specified.</li></ul> </li></ul></div>';
+    settingsHTML += '<div id="filter_guide" style="padding:4px;"><div id="filterDisabledMessage" style="color: #d14; background-color: #f7f7f9; text-align: center; font-size: 15px; display:none;">The Filter is currently disabled. Turn it on via the setting in the Main tab</div><p>Use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" style="text-decoration: underline;">regular expressions</a>, one per line. <br>Lines starting with a <code>#</code> will be ignored. <br>For example, <code>/weeaboo/i</code> will filter posts containing the string <code>weeaboo</code>, case-insensitive. <br><br>You can use these settings with each regular expression, separate them with semicolons: </p><ul> <li>Per boards, separate them with commas. It is global if not specified. <br>For example: <code>boards:a,tg;</code></li><li> Set the way the filter will handle the post with <code>mode</code><br>For example: <code>mode:hide;</code><br>Valid options are: <ul> <li><code>purge</code>: Remove the post from the page entirely, the site will need to reload the post for hoverlinks and such to work.</li><li><code>remove</code>: Remove the post from view but leave it in the page.</li><li><code>hide</code>: Collapse the post, leave a button to restore it.</li><li><code>fade</code>: Simply halve the opacity of the post. This is the default if the mode isn\'t specified.</li></ul> </li></ul></div>';
     for (var type in settings.FilterSettings){
         settingsHTML += '<div id="filter_'+type+'" style="display: none;"><textarea name="'+type+'" spellcheck="false" class="filterTextarea">';
         $.each(settings.FilterSettings[type].value, function(i,line){
