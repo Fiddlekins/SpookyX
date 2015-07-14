@@ -2,6 +2,13 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.7:** *(2015-07-14)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.7/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.7/README.md)
+- Added Filter Notifications and Recursive Filtering options under the Filter setting
+- Added Custom thumbnail size under the Inline Images setting
+- Hide QR Options now hides the Rules and Uses as well
+- Guide panel of the Filter	Settings tab now notifies you if the filter is turned off
+- fixed bug where the image embedding was checking for just the extension and not the period prefixing the extension (helps avoid inaccurate link detection)
+
 **v29.62:** *(2015-07-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.62/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.62/README.md)
 - fixed bug where non-ghost posts were being given a silly white border-right in Midnight theme
 
