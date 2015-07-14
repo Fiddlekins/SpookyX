@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.7
+// @version       29.8
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       https://*4plebs.org/*
 // @include       http://*4plebs.org/*
@@ -976,6 +976,7 @@ function togglePost(postID, mode){
         $('#'+postID).toggle();
         $('#'+postID).prev().toggle();
     }
+    postCounter(); // Update hidden post counter
 }
 
 function recursiveToggle(postID, mode){
@@ -1188,39 +1189,33 @@ function pauseGifs(posts){
 
 function imageHover(){
     if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.imageHover.value){
-        $('img').off("mouseenter");
-        $('img').off("mousemove");
-        $('img').off("mouseout");
-        $('img').on("mouseenter", function(e){
+        var $image = $('img');
+        $image.off("mouseenter mousemove mouseout");
+        $image.on("mouseenter", function(e){
             if(e.target.id !== "mascot" && !$(e.target).hasClass("bigImage") && !$(e.target).data('dontHover')){
                 $(e.target).clone().removeClass("smallImage smallImageOP spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
-                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
-                var visibleHeight = window.innerHeight - headerBarHeight;
-                $('#hoverUI > img').css({
-                    "max-height":visibleHeight,
-                    "max-width":$('body').innerWidth() - e.clientX - 50,
-                    "top": function(){
-                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
-                    },
+            }
+        });
+        $image.on("mousemove mouseenter", function(e){
+            var etarget = e.target;
+            if(!$(etarget).hasClass("bigImage")){
+                var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
+                var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
+                var windowWidth = $('body').innerWidth(); // Define internal dimensions
+                var windowHeight = window.innerHeight -21; // -21 so link destination doesn't overlay image
+                var visibleHeight = windowHeight - headerBarHeight;
+                var visibleWidth = windowWidth - e.clientX - 50;
+                var canFitFullHeight = windowHeight*etarget.naturalWidth/etarget.naturalHeight < visibleWidth - headerBarWidth +1;
+                var $img = $('#hoverUI > img');
+                $img.css({
+                    "max-height": canFitFullHeight ? windowHeight : visibleHeight,
+                    "max-width": visibleWidth,
+                    "top": canFitFullHeight ? (windowHeight - $img[0].height)*(e.clientY / windowHeight) : (visibleHeight - $img[0].height)*(e.clientY / visibleHeight) + headerBarHeight,
                     "left":e.clientX + 50
                 });
             }
         });
-        $('img').on("mousemove", function(e){
-            if(!$(this).hasClass("bigImage")){
-                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
-                var visibleHeight = window.innerHeight - headerBarHeight;
-                $('#hoverUI > img').css({
-                    "max-height":visibleHeight,
-                    "max-width":$('body').innerWidth() - e.clientX - 50,
-                    "top": function(){
-                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
-                    },
-                    "left":e.clientX + 50
-                });
-            }
-        });
-        $('img').on("mouseout", function(e){
+        $image.on("mouseout", function(e){
             $('#hoverUI').html('');
         });
     }
@@ -1228,39 +1223,33 @@ function imageHover(){
 
 function canvasHover(){
     if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.imageHover.value){
-        $('canvas').off("mouseenter");
-        $('canvas').off("mousemove");
-        $('canvas').off("mouseout");
-        $('canvas').on("mouseenter", function(e){
+        var $canvas = $('canvas');
+        $canvas.off("mouseenter mousemove mouseout");
+        $canvas.on("mouseenter", function(e){
             if(e.target.id !== "myCanvas"){
                 $(e.target.previousSibling).clone().show().removeClass("spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
-                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
-                var visibleHeight = window.innerHeight - headerBarHeight;
-                $('#hoverUI > img').css({
-                    "max-height":visibleHeight,
-                    "max-width":$('body').innerWidth() - e.clientX - 50,
-                    "top": function(){
-                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
-                    },
+            }
+        });
+        $canvas.on("mousemove mouseenter", function(e){
+            var etarget = e.target;
+            if(!$(etarget).hasClass("bigImage")){
+                var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
+                var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
+                var windowWidth = $('body').innerWidth(); // Define internal dimensions
+                var windowHeight = window.innerHeight -21; // -21 so link destination doesn't overlay image
+                var visibleHeight = windowHeight - headerBarHeight;
+                var visibleWidth = windowWidth - e.clientX - 50;
+                var canFitFullHeight = windowHeight*etarget.naturalWidth/etarget.naturalHeight < visibleWidth - headerBarWidth +1;
+                var $img = $('#hoverUI > img');
+                $img.css({
+                    "max-height": canFitFullHeight ? windowHeight : visibleHeight,
+                    "max-width": visibleWidth,
+                    "top": canFitFullHeight ? (windowHeight - $img[0].height)*(e.clientY / windowHeight) : (visibleHeight - $img[0].height)*(e.clientY / visibleHeight) + headerBarHeight,
                     "left":e.clientX + 50
                 });
             }
         });
-        $('canvas').on("mousemove", function(e){
-            if(!$(e.target).hasClass("bigImage")){
-                var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
-                var visibleHeight = window.innerHeight - headerBarHeight;
-                $('#hoverUI > img').css({
-                    "max-height":visibleHeight,
-                    "max-width":$('body').innerWidth() - e.clientX - 50,
-                    "top": function(){
-                        return (visibleHeight - $('#hoverUI > img')[0].height)*(e.clientY / visibleHeight) + headerBarHeight;
-                    },
-                    "left":e.clientX + 50
-                });
-            }
-        });
-        $('canvas').on("mouseout", function(e){
+        $canvas.on("mouseout", function(e){
             $('#hoverUI').html('');
         });
     }
@@ -1268,35 +1257,28 @@ function canvasHover(){
 
 function videoHover(){
     if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.videoHover.value){
-        $('video').off("mouseenter");
-        $('video').off("mousemove");
-        $('video').off("mouseout");
+        $('video').off("mouseenter mousemove mouseout");
         $('video').on("mouseenter", function(e){
             if(e.target.id !== "mascot" && !$(e.target).hasClass("fullVideo")){
                 $(e.target).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
-                $('#hoverUI > video').removeAttr('width');
-                $('#hoverUI > video').on('canplaythrough', function(){
-                    if ($('#hoverUI > video').length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
-                        $('#hoverUI > video')[0].muted=false;
-                        $('#hoverUI > video')[0].play();
-                        var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
-                        var visibleHeight = window.innerHeight - headerBarHeight;
-                        $('#hoverUI > video').css({
-                            "max-height":visibleHeight,
-                            "max-width":$('body').innerWidth() - e.clientX - 50,
-                            "top": function(){
-                                return (visibleHeight - $('#hoverUI > video')[0].clientHeight)*(e.clientY / visibleHeight) + headerBarHeight;
-                            },
-                            "left":e.clientX + 50
-                        });
+                var $video = $('#hoverUI > video');
+                $video.removeAttr('width');
+                $video.on('canplaythrough', function(){
+                    if ($video.length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
+                        $video[0].muted=false;
+                        $video[0].play();
                         $('video').on("mousemove", function(e){
-                            var headerBarHeight = document.getElementById('headerFixed').offsetHeight;
-                            var visibleHeight = window.innerHeight - headerBarHeight;
-                            $('#hoverUI > video').css({
-                                "max-height":visibleHeight,
-                                "top": function(){
-                                    return (visibleHeight - $('#hoverUI > video')[0].clientHeight)*(e.clientY / visibleHeight) + headerBarHeight;
-                                },
+                            var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
+                            var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
+                            var windowWidth = $('body').innerWidth(); // Define internal dimensions
+                            var windowHeight = window.innerHeight;
+                            var visibleHeight = windowHeight - headerBarHeight;
+                            var visibleWidth = windowWidth - e.clientX - 50;
+                            var canFitFullHeight = windowHeight*e.target.videoWidth/e.target.videoHeight < visibleWidth - headerBarWidth +1;
+                            $video.css({
+                                "max-height": canFitFullHeight ? windowHeight : visibleHeight,
+                                "max-width": visibleWidth,
+                                "top": canFitFullHeight ? (windowHeight - $video[0].clientHeight)*(e.clientY / windowHeight) : (visibleHeight - $video[0].clientHeight)*(e.clientY / visibleHeight) + headerBarHeight,
                                 "left":e.clientX + 50
                             });
                         });
@@ -1513,19 +1495,21 @@ function newPosts(){
 function postCounter(){
     if (!(/other/).test(threadID)){
         var postCount = notLoadedPostCount + $('.post_wrapper').length;
+        var hiddenPostCount = $('.post.stub:visible').length;
+        var imageCount = $(".thread_image_box").length;
         if (settings.UserSettings.postCounter.suboptions.location.value.value === "Header bar"){
             $(".rules_box").html(rulesBox);
             if (settings.UserSettings.postCounter.suboptions.limits.value){
-                $(".threadStats").html("<span>Posts: " + postCount + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
+                $(".threadStats").html("<span>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " +imageCount+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
             }else{
-                $(".threadStats").html("<span>Posts: " + postCount + " Images: " + $(".thread_image_box").length + "</span>");
+                $(".threadStats").html("<span>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ " Images: " +imageCount+ "</span>");
             }
         }else{
             $(".threadStats").html('');
             if (settings.UserSettings.postCounter.suboptions.limits.value){
-                $(".rules_box").html("<h6>Posts: " + postCount + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " + $(".thread_image_box").length + "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
+                $(".rules_box").html("<h6>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " +imageCount+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
             }else{
-                $(".rules_box").html("<h6>Posts: " + postCount + "<br> Images: " + $(".thread_image_box").length + "</h6>" + rulesBox);
+                $(".rules_box").html("<h6>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ "<br> Images: " +imageCount+ "</h6>" + rulesBox);
             }
         }
     }
