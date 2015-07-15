@@ -2,6 +2,17 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.9:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.9/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.9/README.md)
+- Tidied up the site matching for the userscript, added some, removed some
+- On archives that have a native inline image expansion feature this should be disabled (and the button removed) if SpookyX has inline images enabled
+- Made differentiation of OP and non-OP images far more sensible and slightly faster
+- Adjusted URL detection to more appropriately handle applying SpookyX features to unusual pages
+- fixed bug where the script would break in a thread without a replybox
+- fixed bug where mousing over media that have yet to be loaded due to Delayed Load caused an error
+- fixed bug where Delayed Load would not enforce Custom thumbnail sizes until after the image was clicked
+- fixed bug where the settingsjoinline was the incorrect colour, something especially noticeable using Midnight theme
+- fixed bug where the settings lines weren't stopping at the last suboption on pages without posts
+
 **v29.81:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.81/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.81/README.md) - *([theBladeee](https://github.com/theBladeee))*
 - Fixed a domain issue for Love is Over Archive
 
