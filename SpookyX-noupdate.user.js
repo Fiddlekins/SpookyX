@@ -2,23 +2,31 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.81
+// @version       29.9
 // @namespace     https://github.com/Fiddlekins/SpookyX
-// @include       https://*4plebs.org/*
-// @include       http://*4plebs.org/*
-// @include       https://archive.moe/*
+// @include       http://archive.4plebs.org/*
+// @include       https://archive.4plebs.org/*
+// @include       https://*archive.moe/*
 // @include       http://archive.loveisover.me/*
 // @include       https://archive.loveisover.me/*
-// @include       http://*imcute.yt/*
-// @include       https://*imcute.yt/*
 // @include       http://boards.foolz.us/*
 // @include       https://boards.foolz.us/*
-// @include       https://*nyafuu.org/*
-// @include       http://*nyafuu.org/*
-// @include       https://*fgts.jp/*
+// @include       http://archive.nyafuu.org/*
+// @include       https://archive.nyafuu.org/*
 // @include       http://*fgts.jp/*
-// @include       https://*not4plebs.org/*
-// @include       http://*not4plebs.org/*
+// @include       https://*fgts.jp/*
+// @include       http://totally.not4plebs.org/*
+// @include       https://totally.not4plebs.org/*
+// @include       http://archive*.desustorage.org/*
+// @include       https://archive*.desustorage.org/*
+// @include       http://boards.fireden.net/*
+// @include       https://boards.fireden.net/*
+// @include       http://boards.wohlfe.net/*
+// @include       https://boards.wohlfe.net/*
+// @include       http://www.neetchan.org/*
+// @include       https://www.neetchan.org/*
+// @include       http://archive.sfur.net/*
+// @include       https://archive.sfur.net/*
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
 // @grant         none
@@ -606,17 +614,15 @@ var ignoreInline = ['v'];
 var rulesBox = $(".rules_box").html();
 if(settings.UserSettings.inlineImages.suboptions.autoplayVids.value){var autoplayVid = "autoplay";}else{var autoplayVid = "";}
 
-var threadID; // Returns undefined if there's no thread
-var splitURL = (document.URL).split("/");
+var splitURL = (document.URL).toLowerCase().split("/");
 var board = splitURL[3];
-if ((/\/search\//).test(document.URL)){
-    threadID = "search";
-}else if ((/\/thread\//).test(document.URL)){    
+var threadID = splitURL[4];
+if (threadID === "thread"){
     threadID = splitURL[5];
-}else if ((/\/last\//).test(document.URL)){
+}else if (threadID === "last"){
     threadID = splitURL[6];
-}else{
-    if (board === "_" || splitURL[4] === "" || splitURL[4] === undefined || splitURL[4] === "ghost" || splitURL[4] === "page"){
+}else if (threadID !== "search"){
+    if (board === "_" || threadID === "page" || threadID === "ghost" || threadID === "" || threadID === undefined){
         if (board !== "" && board !== undefined && board !== "_"){
             threadID = "board";
         }else{
@@ -626,8 +632,8 @@ if ((/\/search\//).test(document.URL)){
 }
 /*
 console.log(splitURL);
-console.log(threadID);
-console.log(board);*/
+console.log("Board:"+board);
+console.log("ThreadID:"+threadID);*/
 
 var imageWidthOP = 250;
 var imageHeightOP = 250;
@@ -943,11 +949,7 @@ function inlineImages(posts){
                         });
                         $image.removeAttr('width');
                         $image.removeAttr('height');
-                        if ($image.hasClass("thread_image")){ // Handle OP images
-                            $image.addClass("smallImageOP");
-                        }else{ // Handle post images
-                            $image.addClass("smallImage");
-                        }
+                        $image.addClass("smallImage");
                     });
                 }
             });
@@ -985,7 +987,7 @@ function recursiveToggle(postID, mode){
     for (var i=0; i < postList.length; i++) {
         checkedPostCollection[postList[i]] = true;
         $('#p_b'+postList[i]+' > a').each(function(i, backlink){
-            var backlinkID = backlink.getAttribute('data-post');
+            var backlinkID = backlink.dataset.post;
             if (!checkedPostCollection[backlinkID]){
                 postList.push(backlinkID);
             }
@@ -1193,12 +1195,13 @@ function imageHover(){
         $image.off("mouseenter mousemove mouseout");
         $image.on("mouseenter", function(e){
             if(e.target.id !== "mascot" && !$(e.target).hasClass("bigImage") && !$(e.target).data('dontHover')){
-                $(e.target).clone().removeClass("smallImage smallImageOP spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
+                $(e.target).clone().removeClass("smallImage spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
             }
         });
         $image.on("mousemove mouseenter", function(e){
             var etarget = e.target;
-            if(!$(etarget).hasClass("bigImage")){
+            var $etarget = $(etarget);
+            if(!$etarget.hasClass("bigImage") && !$etarget.data('dontHover')){
                 var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
                 var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
                 var windowWidth = $('body').innerWidth(); // Define internal dimensions
@@ -1232,7 +1235,8 @@ function canvasHover(){
         });
         $canvas.on("mousemove mouseenter", function(e){
             var etarget = e.target;
-            if(!$(etarget).hasClass("bigImage")){
+            var $etarget = $(etarget);
+            if(!$etarget.hasClass("bigImage") && !$etarget.data('dontHover')){
                 var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
                 var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
                 var windowWidth = $('body').innerWidth(); // Define internal dimensions
@@ -1320,16 +1324,11 @@ function changeTimestamp(timeElement, postTimestamp){
     var diffMS = currentTimestamp - postTimestamp;
     if (diffMS < 0){diffMS = 0;} // Handle the issue where mismatched local and server time could end up with negative difference
     var diff = convertMS(diffMS);
-    var years = "years";
-    var days = "days";
-    var hours = "hours";
-    var minutes = "minutes";
-    var seconds = "seconds";
-    if (diff.y == 1){years = "year";}
-    if (diff.d == 1){days = "day";}
-    if (diff.h == 1){hours = "hour";}
-    if (diff.m == 1){minutes = "minute";}
-    if (diff.s == 1){seconds = "second";}
+    var years = diff.y === 1 ? "year" : "years";
+    var days = diff.d === 1 ? "day" : "days";
+    var hours = diff.h === 1 ? "hour" : "hours";
+    var minutes = diff.m === 1 ? "minute" : "minutes";
+    var seconds = diff.s === 1 ? "second" : "seconds";
     if (diff.y){
         $(timeElement).html(diff.y+' '+years+' and '+diff.d+' '+days+' ago');
         setTimeout(function(){changeTimestamp(timeElement, postTimestamp);}, 365.25*24*60*60*1000);        
@@ -1493,7 +1492,7 @@ function newPosts(){
 }
 
 function postCounter(){
-    if (!(/other/).test(threadID)){
+    if (!/(other|statistics)/.test(threadID)){
         var postCount = notLoadedPostCount + $('.post_wrapper').length;
         var hiddenPostCount = $('.post.stub:visible').length;
         var imageCount = $(".thread_image_box").length;
@@ -1677,9 +1676,9 @@ function labelNewPosts(newPosts, boardView){
     $.each(newPosts, function(i,postID){ // For each post returned by update
         var notificationTriggered = false;
         $('#'+postID+' .backlink').each(function(i, link){ // For each post content backlink
-            var linkBoard = $(link).attr('data-board');
+            var linkBoard = link.dataset.board;
             if (yourPostsLookup[linkBoard] !== undefined){
-                var linkID = $(link).attr('data-post').replace(',','_');
+                var linkID = link.dataset.post.replace(',','_');
                 if (yourPostsLookup[linkBoard][linkID]){ // If the link points to your post
                     if (!notificationTriggered && !boardView){
                         if (!settings.UserSettings.filter.value || !settings.UserSettings.filter.suboptions.filterNotifications.value || $('#'+postID+':visible').length){ // Filter notifications
@@ -1717,7 +1716,9 @@ function postSubmitEvent(){
         config = {
             attributes: true
         };
-    observer.observe(target, config);
+    if (target !== undefined){ // Some threads don't allow for ghost posting
+        observer.observe(target, config);
+    }
 }
 
 function linkHoverEvent(){ // Hook into the native internal link hover
@@ -1731,7 +1732,9 @@ function linkHoverEvent(){ // Hook into the native internal link hover
         config = {
             childList: true
         };
-    observer.observe(target, config);
+    if (target !== undefined){ // Some boards don't have posts and thus link hovering
+        observer.observe(target, config);
+    }
 }
 
 function mascot(mascotImageLink){
@@ -2012,13 +2015,16 @@ function headerBar(){
 }
 
 $(document).ready(function(){
+    $('body').append('<div id="postBackgroundColourPicker" class="thread_form_wrap" style="display:none;"></div>'); // Create an element to get the post colour from
+    var postBackgroundColourPicker = $('#postBackgroundColourPicker').css('background-color'); // Set the colour
+    $('#postBackgroundColourPicker').remove(); // Delete the element afterwards
     $('head').after('<style type="text/css" id="SpookyX-css"></style>');
     $('head').after('<style type="text/css" id="SpookyX-css-word-break"></style>'); // Add style element that controls that one thing
-    $('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:'+imageWidth+'px; max-height:'+imageHeight+'px}.smallImageOP{max-width:'+imageWidthOP+'px; max-height:'+imageHeightOP+'px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.theme_default.midnight .post_wrapper{border-right: 0;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin:21px 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: '+imageWidth+'px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}');
-    $('#SpookyX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
-    $('#SpookyX-css').append('.last{background-color:'+$('.post_wrapper').css('background-color')+';}#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
+    $('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:'+imageWidth+'px; max-height:'+imageHeight+'px}.smallImage.thread_image{max-width:'+imageWidthOP+'px; max-height:'+imageHeightOP+'px}.spoilerImage{opacity: 0.1}.spoilerText{position: relative; height: 0px; font-size: 19px; top: 47px;}.forwarded{display:none!important}.inline{border:1px solid; display: table; margin: 2px 0;}.inlined{opacity:0.5}.post_wrapper{border-right: 1px solid #cccccc;}.theme_default.midnight .post_wrapper{border-right: 0;}.post_wrapperInline{border-right:0!important; border-bottom:0!important;}.quickReply{position: fixed; top: 0; right: 0; margin:21px 3px !important;}.shitpost{opacity: 0.3}.embedded_post_file{margin: 0!important; max-width: '+imageWidth+'px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}');
+    $('#SpookyX-css').append('.headerBar{float:right; display:inline-block; z-index:10;}.threadStats{display:inline;}#settingsMenu{position: fixed; height: 550px; max-height: 100%; width: 900px; max-width: 100%; margin: auto; padding: 0; top: 50%; left: 50%; -moz-transform: translate(-50%, -50%); -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);z-index: 999; border: 2px solid #364041;}.sections-list{padding: 3px 6px; float: left;}.credits{padding: 3px 6px; float: right;}#menuSeparator{width:100%; border-top:1px solid #364041; float:left; position:relative; top:-2px;}.sections-list a.active{font-weight: 700;}.sections-list a{text-decoration: underline;}#settingsMenu label{display: inline; text-decoration: underline; cursor: pointer;}#settingsContent{position: absolute; overflow: auto; top: 1.8em; bottom: 0; left: 0; right: 0; padding: 0;}#settingsContent > div{padding: 3px;}.suboption-list{position: relative;}.suboption-list::before{content: ""; display: inline-block; position: absolute; left: .7em; width: 0; height: 100%; border-left: 1px solid;}.suboption-list > div::before{content: ""; display: inline-block; position: absolute; left: .7em; width: .7em; height: .6em; border-left: 1px solid; border-bottom: 1px solid;}.suboption-list > div{position: relative; padding-left: 1.4em;}.suboption-list > div:last-of-type {background-color:'+postBackgroundColourPicker+';}#settingsMenu input{margin: 3px 3px 3px 4px; padding-top:1px; padding-bottom:0; padding-right:0;}#settingsMenu select{margin: 3px 3px 3px 4px; padding-left: 2px; padding-top: 0px; padding-bottom: 0px; padding-right: 0; height: 19px; width: auto;}#settingsMenu input[type="text"]{height:16px; line-height:0;}#settingsMenu input[type="number"]{height:16px; line-height:0; width:44px;}');
+    $('#SpookyX-css').append('.last{background-color:'+postBackgroundColourPicker+';}#settingsMenu code{padding: 2px 4px; background-color: #f7f7f9!important; border: 1px solid #e1e1e8!important;}.filters-list{padding: 0 3px;}.filters-list a.active{font-weight: 700;}.filters-list a{text-decoration: underline;}#Filter textarea {margin:0; height: 493px; font-family:monospace; min-width:100%; max-width:100%;}#Filter > div{margin-right:14px;}');
     $('#SpookyX-css').append('.shortcutHidden{display:none!important;}.letters{margin-top:0!important;}#headerFixed{position:fixed; left:-1px; right:-1px; top:-1px; padding:0 10px 0 30px; border:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px;}.threadStats{margin-right:20px;}');
-    $('#SpookyX-css').append('#settingsMenu .description{margin-left:2px; flex-shrink: 9999;}.selectDescription{margin-top:3px;}#settingsMenu label{margin-bottom:0}.settingsJoinLine{border-left:solid 1px black; position:relative; left:0.7em; top: 1.9em;}.settingsJoinLineCheckbox{top: 1.4em;}.settingFlexContainer{display:flex;}');
+    $('#SpookyX-css').append('#settingsMenu .description{margin-left:2px; flex-shrink: 9999;}.selectDescription{margin-top:3px;}#settingsMenu label{margin-bottom:0}.settingsJoinLine{border-left:solid 1px; position:relative; left:0.7em; top: 1.9em;}.settingsJoinLineCheckbox{top: 1.4em;}.settingFlexContainer{display:flex;}');
     if (settings.UserSettings.favicon.value){
         $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
@@ -2032,9 +2038,9 @@ $(document).ready(function(){
     }else{ // Insert settings link when on board index
         $('.container-fluid').append('<div class="headerBar" style="position: fixed; right: 0; top: 0;"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
     }
-    $('body').append('<div id="settingsMenu" class="theme_default thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a target="_blank" href="https://archive.moe/a/thread/126054592" style="text-decoration: underline;">Feedback</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
+    $('body').append('<div id="settingsMenu" class="thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a target="_blank" href="https://archive.moe/a/thread/126054592" style="text-decoration: underline;">Feedback</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
     if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
-    if (!(/(search|board|other)/).test(threadID)){
+    if (/[0-9]+/.test(threadID)){ // If in a thread
         $($('.navbar .nav')[1]).append('<li><a href="//boards.4chan.org/'+board+'/thread/'+threadID+'">View thread on 4chan</a></li>'); // Add view thread on 4chan link
     }
     $('.headerBar > a[title="SpookyX Settings"], a[title=Close]').on('click', function(){
@@ -2167,7 +2173,7 @@ $(document).ready(function(){
         localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
     });
     if (settings.UserSettings.postCounter.suboptions.countUnloaded.value){
-        if (!(/(search|board|other)/).test(threadID)){ // Count the posts that aren't loaded (eg. in last/50 mode)
+        if (/[0-9]+/.test(threadID)){ // Count the posts that aren't loaded (eg. in last/50 mode)
             $.ajax({
                 url:"/_/api/chan/thread/",
                 method:"GET",
@@ -2184,7 +2190,7 @@ $(document).ready(function(){
             });
         }
     }
-    if (!(/(search|board|other)/).test(threadID)){
+    if (/[0-9]+/.test(threadID)){
         windowFocus = true;
         $(window).focus(function(){
             windowFocus = true;
@@ -2206,7 +2212,7 @@ $(document).ready(function(){
                 }
             }
         }
-        if (!(/(search|board|other)/).test(threadID)){
+        if (/[0-9]+/.test(threadID)){
             postSubmitEvent();
             $(document).ajaxComplete(function(event, request, ajaxSettings){
                 if (!(/inThread=true/).test(ajaxSettings.url)){
@@ -2265,6 +2271,20 @@ $(document).ready(function(){
     mascot(parseMascotImageValue()); // Insert mascot
     if (settings.UserSettings.adjustReplybox.value){adjustReplybox();} // Adjust reply box
     if (settings.UserSettings.inlineImages.value){ // Inline images
+        $('.toggle-expansion').remove(); // Remove the native inline expansion button
+        if (localStorage.expandpref === "yes"){localStorage.expandpref = "no";} // Disable native inline image expansion (might require a reload after to work?)
+        if (threadID !== "statistics"){ // Stop this interfering with the images it displays
+            var designateOPimages = /(search|quests)/.test(threadID);
+            $('#main img').each(function(i, image){
+                var $image = $(image);
+                $image.addClass('smallImage');
+                if (designateOPimages){
+                    if ($image.attr('width') >= 249 || $image.attr('height') >= 249){ // Assuming OP images are 250px limited across all archives might be false
+                        $image.addClass('thread_image');
+                    }
+                }
+            });
+        }
         if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
             delayedLoad(staticPostsAndOP);
         }else{
@@ -2273,12 +2293,12 @@ $(document).ready(function(){
     }
     if (settings.UserSettings.removeJfont.value){$('.shift-jis').removeClass('shift-jis');} // Remove japanese font formatting
     if (settings.UserSettings.inlineReplies.value){ // Inline replies
-        staticPosts.each(function(i, post){
+        staticPostsAndOP.each(function(i, post){
             $(post).addClass("base");
         });
     }
     if (settings.UserSettings.labelYourPosts.value){ // Label your posts
-        if ((/(search|board)/).test(threadID)){
+        if (/(search|board|quest|gallery)/.test(threadID)){
             if (board === "_"){ // Handle finding the board per post for all-board searches
                 $('article.post').each(function(i,post){
                     var postBoard = $(post).find('.post_show_board').html().replace(/\//g,'');
@@ -2303,15 +2323,15 @@ $(document).ready(function(){
             });
         }
         $('.backlink').each(function(i,backlink){
-            if (yourPostsLookup[$(backlink).attr('data-board')] !== undefined && yourPostsLookup[$(backlink).attr('data-board')][$(backlink).attr('data-post').replace(',','_')]){
+            if (yourPostsLookup[backlink.dataset.board] !== undefined && yourPostsLookup[backlink.dataset.board][backlink.dataset.post.replace(',','_')]){
                 backlink.textContent += ' (You)';
             }
         });
     }
     if (settings.UserSettings.embedImages.value){embedImages(staticPosts);} // Embed images
     if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs($('img'));} // Stop gifs autoplaying
-    if (!(/(other)/).test(threadID) && settings.UserSettings.relativeTimestamps.value){relativeTimestamps(staticPostsAndOP);linkHoverEvent();} // Initiate relative timestamps
-    if (!(/(search|board|other)/).test(threadID) && settings.UserSettings.postQuote.value){
+    if (threadID !== "other" && settings.UserSettings.relativeTimestamps.value){relativeTimestamps(staticPostsAndOP);linkHoverEvent();} // Initiate relative timestamps
+    if (/[0-9]+/.test(threadID) && settings.UserSettings.postQuote.value){
         $('.post_data > [data-function=quote]').each(function(){
             $(this).removeAttr('data-function'); // Disable native quote function
             $(this).addClass('postQuote'); // Make it findable so that inline posts will be handled
@@ -2333,11 +2353,13 @@ $(document).ready(function(){
     }
     if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
     if (settings.UserSettings.filter.value){filter(staticPostsAndOP);}
-    imageHover();
-    canvasHover();
-    videoHover();
+    if (threadID !== "statistics"){
+        imageHover();
+        canvasHover();
+        videoHover();
+    }
 
-    if (!(/(search|other)/).test(threadID)){
+    if (!(/(search|other|statistics)/).test(threadID)){
         $(document).ajaxComplete(function(event, request, ajaxSettings){ // Parse all GET and POST delivered posts and apply SpookyX features to them
             if (!(/inThread=true/).test(ajaxSettings.url)){
                 if (request.responseText !== ""){
@@ -2350,7 +2372,7 @@ $(document).ready(function(){
                 }else{
                     for (var key in response){
                         if (response[key] !== null && response[key].posts !== undefined){
-                            var isBoard = (/(board)/).test(threadID);
+                            var isBoard = threadID === "board";
                             if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
                                 labelNewPosts(Object.keys(response[key].posts), true);
                             }
@@ -2358,7 +2380,7 @@ $(document).ready(function(){
                                 if (document.getElementById(postID) !== null){ // Don't process post if filter has purged it
                                     var newPost = $('#'+postID);
                                     if (settings.UserSettings.inlineImages.value){inlineImages(newPost);} // Inline images
-                                    if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
+                                    if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) designation for expanding threads on board view
                                         if (yourPostsLookup[board][postID]){
                                             newPost.find('.post_author').after('<span> (You)</span>');
                                         }
@@ -2397,7 +2419,7 @@ $(document).ready(function(){
         if (settings.UserSettings.inlineReplies.value && $(e.target).hasClass("backlink")){ // Inline replies
             if (!e.originalEvent.ctrlKey && e.which == 1){
                 e.preventDefault();
-                var postID = $(e.target).attr('data-post').replace(',','_'); // Replace to deal with crossboard links
+                var postID = e.target.dataset.post.replace(',','_'); // Replace to deal with crossboard links
                 var rootPostID = e.target.closest('article.base').id;
                 if (e.target.parentNode.className == "post_backlink"){
                     if ($(e.target).hasClass("inlined")){
@@ -2411,8 +2433,8 @@ $(document).ready(function(){
                         $(e.target.parentNode.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
                         $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
                         $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
-                            if (!$(this).hasClass('sub'+rootPostID)){
-                                $(this).attr("class","inline sub"+rootPostID);
+                            if (!$(currentPost).hasClass('sub'+rootPostID)){
+                                $(currentPost).attr("class","inline sub"+rootPostID);
                             }
                         });
                         $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
@@ -2433,8 +2455,8 @@ $(document).ready(function(){
                         $(e.target.parentNode).after('<div class="inline sub'+rootPostID+'" id="i'+postID+'"></div>');
                         $("#"+postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id","r"+postID).show().appendTo($("#i"+postID+'.sub'+rootPostID));
                         $("#"+rootPostID+'.base .inline').each(function(index,currentPost){
-                            if (!$(this).hasClass('sub'+rootPostID)){
-                                $(this).attr("class","inline sub"+rootPostID);
+                            if (!$(currentPost).hasClass('sub'+rootPostID)){
+                                $(currentPost).attr("class","inline sub"+rootPostID);
                             }
                         });
                         $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
@@ -2479,12 +2501,7 @@ $(document).ready(function(){
                     canvas.toggle();
                     image.toggle();
                 }else{
-                    if (image.hasClass("thread_image")){
-                        image.toggleClass("smallImageOP"); // If OP image
-                    }else{
-                        image.toggleClass("smallImage");
-                    }
-                    image.toggleClass("bigImage");
+                    image.toggleClass("smallImage bigImage");
                     $('#hoverUI').html('');
                     image.trigger("mouseenter");
                 }
@@ -2519,18 +2536,18 @@ $(document).ready(function(){
             }
             $('#hoverUI').html('');
             video.trigger("mouseenter");
-        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.className == "btn-toggle-post"){ // Recursive hiding
+        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.className === "btn-toggle-post"){ // Recursive hiding
             var button = e.target;
-            if(button.attributes["data-function"].value == "showPost"){
+            if(button.attributes["data-function"].value === "showPost"){
                 recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "show");
-            }else if(button.attributes["data-function"].value == "hidePost"){
+            }else if(button.attributes["data-function"].value === "hidePost"){
                 recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "hide");
             }
-        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.parentNode.className == "btn-toggle-post"){ // Recursive hiding
+        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.parentNode.className === "btn-toggle-post"){ // Recursive hiding
             var button = e.target.parentNode;
-            if(button.attributes["data-function"].value == "showPost"){
+            if(button.attributes["data-function"].value === "showPost"){
                 recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "show");
-            }else if(button.attributes["data-function"].value == "hidePost"){
+            }else if(button.attributes["data-function"].value === "hidePost"){
                 recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "hide");
             }
         }
@@ -2779,7 +2796,7 @@ $(function(){
     shortcut.add("left", function(){if (settings.UserSettings.gallery.value){galleryChange("left");}}, {"disable_in_input":true});
     shortcut.add("right", function(){if (settings.UserSettings.gallery.value){galleryChange("right");}}, {"disable_in_input":true});
     shortcut.add("o", function(){populateSettingsMenu();}, {"disable_in_input":true});
-    if (!(/(search|board|other)/).test(threadID)){
+    if (/[0-9]+/.test(threadID)){
         seenPosts();
         ThreadUpdate();
         window.setInterval(function(){ThreadUpdate();},250);
