@@ -2,7 +2,7 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
-**v29.81:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.8/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.8/README.md) - *([theBladeee](https://github.com/theBladeee))*
+**v29.81:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.81/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.81/README.md) - *([theBladeee](https://github.com/theBladeee))*
 - Fixed a domain issue for Love is Over Archive
 
 **v29.8:** *(2015-07-14)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.8/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.8/README.md)
