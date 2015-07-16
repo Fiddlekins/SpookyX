@@ -2,6 +2,10 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.91:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.91/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.91/README.md)
+- fixed bug where using Delayed Load sometimes distorted the aspect ratio of the image
+- fixed bug where using Delayed Load wouldn't affect posts returned by the thread autoupdater
+
 **v29.9:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.9/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.9/README.md)
 - Tidied up the site matching for the userscript, added some, removed some
 - On archives that have a native inline image expansion feature this should be disabled (and the button removed) if SpookyX has inline images enabled
