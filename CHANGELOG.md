@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v29.92:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.92/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.92/README.md)
+- New Feature: Label Deletions adds '[Deleted]' beside the trashcan icon to allow easier searching for deleted posts
+
 **v29.91:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.91/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.91/README.md)
 - fixed bug where using Delayed Load sometimes distorted the aspect ratio of the image
 - fixed bug where using Delayed Load wouldn't affect posts returned by the thread autoupdater
