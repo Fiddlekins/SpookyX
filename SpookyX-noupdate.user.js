@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.91
+// @version       29.92
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -491,6 +491,12 @@ var settings = {
             "description": "Enabling this will make the addition of japanese characters to a post cease to change the post font and size. Presumably will cause issues for people whose default font doesn't support japanese characters",
             "type": "checkbox",
             "value": false
+        },
+        "labelDeletions": {
+            "name": "Label Deletions",
+            "description": "Enabling this will add 'Deleted' to all trashcan icons that designate deleted posts to allow for easier searching",
+            "type": "checkbox",
+            "value": false
         }
     },
     "FilterSettings": {
@@ -630,10 +636,10 @@ if (threadID === "thread"){
         }
     }
 }
-/*
+
 console.log(splitURL);
 console.log("Board:"+board);
-console.log("ThreadID:"+threadID);*/
+console.log("ThreadID:"+threadID);
 
 var imageWidthOP = 250;
 var imageHeightOP = 250;
@@ -2350,7 +2356,8 @@ $(document).ready(function(){
         $('#reply').toggleClass("showQROptions"); // Make options hidden in QR by default
     }
     if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
-    if (settings.UserSettings.filter.value){filter(staticPostsAndOP);}
+    if (settings.UserSettings.filter.value){filter(staticPostsAndOP);} // Filter posts
+    if (settings.UserSettings.labelDeletions.value){$('.icon-trash').html(' [Deleted]');} // Label deletions
     if (threadID !== "statistics"){
         imageHover();
         canvasHover();
@@ -2412,6 +2419,7 @@ $(document).ready(function(){
                                     }
                                     if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
                                     if (settings.UserSettings.removeJfont.value){newPost.find('.text').removeClass('shift-jis');} // Remove japanese font formatting
+                                    if (settings.UserSettings.labelDeletions.value){newPost.find('.icon-trash').html(' [Deleted]');} // Label deletions
                                 }
                             }
                             imageHover();
