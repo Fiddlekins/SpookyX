@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       29.92
+// @version       30.0
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -29,6 +29,7 @@
 // @include       https://archive.sfur.net/*
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
+// @require       https://raw.githubusercontent.com/carloscabo/colz/master/public/js/colz.class.min.js
 // @grant         none
 // @updateURL     https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.meta.js
 // @downloadURL   https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js
@@ -104,6 +105,12 @@ var settings = {
                             "value": 125
                         }
                     }
+                },
+                "processSpoiler": {
+                    "name": "Process spoilered images",
+                    "description": "Make native spoilered images inline",
+                    "type": "checkbox",
+                    "value": true
                 }
             }
         },
@@ -167,29 +174,37 @@ var settings = {
             "type": "checkbox",
             "value": true,
             "suboptions": {
-                "unlit": {
-                    "name": "Unlit",
-                    "description": "Choose which favicon is used normally. Default is \"http://i.imgur.com/xuadeJ2.png\"",
-                    "type": "text",
-                    "value": "http://i.imgur.com/xuadeJ2.png"
-                },
-                "lit": {
-                    "name": "Lit",
-                    "description": "Choose which favicon is used to indicate there are unread posts. Preset numbers are 0-4, replace with link to custom image if you desire such as: \"http://i.imgur.com/XGsrewo.png\"",
-                    "type": "text",
-                    "value": "2"
-                },
-                "alert": {
-                    "name": "Alert",
-                    "description": "The favicon that indicates unread replies to your posts. Value is ignored if using a preset Lit favicon",
-                    "type": "text",
-                    "value": ""
-                },
-                "alertOverlay": {
-                    "name": "Alert Overlay",
-                    "description": "The favicon overlay that indicates unread replies. Default is \"http://i.imgur.com/6EfJyYA.png\"",
-                    "type": "text",
-                    "value": "http://i.imgur.com/6EfJyYA.png"
+                "customFavicons": {
+                    "name": "Custom Favicons",
+                    "description": "If disabled SpookyX will try its hand at automatically generating suitable favicons for the site. Enabling this allows you to manually specify which favicons it should use instead",
+                    "type": "checkbox",
+                    "value": false,
+                    "suboptions": {
+                        "unlit": {
+                            "name": "Unlit",
+                            "description": "Choose which favicon is used normally. Default is \"http://i.imgur.com/xuadeJ2.png\"",
+                            "type": "text",
+                            "value": "http://i.imgur.com/xuadeJ2.png"
+                        },
+                        "lit": {
+                            "name": "Lit",
+                            "description": "Choose which favicon is used to indicate there are unread posts. Preset numbers are 0-4, replace with link to custom image if you desire such as: \"http://i.imgur.com/XGsrewo.png\"",
+                            "type": "text",
+                            "value": "2"
+                        },
+                        "alert": {
+                            "name": "Alert",
+                            "description": "The favicon that indicates unread replies to your posts. Value is ignored if using a preset Lit favicon",
+                            "type": "text",
+                            "value": ""
+                        },
+                        "alertOverlay": {
+                            "name": "Alert Overlay",
+                            "description": "The favicon overlay that indicates unread replies. Default is \"http://i.imgur.com/DCXVHHl.png\"",
+                            "type": "text",
+                            "value": "http://i.imgur.com/DCXVHHl.png"
+                        }
+                    }
                 }
             }
         },
@@ -613,7 +628,6 @@ var defaultMascots = [
 if (localStorage.SpookyXsettings !== undefined){
     $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
 }
-presetFavicons();
 
 var newPostCount = 0;
 var notLoadedPostCount = 0;
@@ -638,10 +652,10 @@ if (threadID === "thread"){
         }
     }
 }
-
+/*
 console.log(splitURL);
 console.log("Board:"+board);
-console.log("ThreadID:"+threadID);
+console.log("ThreadID:"+threadID);*/
 
 var imageWidthOP = 250;
 var imageHeightOP = 250;
@@ -660,14 +674,72 @@ if (localStorage.crosslinkTracker === undefined){
     localStorage.crosslinkTracker = "{}";
 }
 
-function presetFavicons(){
-    switch(settings.UserSettings.favicon.suboptions.lit.value) {
-        case "0": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/7iTgtjy.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/QrkQSo0.png"; break;
-        case "1": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/AWVjxfw.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/KXIPcD9.png"; break;
-        case "2": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/S7uBSPZ.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/7IxJvBN.png"; break;
-        case "3": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/Rt8dEaq.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/tvJjpqF.png"; break;
-        case "4": settings.UserSettings.favicon.suboptions.lit.value = "http://i.imgur.com/3bRaVUl.png"; settings.UserSettings.favicon.suboptions.alert.value = "http://i.imgur.com/5Bv27Co.png"; break;
-        default: break;
+var faviconUnlit;
+var faviconLit;
+var faviconAlert;
+var faviconState = "unlit";
+
+function generateFavicons(){ // Generate dynamic favicons
+    if (settings.UserSettings.favicon.suboptions.customFavicons.value){
+        switch(settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value) {
+            case "0": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/7iTgtjy.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/QrkQSo0.png"; break;
+            case "1": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/AWVjxfw.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/KXIPcD9.png"; break;
+            case "2": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/S7uBSPZ.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/7IxJvBN.png"; break;
+            case "3": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/Rt8dEaq.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/tvJjpqF.png"; break;
+            case "4": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/3bRaVUl.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/5Bv27Co.png"; break;
+            default: break;
+        }
+        faviconUnlit = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.unlit.value; // Store unlit favicon
+        faviconLit = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value; // Store lit favicon
+        faviconAlert = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value; // Store alert favicon
+        setFavicon();
+    }else{
+        var faviconCanvas = document.createElement('canvas');
+        var nativeFavicon = $('<img src="/favicon.ico">');
+        var overlayFavicon = $('<img src="data:image/png;base64,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">');
+        var ctx = faviconCanvas.getContext('2d');
+        var faviconLink;
+        nativeFavicon.on('load', function(e){
+            faviconCanvas.height = e.target.naturalHeight;
+            faviconCanvas.width = e.target.naturalWidth;            
+            ctx.drawImage(e.target, 0, 0); // Draw native favicon
+            faviconUnlit = faviconCanvas.toDataURL('image/png'); // Store unlit favicon
+            var faviconData = ctx.getImageData(0, 0, faviconCanvas.height, faviconCanvas.width);
+            var meanColour = [0,0,0,0];
+            for (var i=0, len=faviconData.data.length; i<len; i++){
+                meanColour[i%4] += faviconData.data[i];
+            }
+            for (var i=0; i < 4; i++){
+                meanColour[i] /= len/4;
+            }
+            var colour = new colz.Color(meanColour);
+            for (var i=0, len=faviconData.data.length; i<len; i+=4){
+                var col = new colz.Color(faviconData.data[i],faviconData.data[i+1],faviconData.data[i+2],faviconData.data[i+3]);
+                col.setLum(col.l+((100-col.l)*(100-col.l))/(100*1.5)); // Raise luminosity
+                col.setSat(col.s+(100-colour.s)*0.3); // Raise saturation
+                col.setHue(180+colour.h); // Shift hue
+                col.setLum(1.8*(col.l-128)+128+32); // Raise contrast
+                faviconData.data[i] = col.r;
+                faviconData.data[i+1] = col.g;
+                faviconData.data[i+2] = col.b;
+                faviconData.data[i+3] = col.a;
+            }
+            ctx.putImageData(faviconData, 0, 0); // Draw edited data on canvas
+            faviconLit = faviconCanvas.toDataURL('image/png'); // Store lit favicon
+            ctx.drawImage(overlayFavicon[0], 0, 0, faviconCanvas.height, faviconCanvas.width); // Draw alert symbol on canvas
+            faviconAlert = faviconCanvas.toDataURL('image/png'); // Store alert favicon
+            setFavicon();
+        });
+    }
+}
+
+function setFavicon(){
+    if (faviconState === "unlit"){
+        $('#favicon').attr("href", faviconUnlit);
+    }else if(faviconState === "lit"){
+        $('#favicon').attr("href", faviconLit);
+    }else if(faviconState === "alert"){
+        $('#favicon').attr("href", faviconAlert);
     }
 }
 
@@ -933,17 +1005,27 @@ function delayedLoad(posts){
 
 function inlineImages(posts){
     posts.each(function(i, post){
-        ($(post).hasClass('thread') ? $(post).children('.thread_image_box') : $(post).find('.thread_image_box')).each(function(i,currentImage){
-            $(currentImage).find('>a').each(function(j,imgLink){
+        var $post = $(post);
+        ($post.hasClass('thread') ? $post.children('.thread_image_box') : $post.find('.thread_image_box')).each(function(i,currentImage){
+            var $currentImage = $(currentImage);
+            $currentImage.find('>a').each(function(j,imgLink){
                 var fullImage = imgLink.href;
+                if ( settings.UserSettings.inlineImages.suboptions.processSpoiler.value && $currentImage.find('.spoiler_box').length){
+                    $(imgLink).html('<div class="spoilerText">Spoiler</div><img class="smallImage spoilerImage">');
+                    var $image = $currentImage.find('img');
+                    $image.on('load', function(e){
+                        $image.unbind('load');
+                        $currentImage.find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
+                    });
+                }
                 if (fullImage.match(/\.webm$/)){ // Handle post webms
-                    $(currentImage).prepend('<video width="'+($(post).hasClass('thread') ? imageWidthOP : imageWidth)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
+                    $currentImage.prepend('<video width="'+($(post).hasClass('thread') ? imageWidthOP : imageWidth)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
                     $(imgLink).remove();
                     if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
                         videoHover();
                     }
                 }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
-                    $(currentImage).find('img').each(function(k,image){
+                    $currentImage.find('img').each(function(k,image){
                         var $image = $(image);
                         var thumbImage = $(image).attr('src');
                         $image.attr('src',fullImage);
@@ -1087,10 +1169,11 @@ var embedImages = function(posts){
     var videoFiletypes = new RegExp("\\.(webm|gifv|mp4)($|(\\?|:)[\\S]+$)",'i');
     var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
     posts.each(function(index, currentArticle){
-        if (!$(currentArticle).data('imgEmbed')){
-            $(currentArticle).data('imgEmbed',true);
-            var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $(currentArticle).find('.thread_image_box').length;
-            $(currentArticle).find(".text a").each(function(index, currentLink){
+        var $currentArticle = $(currentArticle);
+        if (!$currentArticle.data('imgEmbed')){
+            $currentArticle.data('imgEmbed',true);
+            var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $currentArticle.find('.thread_image_box').length;
+            $currentArticle.find(".text a").each(function(index, currentLink){
                 if (imgNum === 0){
                     return false;
                 }
@@ -1105,7 +1188,7 @@ var embedImages = function(posts){
                     imgNum--;
                     var filename = '<div class="post_file embedded_post_file"><a href="'+mediaLink+'" class="post_file_filename" rel="tooltip" title="'+mediaLink+'">'+mediaLink.match(/[^\/]*/g)[mediaLink.match(/[^\/]*/g).length -2]+'</a></div>';
                     var spoiler = "";
-                    var elem = $('<div class="thread_image_box">'+filename+'</div>').insertBefore($(currentArticle).find("header"));
+                    var elem = $('<div class="thread_image_box">'+filename+'</div>').insertBefore($currentArticle.find('header'));
                     if($(this).parents('.spoiler').length){
                         spoiler = "spoilerImage ";
                         elem.append('<div class="spoilerText">Spoiler</div>');
@@ -1113,11 +1196,15 @@ var embedImages = function(posts){
                     if (mediaType == "image"){
                         elem.append('<a href="'+mediaLink+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+mediaLink+'" class="lazyload post_image '+spoiler+'smallImage"></a>');
                         removeLink(currentLink);
-                        elem.find('img').on('load', function(e){
-                            elem.find('img').unbind('load');
-                            $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
-                            $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
-                        });
+                        var $image = elem.find('img');
+                        if (!$image.attr('loadEventSet')){
+                            $image.attr('loadEventSet',true);
+                            $image.on('load', function(e){
+                                $image.unbind('load');
+                                $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
+                                $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
+                            });
+                        }
                         imageHover();
                         canvasHover();
                     }else if (mediaType == "video"){
@@ -1130,31 +1217,48 @@ var embedImages = function(posts){
                         };
                         if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
                     }
-                }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec($(this).html()) !== null){
-                    var imgurLinkFragments = $(this).html().split('\/');
+                }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec(currentLink.href) !== null){
+                    var imgurLinkFragments = currentLink.href.split('\/');
                     if (imgurLinkFragments[3] == "a"){
                         imgurLinkFragments[4] = imgurLinkFragments[4].replace(/#[0-9]+/, ''); // Remove the trailing image number
                         if (settings.UserSettings.embedGalleries.suboptions.showDetails.value){
-                            $(currentArticle).find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/'+imgurLinkFragments[4]+'"><a href="//imgur.com/a/'+imgurLinkFragments[4]+'"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
+                            $currentArticle.find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/'+imgurLinkFragments[4]+'"><a href="//imgur.com/a/'+imgurLinkFragments[4]+'"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
                         }else{
-                            $(currentArticle).find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/'+imgurLinkFragments[4]+'" data-context="false"><a href="//imgur.com/a/'+imgurLinkFragments[4]+'"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
+                            $currentArticle.find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/'+imgurLinkFragments[4]+'" data-context="false"><a href="//imgur.com/a/'+imgurLinkFragments[4]+'"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
                         }
                         removeLink(currentLink);
                     }else if (imgurLinkFragments[3] !== "gallery"){
-                        var link = pattImgGal.exec($(this).html());
+                        var link = pattImgGal.exec(currentLink.href);
                         var individualImages = link[0].match(/[A-z0-9]{7}/g);
-                        $.each(individualImages.reverse(), function(i,imgID){
-                            var filename = '<div class="post_file embedded_post_file"><a href="https://i.imgur.com/'+imgID+'.jpg" class="post_file_filename" rel="tooltip" title="https://i.imgur.com/'+imgID+'.jpg">'+imgID+'.jpg</a></div>';
-                            $(currentArticle).find(".post_wrapper").prepend('<div class="thread_image_box">'+filename+'<a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>');
+                        var allDisplayed = true; // Track whether all of the linked images get inserted so that if not the link can be kept
+                        $.each(individualImages, function(i,imgID){
+                            if (imgNum){
+                                imgNum--;
+                                var filename = '<div class="post_file embedded_post_file"><a href="https://i.imgur.com/'+imgID+'.jpg" class="post_file_filename" rel="tooltip" title="https://i.imgur.com/'+imgID+'.jpg">'+imgID+'.jpg</a></div>';
+                                var imgHTML = '<div class="thread_image_box">'+filename+'<a href="https://i.imgur.com/'+imgID+'.jpg" target="_blank" rel="noreferrer" class="thread_image_link"><img src="https://i.imgur.com/'+imgID+'.jpg" class="lazyload post_image smallImage"></a></div>';
+                                if (i){
+                                    $($currentArticle.find(".thread_image_box")[i-1]).after(imgHTML);
+                                }else{
+                                    $currentArticle.find(".post_wrapper").prepend(imgHTML);
+                                }
+                            }else{
+                                allDisplayed = false;
+                                return false;
+                            }
                         });
-                        $(currentArticle).find('.thread_image_box img').each(function(i, image){
-                            $(image).on("load", function(e){
-                                $(image).unbind('load');
-                                $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
-                                $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
-                            });
+                        $currentArticle.find(".post_wrapper").prepend('<style>.thread_image_box{min-height:'+imageHeight+'px;}.post_wrapper header{min-width:400px;}</style>');
+                        $currentArticle.find('.thread_image_box img').each(function(i, image){
+                            var $image = $(image);
+                            if (!$image.attr('loadEventSet')){
+                                $image.attr('loadEventSet',true);
+                                $image.on("load", function(e){
+                                    $image.unbind('load');
+                                    $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.height/2)-6.5}); // Center spoiler text
+                                    $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
+                                });
+                            }
                         });
-                        removeLink(currentLink);
+                        if (allDisplayed){removeLink(currentLink);}
                         imageHover();
                         canvasHover();
                     }
@@ -1472,16 +1576,19 @@ function newPosts(){
         }
         newPostCount = unseenPosts.length;
         if (unseenReplies.length){
-            if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.alert.value){
-                $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.alert.value);
+            faviconState = "alert";
+            if ($('#favicon').attr("href") !== faviconAlert){
+                $('#favicon').attr("href", faviconAlert);
             }
         }else if (newPostCount > 0){
-            if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.lit.value){
-                $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.lit.value);
+            faviconState = "lit";
+            if ($('#favicon').attr("href") !== faviconLit){
+                $('#favicon').attr("href", faviconLit);
             }
         }else{
-            if ($('#favicon').attr("href") !== settings.UserSettings.favicon.suboptions.unlit.value){
-                $('#favicon').attr("href", settings.UserSettings.favicon.suboptions.unlit.value);
+            faviconState = "unlit";
+            if ($('#favicon').attr("href") !== faviconUnlit){
+                $('#favicon').attr("href", faviconUnlit);
             }
         }
     }else{ // Original newpost counter code
@@ -2031,7 +2138,8 @@ $(document).ready(function(){
     $('#SpookyX-css').append('.shortcutHidden{display:none!important;}.letters{margin-top:0!important;}#headerFixed{position:fixed; left:-1px; right:-1px; top:-1px; padding:0 10px 0 30px; border:#252525 1px solid; z-index:1;}#headerStatic{position:static; padding: 0px 10px 0 30px;}.threadStats{margin-right:20px;}');
     $('#SpookyX-css').append('#settingsMenu .description{margin-left:2px; flex-shrink: 9999;}.selectDescription{margin-top:3px;}#settingsMenu label{margin-bottom:0}.settingsJoinLine{border-left:solid 1px; position:relative; left:0.7em; top: 1.9em;}.settingsJoinLineCheckbox{top: 1.4em;}.settingFlexContainer{display:flex;}');
     if (settings.UserSettings.favicon.value){
-        $('head').append('<link id="favicon" rel="shortcut icon" type="image/png" href="'+settings.UserSettings.favicon.suboptions.unlit.value+'">');
+        $('head').append('<link id="favicon" rel="shortcut icon" type="image/png">');
+        generateFavicons();
         $('#reply fieldset .progress').after('<canvas id="myCanvas" width="64" height="64" style="float:left; display:none; position: relative; top: -10px; left: -10px;"></canvas>');
     }
     $('body').append('<div id="hoverUI"></div>');
@@ -2171,6 +2279,9 @@ $(document).ready(function(){
             }else if (elementPath.substr(0,9) == "headerBar"){
                 headerBar();
             }
+        }
+        if(e.target.name === "Custom Favicons"){
+            generateFavicons();
         }
         settingsStore = {};
         settingsStore.UserSettings = settingsStrip(settings.UserSettings);
@@ -2486,7 +2597,7 @@ $(document).ready(function(){
                     }
                 }
             }
-        }else if (settings.UserSettings.postQuote.value && e.target.className == "postQuote"){ // Better post quoting
+        }else if (settings.UserSettings.postQuote.value && e.target.className === "postQuote"){ // Better post quoting
             if (!e.originalEvent.ctrlKey && e.which == 1){
                 e.preventDefault();
                 var postnum = e.target.innerHTML;
@@ -2510,7 +2621,7 @@ $(document).ready(function(){
                     document.getElementById('reply_chennodiscursus').value = originalText.replace(originalText,newText);
                 }
             }
-        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName == "IMG"){ // Expand images
+        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName === "IMG"){ // Expand images
             if (!e.originalEvent.ctrlKey && e.which == 1){
                 e.preventDefault();
                 var image = $(e.target);
@@ -2525,7 +2636,7 @@ $(document).ready(function(){
                     image.trigger("mouseenter");
                 }
             }
-        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName == "CANVAS"){ // Expand images
+        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName === "CANVAS"){ // Expand images
             if (!e.originalEvent.ctrlKey && e.which == 1){
                 e.preventDefault();
                 var canvas = $(e.target);
@@ -2536,7 +2647,7 @@ $(document).ready(function(){
                 $('#hoverUI').html('');
                 image.trigger("mouseenter");
             }
-        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName == "VIDEO"){ // Expand videos
+        }else if (settings.UserSettings.inlineImages.value && e.target.nodeName === "VIDEO"){ // Expand videos
             var video = $(e.target);
             video.toggleClass("bigImage"); // Make it full opacity to override spoilering
             video.closest('.thread_image_box').find('.spoilerText').toggle(); // Toggle the Spoiler text
@@ -2681,27 +2792,33 @@ function populateSettingsMenu(){
         if (localStorage.SpookyXsettings !== undefined){
             $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
         }
-        presetFavicons();
+        generateFavicons();
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
         settingsHTML += '<div id="Filter">'+generateFilterHTML()+'</div>';
         $('#settingsContent').html(settingsHTML);
         if (!settings.UserSettings.filter.value){
             $('#filterDisabledMessage').show(); // Show filter disabled message if the filter is disabled
         }
+        $('#settingsMenu').show(); // Show the menu
+        $('#settingsContent .suboption-list > :visible:last').addClass('last');
         $('#settingsContent > div').hide(); //  Hide all tabs
         $('#settingsContent #'+$('.sections-list .active').html()).show(); // Show active tab
-        $('#settingsMenu').show(); // Show the menu
         $('#settingsContent select, #settingsContent input').each(function(i,el){
             if (el.type !== "checkbox"){ // Add the top margins for non-checkboxes to align description with name
                 $(el).parent().next().addClass('selectDescription');
             }
             if (el.nodeName === "SELECT"){ // Hide the settings join line for select options that start with one or less visible suboptions
-                if ($(el).closest('div:not(.settingFlexContainer)').children('.suboption-list').children(':visible').length <= 1){
+                var visibleSubopsCount = 0;
+                $(el).closest('div:not(.settingFlexContainer)').children('.suboption-list').children().each(function(i, subop){
+                    if ($(subop).css('display') !== "none"){
+                        visibleSubopsCount++;
+                    }
+                });
+                if (visibleSubopsCount <= 1){
                     $(el).closest('.settingFlexContainer').children('.settingsJoinLine').hide();
                 }                
             }
         });
-        $('#settingsContent .suboption-list > :visible:last').addClass('last');
     }
 }
 
