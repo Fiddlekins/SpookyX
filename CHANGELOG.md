@@ -2,6 +2,10 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v30.1:** *(2015-07-22)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v30.1/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v30.1/README.md)
+- Added Count hidden posts and Auto-hide null hidden counter options to the Post Counter setting to allow control of hidden post counter behaviour
+- fixed bugs with incorrect counting of posts and hidden posts on board view
+
 **v30.01:** *(2015-07-22)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v30.01/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v30.01/README.md)
 - fixed bug where the script would crash due to changed favicon setting references
 
