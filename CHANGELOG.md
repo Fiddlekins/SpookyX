@@ -2,6 +2,14 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v30.0:** *(2015-07-22)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v30.0/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v30.0/README.md)
+- Added Custom Favicons option under the Favicon setting. With this turned off SpookyX will attempt to generate dynamic favicons from the site's default favicon. Turning this on will let you set specific custom favicons as before
+- Added Process spoilered images option to Inline Images. This has no effect on the moe archives but on other ones it will replace a spoiler image with a faded target image that can be clicked to expand and has image hover capabilties
+- fixed bug with setting join lines incorrectly displaying in certain cases when opening the menu onto the Filter tab and then switching over to Main tab
+- fixed bug where embedding too many images would crush the post header (name, date, other details)
+- fixed bug where certain multi-embed links ignored the embed image limit
+- fixed bug where posts with multiple embeddable links resulted in image dimensions being erroneously added multiple times
+
 **v29.92:** *(2015-07-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v29.92/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v29.92/README.md)
 - New Feature: Label Deletions adds '[Deleted]' beside the trashcan icon to allow easier searching for deleted posts
 
