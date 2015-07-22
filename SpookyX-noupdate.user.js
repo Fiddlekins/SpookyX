@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       30.01
+// @version       30.1
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -347,6 +347,20 @@ var settings = {
                     "description": "If only viewing the last x posts in a thread use this setting for the post counter to count the total number of posts rather than just the number of posts that have been loaded",
                     "type": "checkbox",
                     "value": true
+                },
+                "countHidden": {
+                    "name": "Count hidden posts",
+                    "description": "Adds a counter that displays how many posts of the total count are hidden",
+                    "type": "checkbox",
+                    "value": true,
+                    "suboptions": {
+                        "hideNullHiddenCounter": {
+                            "name": "Auto-hide null hidden counter",
+                            "description": "If there are no hidden posts the post counter will not display the hidden counter",
+                            "type": "checkbox",
+                            "value": true
+                        }
+                    }
                 }
             }
         },
@@ -1603,24 +1617,30 @@ function newPosts(){
 
 function postCounter(){
     if (!/(other|statistics)/.test(threadID)){
-        var postCount = notLoadedPostCount + $('.post_wrapper').length;
-        var hiddenPostCount = $('.post.stub:visible').length;
-        var imageCount = $(".thread_image_box").length;
-        if (settings.UserSettings.postCounter.suboptions.location.value.value === "Header bar"){
-            $(".rules_box").html(rulesBox);
-            if (settings.UserSettings.postCounter.suboptions.limits.value){
-                $(".threadStats").html("<span>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" Images: " +imageCount+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</span>");
-            }else{
-                $(".threadStats").html("<span>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ " Images: " +imageCount+ "</span>");
-            }
-        }else{
-            $(".threadStats").html('');
-            if (settings.UserSettings.postCounter.suboptions.limits.value){
-                $(".rules_box").html("<h6>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value+" <br> Images: " +imageCount+ "/"+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value+"</h6>" + rulesBox);
-            }else{
-                $(".rules_box").html("<h6>Posts(Hidden): " + postCount +"("+hiddenPostCount+")"+ "<br> Images: " +imageCount+ "</h6>" + rulesBox);
-            }
+        var postCount = notLoadedPostCount + $('.post_wrapper, div.thread').length;
+        var hiddenPostCount = $('.stub').length - $('.pull-left > .btn-toggle-post:visible').length; // Count total minus those that aren't visible to take account for hiding a whole thread on a board
+        var imageCount = $('.thread_image_box').length;
+        var limits = settings.UserSettings.postCounter.suboptions.limits.value;
+        var countHidden = settings.UserSettings.postCounter.suboptions.countHidden.value;
+        if (countHidden && settings.UserSettings.postCounter.suboptions.countHidden.suboptions.hideNullHiddenCounter.value){
+            countHidden = hiddenPostCount;
         }
+        var locationHeader = settings.UserSettings.postCounter.suboptions.location.value.value === "Header bar";
+        if (locationHeader){
+            $(".rules_box").html(rulesBox);
+        }else{
+            $('.threadStats').html('');
+        }
+        (locationHeader ? $('.threadStats') : $(".rules_box")).html(
+            '<'+(locationHeader ? 'span' : 'h6')+'>Posts'+
+            (countHidden ? '(Hidden)' : '')+': '+postCount+
+            (countHidden ? '('+hiddenPostCount+')' : '')+
+            (limits ? '/'+settings.UserSettings.postCounter.suboptions.limits.suboptions.posts.value : '')+
+            (locationHeader ? '' : '<br>')+' Images: '+imageCount+
+            (limits ? '/'+settings.UserSettings.postCounter.suboptions.limits.suboptions.images.value : '')+
+            '</'+(locationHeader ? 'span' : 'h6')+'>'+
+            (locationHeader ? '' : rulesBox)
+        );
     }
 }
 
@@ -2664,20 +2684,21 @@ $(document).ready(function(){
             }
             $('#hoverUI').html('');
             video.trigger("mouseenter");
-        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.className === "btn-toggle-post"){ // Recursive hiding
-            var button = e.target;
-            if(button.attributes["data-function"].value === "showPost"){
-                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "show");
-            }else if(button.attributes["data-function"].value === "hidePost"){
-                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "hide");
+        }else if(e.target.className === "btn-toggle-post" || e.target.parentNode.className === "btn-toggle-post"){ // If a hide post button is clicked
+            var button = e.target.className === "btn-toggle-post" ? e.target : e.target.parentNode;
+            if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){ // If recursive toggling is enabled
+                if(button.attributes["data-function"].value === "showPost"){
+                    recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "show");
+                }else if(button.attributes["data-function"].value === "hidePost"){
+                    recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "hide");
+                }
             }
-        }else if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value && e.target.parentNode.className === "btn-toggle-post"){ // Recursive hiding
-            var button = e.target.parentNode;
-            if(button.attributes["data-function"].value === "showPost"){
-                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "show");
-            }else if(button.attributes["data-function"].value === "hidePost"){
-                recursiveToggle($('article.doc_id_'+button.attributes["data-doc-id"].value).attr('id'), "hide");
-            }
+            var waitForNativeHide = setInterval(function(){ // Calling postCounter immediately does so before the native site toggles everything
+                if ($(button).closest('.post, .thread').css('display') === "none"){
+                    clearInterval(waitForNativeHide);
+                    postCounter(); // Update post counter
+                }
+            },100);
         }
     });
 });
