@@ -2,15 +2,13 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       30.11
+// @version       30.2
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
 // @include       https://*archive.moe/*
 // @include       http://archive.loveisover.me/*
 // @include       https://archive.loveisover.me/*
-// @include       http://boards.foolz.us/*
-// @include       https://boards.foolz.us/*
 // @include       http://archive.nyafuu.org/*
 // @include       https://archive.nyafuu.org/*
 // @include       http://*fgts.jp/*
@@ -182,13 +180,13 @@ var settings = {
                     "suboptions": {
                         "unlit": {
                             "name": "Unlit",
-                            "description": "Choose which favicon is used normally. Default is \"http://i.imgur.com/xuadeJ2.png\"",
+                            "description": "Choose which favicon is used normally. Default is \"https://i.imgur.com/xuadeJ2.png\"",
                             "type": "text",
-                            "value": "http://i.imgur.com/xuadeJ2.png"
+                            "value": "https://i.imgur.com/xuadeJ2.png"
                         },
                         "lit": {
                             "name": "Lit",
-                            "description": "Choose which favicon is used to indicate there are unread posts. Preset numbers are 0-4, replace with link to custom image if you desire such as: \"http://i.imgur.com/XGsrewo.png\"",
+                            "description": "Choose which favicon is used to indicate there are unread posts. Preset numbers are 0-4, replace with link to custom image if you desire such as: \"https://i.imgur.com/XGsrewo.png\"",
                             "type": "text",
                             "value": "2"
                         },
@@ -200,9 +198,15 @@ var settings = {
                         },
                         "alertOverlay": {
                             "name": "Alert Overlay",
-                            "description": "The favicon overlay that indicates unread replies. Default is \"http://i.imgur.com/DCXVHHl.png\"",
+                            "description": "The favicon overlay that indicates unread replies. Default is \"https://i.imgur.com/DCXVHHl.png\"",
                             "type": "text",
-                            "value": "http://i.imgur.com/DCXVHHl.png"
+                            "value": "https://i.imgur.com/DCXVHHl.png"
+                        },
+                        "notification": {
+                            "name": "Notification image",
+                            "description": "The image that is displayed in SpookyX generated notifications. 64px square is ideal. Default is \"https://i.imgur.com/HTcKk4Y.png\"",
+                            "type": "text",
+                            "value": "https://i.imgur.com/HTcKk4Y.png"
                         }
                     }
                 }
@@ -620,23 +624,23 @@ var settings = {
 };
 
 var defaultMascots = [
-    "http://i.imgur.com/l2rGSUs.png",
-    "http://i.imgur.com/QudFqBK.png",
-    "http://i.imgur.com/YtdTqBW.png",
-    "http://i.imgur.com/cinWJsP.png",
-    "http://i.imgur.com/CrjD09g.png",
-    "http://i.imgur.com/r6RuI3Q.png",
-    "http://i.imgur.com/U9NQ0aQ.png",
-    "http://i.imgur.com/avlBCUC.png",
-    "http://i.imgur.com/RSealGL.png",
-    "http://i.imgur.com/ZTf8d85.png",
-    "http://i.imgur.com/47Nf9WQ.png",
-    "http://i.imgur.com/zw1NtJZ.png",
-    "http://i.imgur.com/jIx9a5q.png",
-    "http://i.imgur.com/IGT97Rg.png",
-    "http://i.imgur.com/Q8OSBd4.png",
-    "http://i.imgur.com/T5LyxZ3.png",
-    "http://i.imgur.com/xdcWW4m.png"
+    "https://i.imgur.com/l2rGSUs.png",
+    "https://i.imgur.com/QudFqBK.png",
+    "https://i.imgur.com/YtdTqBW.png",
+    "https://i.imgur.com/cinWJsP.png",
+    "https://i.imgur.com/CrjD09g.png",
+    "https://i.imgur.com/r6RuI3Q.png",
+    "https://i.imgur.com/U9NQ0aQ.png",
+    "https://i.imgur.com/avlBCUC.png",
+    "https://i.imgur.com/RSealGL.png",
+    "https://i.imgur.com/ZTf8d85.png",
+    "https://i.imgur.com/47Nf9WQ.png",
+    "https://i.imgur.com/zw1NtJZ.png",
+    "https://i.imgur.com/jIx9a5q.png",
+    "https://i.imgur.com/IGT97Rg.png",
+    "https://i.imgur.com/Q8OSBd4.png",
+    "https://i.imgur.com/T5LyxZ3.png",
+    "https://i.imgur.com/xdcWW4m.png"
 ];
 
 if (localStorage.SpookyXsettings !== undefined){
@@ -696,16 +700,17 @@ var faviconState = "unlit";
 function generateFavicons(){ // Generate dynamic favicons
     if (settings.UserSettings.favicon.suboptions.customFavicons.value){
         switch(settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value) {
-            case "0": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/7iTgtjy.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/QrkQSo0.png"; break;
-            case "1": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/AWVjxfw.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/KXIPcD9.png"; break;
-            case "2": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/S7uBSPZ.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/7IxJvBN.png"; break;
-            case "3": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/Rt8dEaq.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/tvJjpqF.png"; break;
-            case "4": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "http://i.imgur.com/3bRaVUl.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "http://i.imgur.com/5Bv27Co.png"; break;
+            case "0": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "https://i.imgur.com/7iTgtjy.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "https://i.imgur.com/QrkQSo0.png"; break;
+            case "1": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "https://i.imgur.com/AWVjxfw.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "https://i.imgur.com/KXIPcD9.png"; break;
+            case "2": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "https://i.imgur.com/S7uBSPZ.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "https://i.imgur.com/7IxJvBN.png"; break;
+            case "3": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "https://i.imgur.com/Rt8dEaq.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "https://i.imgur.com/tvJjpqF.png"; break;
+            case "4": settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value = "https://i.imgur.com/3bRaVUl.png"; settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value = "https://i.imgur.com/5Bv27Co.png"; break;
             default: break;
         }
         faviconUnlit = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.unlit.value; // Store unlit favicon
         faviconLit = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value; // Store lit favicon
         faviconAlert = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alert.value; // Store alert favicon
+        faviconNotification = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.notification.value; // Store notification favicon
         setFavicon();
     }else{
         var faviconCanvas = document.createElement('canvas');
@@ -720,6 +725,25 @@ function generateFavicons(){ // Generate dynamic favicons
             faviconUnlit = faviconCanvas.toDataURL('image/png'); // Store unlit favicon
             var faviconData = ctx.getImageData(0, 0, faviconCanvas.height, faviconCanvas.width);
             var meanColour = [0,0,0,0];
+            var scale = Math.floor(64/faviconCanvas.width);
+            var faviconNotificationData = faviconData;
+            if (scale-1){ // Only upscale if scale is 2 or more
+                faviconNotificationData = new ImageData(scale*faviconCanvas.width, scale*faviconCanvas.height);
+                for (var i=0; i<scale; i++){                    
+                    for (var j=0; j<scale; j++){
+                        for (var x=0, width=faviconCanvas.width, widths=width*4; x<widths; x+=4){
+                            for (var y=0, height=faviconCanvas.height, heights=height*4; y<heights; y+=4){
+                                var start = x+(y*width);
+                                var end = (((x)*scale)+((y)*width*scale*scale))+(4*i)+(4*j*height*scale);
+                                faviconNotificationData.data[end] = faviconData.data[start];
+                                faviconNotificationData.data[end+1] = faviconData.data[start+1];
+                                faviconNotificationData.data[end+2] = faviconData.data[start+2];
+                                faviconNotificationData.data[end+3] = faviconData.data[start+3];                            
+                            }
+                        }
+                    }
+                }
+            }
             for (var i=0, len=faviconData.data.length; i<len; i++){
                 meanColour[i%4] += faviconData.data[i];
             }
@@ -742,6 +766,12 @@ function generateFavicons(){ // Generate dynamic favicons
             faviconLit = faviconCanvas.toDataURL('image/png'); // Store lit favicon
             ctx.drawImage(overlayFavicon[0], 0, 0, faviconCanvas.height, faviconCanvas.width); // Draw alert symbol on canvas
             faviconAlert = faviconCanvas.toDataURL('image/png'); // Store alert favicon
+            if (scale){
+                faviconCanvas.height *= scale;
+                faviconCanvas.width *= scale;
+            }
+            ctx.putImageData(faviconNotificationData, 0, 0); // Draw faviconNotification on canvas
+            faviconNotification = faviconCanvas.toDataURL('image/png'); // Store notification favicon
             setFavicon();
         });
     }
@@ -1564,6 +1594,7 @@ function newPosts(){
             }
             if (predictedLastSeenPostIndex >= 0){
                 lastSeenPost = unseenPosts[predictedLastSeenPostIndex]; // Update last seen post
+                saveLastSeenPosts(); // Save new last seen post
                 unseenPosts = unseenPosts.slice(predictedLastSeenPostIndex + 1); // Only keep posts after the lastSeenPost
 
                 var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
@@ -1717,27 +1748,35 @@ function saveYourPosts(){
         }
     }
 }
+function saveLastSeenPosts(){
+    lastSeenPosts[board][threadID] = lastSeenPost;
+    if (localStorage.lastSeenPosts !== undefined){
+        latestLastSeenPosts = JSON.parse(localStorage.lastSeenPosts); // Get the most recent version of the stored object
+        if (latestLastSeenPosts[board] === undefined){
+            latestLastSeenPosts[board] = {threadID:lastSeenPost};
+        }else{
+            if (latestLastSeenPosts[board][threadID] === undefined){
+                latestLastSeenPosts[board][threadID] = lastSeenPost;
+            }else{
+                if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) < parseInt(lastSeenPosts[board][threadID].split('_')[0])){
+                    latestLastSeenPosts[board][threadID] = lastSeenPosts[board][threadID];
+                }else if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) === parseInt(lastSeenPosts[board][threadID].split('_')[0])){
+                    if (!isNaN(lastSeenPosts[board][threadID].split('_')[1]) && isNaN(latestLastSeenPosts[board][threadID].split('_')[1]) || parseInt(latestLastSeenPosts[board][threadID].split('_')[1]) < parseInt(lastSeenPosts[board][threadID].split('_')[1])){
+                        latestLastSeenPosts[board][threadID] = lastSeenPosts[board][threadID];
+                    }
+                }
+            }
+        }
+        lastSeenPosts = latestLastSeenPosts;
+    }
+    localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts); // Save it again
+}
 window.addEventListener("beforeunload", function (e){ // After user leaves the page
     if (settings.UserSettings.labelYourPosts.value){ // Save the your posts object
         saveYourPosts();
     }
     if (settings.UserSettings.favicon.value){ // Save the last read posts object
-        lastSeenPosts[board][threadID] = lastSeenPost;
-        if (localStorage.lastSeenPosts === undefined){
-            localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts);
-        }else{
-            latestLastSeenPosts = JSON.parse(localStorage.lastSeenPosts); // Get the most recent version of the stored object
-            if (latestLastSeenPosts[board] !== undefined && latestLastSeenPosts[board][threadID] !== undefined){
-                if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) > parseInt(lastSeenPosts[board][threadID].split('_')[0])){
-                    lastSeenPosts[board][threadID] = latestLastSeenPosts[board][threadID];
-                }else if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) == parseInt(lastSeenPosts[board][threadID].split('_')[0])){
-                    if (isNaN(lastSeenPosts[board][threadID].split('_')[1]) || parseInt(latestLastSeenPosts[board][threadID].split('_')[1]) > parseInt(lastSeenPosts[board][threadID].split('_')[1])){
-                        lastSeenPosts[board][threadID] = latestLastSeenPosts[board][threadID];
-                    }
-                }
-            }
-            localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts); // Save it again
-        }
+        saveLastSeenPosts();
     }
     //var confirmationMessage = "\o/";
 
@@ -1815,7 +1854,7 @@ function labelNewPosts(newPosts, boardView){
                     if (!notificationTriggered && !boardView){
                         if (!settings.UserSettings.filter.value || !settings.UserSettings.filter.suboptions.filterNotifications.value || $('#'+postID+':visible').length){ // Filter notifications
                             if (settings.UserSettings.notifications.value){
-                                notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you","http://i.imgur.com/HTcKk4Y.png",notificationSpoiler(postID),true);
+                                notifyMe($('#'+postID+' .post_poster_data').text().trim()+" replied to you",faviconNotification,notificationSpoiler(postID),true);
                             }
                             unseenReplies.push(postID); // add postID to list of unseen replies
                             notificationTriggered = true;
@@ -2301,7 +2340,7 @@ $(document).ready(function(){
                 headerBar();
             }
         }
-        if(e.target.name === "Custom Favicons"){
+        if(e.target.name === "Custom Favicons" || (e.target.name === "Favicon" && e.target.checked)){
             generateFavicons();
         }
         settingsStore = {};
@@ -2380,7 +2419,7 @@ $(document).ready(function(){
                             }
                         }else{
                             if (settings.UserSettings.notifications.value){
-                                notifyMe("An error occurred whilst posting", "http://i.imgur.com/HTcKk4Y.png", response.error, false);
+                                notifyMe("An error occurred whilst posting", faviconNotification, response.error, false);
                             }
                         }
                     }else{
@@ -2814,7 +2853,6 @@ function populateSettingsMenu(){
         if (localStorage.SpookyXsettings !== undefined){
             $.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
         }
-        generateFavicons();
         var settingsHTML = '<div id="Main">'+generateSubOptionHTML(settings.UserSettings, '')+'</div>';
         settingsHTML += '<div id="Filter">'+generateFilterHTML()+'</div>';
         $('#settingsContent').html(settingsHTML);
