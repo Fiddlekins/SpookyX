@@ -2,6 +2,15 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v30.2:** *(2015-07-24)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v30.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v30.2/README.md)
+- Improved reliability of last post saving
+- Added new option under Custom favicons that allows you to select the image that is displayed on the notifications
+- SpookyX now uses the native site favicon for notifications if you're not using custom ones
+ - If the site favicon is less than 32px in size SpookyX will upscale it with a nearest neighbour algorithm rather than allowing the browser to use its default bicubic one, which has a tendency to make upscaled small resolution images terrible
+ - The nearest neighbour implementation will only upscale by a discrete ratios however so if for some reason the native site favicon has a favicon with side length of a number that isn't a power of 2 the browser will upscale it again a bit with its native scaling algorithm
+ - e.g. a site with a native favicon that is 20px by 20px will be upscaled by SpookyX to 60px by 60px and the broswer will then upscale it again to 64px by 64px when fitting it into the notification
+- removed Foolz from the sites the script matches
+
 **v30.11:** *(2015-07-22)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v30.11/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v30.11/README.md)
 - fixed bug where enabling the mascot made the footer disappear on some archives (notably LiO)
 
