@@ -2,15 +2,13 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       30.11
+// @version       30.2
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
 // @include       https://*archive.moe/*
 // @include       http://archive.loveisover.me/*
 // @include       https://archive.loveisover.me/*
-// @include       http://boards.foolz.us/*
-// @include       https://boards.foolz.us/*
 // @include       http://archive.nyafuu.org/*
 // @include       https://archive.nyafuu.org/*
 // @include       http://*fgts.jp/*
