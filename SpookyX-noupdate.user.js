@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       30.2
+// @version       31.0
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -446,7 +446,7 @@ var settings = {
                     "name": "Right margin",
                     "description": "Specify the width in pixels of the gap between the end of the posts and the right side of the screen. Negative values set it to equal the mascot width",
                     "type": "number",
-                    "value": 0
+                    "value": -1
                 },
                 "align": {
                     "name": "Align",
@@ -536,7 +536,7 @@ var settings = {
         "name":{
             "name":"Name",
             "value":[
-                {"comment": "#/?????????/;"}
+                {"comment": "#/久保島のミズゴロウ/;"}
             ],
             "threadPostFunction":function(currentPost){return $(currentPost).find('.post_author').html();},
             "responseObjFunction":function(response){return response.name_processed;}
@@ -620,6 +620,8 @@ var settings = {
         }
     }
 };
+
+var defaultSettings = jQuery.extend(true, {}, settings);
 
 var defaultMascots = [
     "https://i.imgur.com/l2rGSUs.png",
@@ -2183,6 +2185,67 @@ function headerBar(){
     }
 }
 
+function addFileSelect(){
+    if(!$('#file_image').length){
+        $('#reply_elitterae').parent().parent().append('<div class="input-prepend"><label class="add-on" for="file_image">File</label><input type="file" name="file_image" id="file_image" size="16"></div>');
+        $('.input-append.pull-left .btn-group [name=reply_gattai]').attr('id','finalReplySubmit').hide();
+        if (!$('#middleReplySubmit').length){
+            $('.input-append.pull-left .btn-group').prepend('<input id="middleReplySubmit" value="Submit" class="btn btn-primary" type="button">');
+            var $middleReplySubmit = $('#middleReplySubmit');
+            $middleReplySubmit.on('click', function(){
+                $middleReplySubmit.val('Uploading Image').attr('disabled','disabled');
+                var reader = new FileReader();
+                var file = document.getElementById('file_image').files[0];
+                if (file){
+                    if (/image/.test(file.type)){
+                        reader.readAsDataURL(file);
+                        var clientId = '6a7827b84201f31';
+                        reader.onloadend = function(){
+                            $.ajax({
+                                url: "https://api.imgur.com/3/image",
+                                type: 'POST',
+                                headers: {
+                                    Authorization: 'Client-ID ' + clientId
+                                },
+                                data: {
+                                    image: reader.result.replace(/data:.*;base64,/,''),
+                                    type: 'base64',
+                                    name: file.name
+                                }
+                            }).done(function(response){
+                                $middleReplySubmit.val('Submitting');
+                                $('#file_image').val('');
+                                $('#reply_chennodiscursus')[0].value += "\n "+response.data.link.replace(/http:/,'https:');
+                                $('#finalReplySubmit').trigger('click');
+                            });
+                        };
+                    }else{
+                        $middleReplySubmit.val('Filetype is not supported').removeAttr('disabled');
+                        setTimeout(function(){ $middleReplySubmit.val('Submit'); }, 3000);
+                    }
+                }else{
+                    $middleReplySubmit.val('Submitting').attr('disabled','disabled');
+                    $('#finalReplySubmit').trigger('click');
+                }
+            });
+        }else{
+            $('#middleReplySubmit').val('Submit').removeAttr('disabled');
+        }
+    }
+}
+
+function updateExportLink(){ // Define the export settings link with the latest version of the settings
+    $('#settingsExport').attr('download','SpookyX v.'+GM_info.script.version+'-'+Date.now()+'.json');
+    $('#settingsExport').attr('href','data:' + 'text/plain'  +  ';charset=utf-8,' + encodeURIComponent(JSON.stringify(settings)));    
+}
+
+function saveSettings(){
+    settingsStore = {};
+    settingsStore.UserSettings = settingsStrip(settings.UserSettings);
+    settingsStore.FilterSettings = settingsStrip(settings.FilterSettings);
+    localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
+}
+
 $(document).ready(function(){
     $('body').append('<div id="postBackgroundColourPicker" class="thread_form_wrap" style="display:none;"></div>'); // Create an element to get the post colour from
     var postBackgroundColourPicker = $('#postBackgroundColourPicker').css('background-color'); // Set the colour
@@ -2209,7 +2272,7 @@ $(document).ready(function(){
     }else{ // Insert settings link when on board index
         $('.container-fluid').append('<div class="headerBar" style="position: fixed; right: 0; top: 0;"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
     }
-    $('body').append('<div id="settingsMenu" class="thread_form_wrap" style="display: none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a target="_blank" href="https://archive.moe/a/thread/126054592" style="text-decoration: underline;">Feedback</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>'); // <a title="Export" href="javascript:;">Export</a> | <a title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> |
+    $('body').append('<div id="settingsMenu" class="thread_form_wrap" style="display: none;"><input type="file" id="fileInput" style="display:none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a id="settingsExport" title="Export" href="javascript:;">Export</a> | <a id="settingsImport" title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.'+GM_info.script.version+'</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a target="_blank" href="https://archive.moe/a/thread/126054592" style="text-decoration: underline;">Feedback</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>');
     if (settings.UserSettings.gallery.value){$('body').append('<div id="gallery" style="display:none;"></div>');}
     if (/[0-9]+/.test(threadID)){ // If in a thread
         $($('.navbar .nav')[1]).append('<li><a href="//boards.4chan.org/'+board+'/thread/'+threadID+'">View thread on 4chan</a></li>'); // Add view thread on 4chan link
@@ -2228,7 +2291,7 @@ $(document).ready(function(){
         $('#headerFixed').show();            
     }
     $('.sections-list').on('click', function(e){ // Main settings tabs change on click
-        if (e.target.tagName == "A"){
+        if (e.target.tagName === "A"){
             $('#settingsContent #'+$('.sections-list .active').html()).hide();
             $('.sections-list .active').removeClass('active');
             $(e.target).addClass('active');
@@ -2236,12 +2299,43 @@ $(document).ready(function(){
         }
     });
     $('#settingsContent').on('click', function(e){ // Filter subtabs change on click
-        if (e.target.parentNode.className == "filters-list"){
+        if (e.target.parentNode.className === "filters-list"){
             var filterSubmenu = $(e.target).attr('name');
             $('#filter_'+$('.filters-list .active').attr('name')).hide();
             $('.filters-list .active').removeClass('active');
             $('.filters-list > a[name='+filterSubmenu+']').addClass('active');
             $('#filter_'+filterSubmenu).show();
+        }
+    });
+    $('#settingsMenu .credits > a').on('click', function(e){ // Set up the import/export/reset links
+        if (e.target.title === "Import"){ // Import settings
+            $('#fileInput').trigger('click');
+        }else if (e.target.title === "Reset Settings"){
+            settings = jQuery.extend(true, {}, defaultSettings);
+            saveSettings(); // Save the settings
+            populateSettingsMenu(); // Double populate to display changed settings
+            populateSettingsMenu();
+        }
+    });
+    $('#fileInput').on('change',function(){ // When the undisplayed file input element changes import settings
+        if (typeof window.FileReader !== 'function') {
+            alert("The file API isn't supported on this browser.");
+            return;
+        }
+        var input = document.getElementById('fileInput');
+        var file = input.files[0];
+        if (!input.files[0]){
+            alert("Please select a file.");
+        }else{
+            var fr = new FileReader();
+            fr.onload = function(){
+                settings = JSON.parse(fr.result);
+                saveSettings(); // Save the settings
+                populateSettingsMenu(); // Double populate to display changed settings
+                populateSettingsMenu();
+                alert("Saved settings applied.");
+            }
+            fr.readAsText(file);
         }
     });
     $('#settingsContent').on('change', function(e){
@@ -2341,10 +2435,8 @@ $(document).ready(function(){
         if(e.target.name === "Custom Favicons" || (e.target.name === "Favicon" && e.target.checked)){
             generateFavicons();
         }
-        settingsStore = {};
-        settingsStore.UserSettings = settingsStrip(settings.UserSettings);
-        settingsStore.FilterSettings = settingsStrip(settings.FilterSettings);
-        localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
+        saveSettings(); // Save the settings
+        updateExportLink(); // Recreate the export link
     });
     if (settings.UserSettings.postCounter.suboptions.countUnloaded.value){
         if (/[0-9]+/.test(threadID)){ // Count the posts that aren't loaded (eg. in last/50 mode)
@@ -2395,42 +2487,47 @@ $(document).ready(function(){
                     }else{
                         response = {"error":"No responseText"};
                     }
-                    if (ajaxSettings.type == "POST"){
-                        if (response.error === undefined){
-                            if (response.captcha){ // If you are required to fill a captcha before posting
-                                //console.log(response);
-                            }else{
-                                for (var postID in response[threadID].posts){
-                                    if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
-                                        yourPosts[board][threadID].push(postID);
-                                        var newPost = $('#'+postID);
-                                        newPost.find('.post_author').after('<span> (You)</span>');
-                                        if (settings.UserSettings.filter.value){filter(newPost);} // Apply filter
+                    if (!/api\.imgur/.test(ajaxSettings.url)){ // Don't handle imgur calls
+                        if (ajaxSettings.type === "POST"){
+                            if (response.error === undefined){
+                                if (response.captcha){ // If you are required to fill a captcha before posting
+                                    //console.log(response);
+                                }else{
+                                    for (var postID in response[threadID].posts){
+                                        if(response[threadID].posts[postID].comment.replace(/[\r\n]/g,'') == lastSubmittedContent.replace(/[\r\n]/g,'')){
+                                            yourPosts[board][threadID].push(postID);
+                                            var newPost = $('#'+postID);
+                                            newPost.find('.post_author').after('<span> (You)</span>');
+                                            if (settings.UserSettings.filter.value){filter(newPost);} // Apply filter
+                                        }
                                     }
-                                }
-                                crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
-                                crosslinkTracker[board] = true;
-                                localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
-                                saveYourPosts();
+                                    crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+                                    crosslinkTracker[board] = true;
+                                    localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
+                                    saveYourPosts();
 
-                                labelNewPosts(Object.keys(response[threadID].posts), false);
-                            }
-                        }else{
-                            if (settings.UserSettings.notifications.value){
-                                notifyMe("An error occurred whilst posting", faviconNotification, response.error, false);
-                            }
-                        }
-                    }else{
-                        if (response.error !== undefined){
-                            //console.log(response.error);
-                        }else{
-                            if (response[threadID] !== undefined){
-                                for (var postID in response[threadID].posts){
-                                    if (settings.UserSettings.filter.value){filter($('#'+postID));} // Apply filter
+                                    labelNewPosts(Object.keys(response[threadID].posts), false);
+                                    addFileSelect(); // Refresh the added file upload
                                 }
-                                labelNewPosts(Object.keys(response[threadID].posts), false);
                             }else{
-                                //console.log("Not in a thread");
+                                if (settings.UserSettings.notifications.value){
+                                    notifyMe("An error occurred whilst posting", faviconNotification, response.error, false);
+                                }
+                            }
+                            $('#middleReplySubmit').val('Submit').removeAttr('disabled'); // Reset submit button
+                        }else{
+                            if (response.error !== undefined){
+                                //console.log(response.error);
+                            }else{
+                                if (response[threadID] !== undefined){
+                                    for (var postID in response[threadID].posts){
+                                        if (settings.UserSettings.filter.value){filter($('#'+postID));} // Apply filter
+                                    }
+                                    labelNewPosts(Object.keys(response[threadID].posts), false);
+                                    addFileSelect(); // Refresh the added file upload
+                                }else{
+                                    //console.log("Not in a thread");
+                                }
                             }
                         }
                     }
@@ -2441,6 +2538,7 @@ $(document).ready(function(){
     var staticPosts = $('article.post');
     var onlyOP = $('article.thread:not(.backlink_container)');
     var staticPostsAndOP = staticPosts.add(onlyOP); // Save querying the staticPosts twice by extending the first query with the OP
+    addFileSelect(); // Intialise ghosting image posting
     if (settings.UserSettings.headerBar.value){headerBar();} // Customise headerbar behaviour
     mascot(parseMascotImageValue()); // Insert mascot
     if (settings.UserSettings.adjustReplybox.value){adjustReplybox();} // Adjust reply box
@@ -2877,6 +2975,7 @@ function populateSettingsMenu(){
                 }                
             }
         });
+        updateExportLink(); // Create the export link
     }
 }
 
