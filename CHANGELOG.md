@@ -2,6 +2,16 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v31.0:** *(2015-07-26)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v31.0/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v31.0/README.md)
+- New Feature: when a thread enters ghost mode the file upload option will remain and you will be able to continue to upload images
+ - This works by uploading the image to Imgur and then appending the generated link to your post. Imgur only supports image uploads so other media cannot be uploaded at present
+ - Free applications have limits on the number of files that can be uploaded in a certain timeframe, beyond which further requests will be refused. If this feature doesn't seem to be working let me know and I'll contact Imgur with a whitelist request
+- New Feature: Export, import and reset settings.
+ - Exporting them will save them as a text file in JSON notation. These can be freely edited if you feel the need. The filename reflects the version of SpookyX that was used to export them and also the timestamp of the moment the download was prepped (which isn't actually the same time that you click the export button - the timestamp will however accurately reflect the chronological order they exported in)
+ - Importing them allows you to select a file that comprises of text in JSON notation which will overwrite your present settings
+ - Reset will restore the settings to the default ones
+- amdended the default filtered name comment which had changed from japanese characters to question marks several updates ago
+
 **v30.2:** *(2015-07-24)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v30.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v30.2/README.md)
 - Improved reliability of last post saving
 - Added new option under Custom favicons that allows you to select the image that is displayed on the notifications
