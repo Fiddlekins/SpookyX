@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       31.0
+// @version       31.1
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -2189,42 +2189,62 @@ function headerBar(){
 
 function addFileSelect(){
     if(!$('#file_image').length){
-        $('#reply_elitterae').parent().parent().append('<div class="input-prepend"><label class="add-on" for="file_image">File</label><input type="file" name="file_image" id="file_image" size="16"></div>');
+        $('#reply_elitterae').parent().parent().append('<div class="input-prepend"><label class="add-on" for="file_image">File</label><input type="file" name="file_image" id="file_image" size="16" multiple="multiple"></div>');
         $('.input-append.pull-left .btn-group [name=reply_gattai]').attr('id','finalReplySubmit').hide();
         if (!$('#middleReplySubmit').length){
             $('.input-append.pull-left .btn-group').prepend('<input id="middleReplySubmit" value="Submit" class="btn btn-primary" type="button">');
             var $middleReplySubmit = $('#middleReplySubmit');
             $middleReplySubmit.on('click', function(){
                 $middleReplySubmit.val('Uploading Image').attr('disabled','disabled');
-                var reader = new FileReader();
-                var file = document.getElementById('file_image').files[0];
-                if (file){
-                    if (/image/.test(file.type)){
-                        reader.readAsDataURL(file);
-                        var clientId = '6a7827b84201f31';
-                        reader.onloadend = function(){
-                            $.ajax({
-                                url: "https://api.imgur.com/3/image",
-                                type: 'POST',
-                                headers: {
-                                    Authorization: 'Client-ID ' + clientId
-                                },
-                                data: {
-                                    image: reader.result.replace(/data:.*;base64,/,''),
-                                    type: 'base64',
-                                    name: file.name
+                var fileCount = document.getElementById('file_image').files.length;
+                if (fileCount){
+                    $.each(document.getElementById('file_image').files, function(i,file){
+                        var reader = new FileReader();
+                        if (/image/.test(file.type)){
+                            reader.readAsDataURL(file);
+                            var clientId = '6a7827b84201f31';
+                            reader.onloadend = function(){
+                                $.ajax({
+                                    url: "https://api.imgur.com/3/image",
+                                    type: 'POST',
+                                    headers: {
+                                        Authorization: 'Client-ID ' + clientId
+                                    },
+                                    data: {
+                                        image: reader.result.replace(/data:.*;base64,/,''),
+                                        type: 'base64',
+                                        name: file.name
+                                    }
+                                }).done(function(response){
+                                    fileCount--;
+                                    $('#reply_chennodiscursus')[0].value += "\n"+response.data.link.replace(/http:/,'https:');
+                                    if (!fileCount){
+                                        $middleReplySubmit.val('Submitting');
+                                        $('#file_image').val('');
+                                        $('#finalReplySubmit').trigger('click');
+                                    }
+                                });
+                            };
+                        }else if(!/application/.test(file.type)){
+                            var data = new FormData();
+                            data.append('files[]', file);
+                            var xhr = new XMLHttpRequest();
+                            xhr.open('POST', 'https://mixtape.moe/upload.php', true);
+                            xhr.addEventListener('load', function(e){
+                                fileCount--;
+                                $('#reply_chennodiscursus')[0].value += "\n"+JSON.parse(xhr.responseText).files[0].url;
+                                if (!fileCount){
+                                    $middleReplySubmit.val('Submitting');
+                                    $('#file_image').val('');
+                                    $('#finalReplySubmit').trigger('click');
                                 }
-                            }).done(function(response){
-                                $middleReplySubmit.val('Submitting');
-                                $('#file_image').val('');
-                                $('#reply_chennodiscursus')[0].value += "\n "+response.data.link.replace(/http:/,'https:');
-                                $('#finalReplySubmit').trigger('click');
                             });
-                        };
-                    }else{
-                        $middleReplySubmit.val('Filetype is not supported').removeAttr('disabled');
-                        setTimeout(function(){ $middleReplySubmit.val('Submit'); }, 3000);
-                    }
+                            xhr.send(data);
+                        }else{
+                            $middleReplySubmit.val('Filetype is not supported').removeAttr('disabled');
+                            setTimeout(function(){ $middleReplySubmit.val('Submit'); }, 3000);
+                        }
+                    });
                 }else{
                     $middleReplySubmit.val('Submitting').attr('disabled','disabled');
                     $('#finalReplySubmit').trigger('click');
