@@ -2,6 +2,13 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v31.1:** *(2015-07-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v31.1/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v31.1/README.md)
+- The file upload now supports multiple files concurrently
+- The file upload now supports filetypes that are not images
+ - Anything that isn't an image is instead uploaded to mixtape.moe and the returned link will be appended to the post as usual
+ - It's worth noting that SpookyX will only attempt to embed images and videos however so other files will just be left linked
+ - Lastly, executables (.exe) are not accepted by mixtape.moe due to risk of viruses so you cannot upload these
+
 **v31.0:** *(2015-07-26)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v31.0/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v31.0/README.md)
 - New Feature: when a thread enters ghost mode the file upload option will remain and you will be able to continue to upload images
  - This works by uploading the image to Imgur and then appending the generated link to your post. Imgur only supports image uploads so other media cannot be uploaded at present
