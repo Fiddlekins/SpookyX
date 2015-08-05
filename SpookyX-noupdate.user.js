@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       31.1
+// @version       31.2
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -687,9 +687,16 @@ if (settings.UserSettings.inlineImages.suboptions.customSize.value){
 }
 
 var yourPostsLookup = {};
-var crosslinkTracker = {};
-if (localStorage.crosslinkTracker === undefined){
-    localStorage.crosslinkTracker = "{}";
+if (/^(board|[0-9]+)$/.test(threadID)){
+    var crosslinkTracker = {};
+    if (localStorage.crosslinkTracker !== undefined){
+        crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+    }
+    if (crosslinkTracker[board] === undefined){
+        crosslinkTracker[board] = {};
+    }
+    crosslinkTracker[board][threadID] = {};
+    localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
 }
 
 var faviconUnlit;
@@ -1066,7 +1073,7 @@ function inlineImages(posts){
                     $currentImage.prepend('<video width="'+($(post).hasClass('thread') ? imageWidthOP : imageWidth)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
                     $(imgLink).remove();
                     if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
-                        videoHover();
+                        addHover($currentImage);
                     }
                 }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
                     $currentImage.find('img').each(function(k,image){
@@ -1232,15 +1239,15 @@ var embedImages = function(posts){
                     imgNum--;
                     var filename = '<div class="post_file embedded_post_file"><a href="'+mediaLink+'" class="post_file_filename" rel="tooltip" title="'+mediaLink+'">'+mediaLink.match(/[^\/]*/g)[mediaLink.match(/[^\/]*/g).length -2]+'</a></div>';
                     var spoiler = "";
-                    var elem = $('<div class="thread_image_box">'+filename+'</div>').insertBefore($currentArticle.find('header'));
+                    var $elem = $('<div class="thread_image_box">'+filename+'</div>').insertBefore($currentArticle.find('header'));
                     if($(this).parents('.spoiler').length){
                         spoiler = "spoilerImage ";
-                        elem.append('<div class="spoilerText">Spoiler</div>');
+                        $elem.append('<div class="spoilerText">Spoiler</div>');
                     }
                     if (mediaType == "image"){
-                        elem.append('<a href="'+mediaLink+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+mediaLink+'" class="lazyload post_image '+spoiler+'smallImage"></a>');
+                        $elem.append('<a href="'+mediaLink+'" target="_blank" rel="noreferrer" class="thread_image_link"><img src="'+mediaLink+'" class="lazyload post_image '+spoiler+'smallImage"></a>');
                         removeLink(currentLink);
-                        var $image = elem.find('img');
+                        var $image = $elem.find('img');
                         if (!$image.attr('loadEventSet')){
                             $image.attr('loadEventSet',true);
                             $image.on('load', function(e){
@@ -1249,18 +1256,16 @@ var embedImages = function(posts){
                                 $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.naturalWidth+'x'+e.target.naturalHeight+'</span>'); // Add file dimensions
                             });
                         }
-                        imageHover();
-                        canvasHover();
                     }else if (mediaType == "video"){
                         mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
-                        elem.append('<video width="'+imageWidth+'" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
+                        $elem.append('<video width="'+imageWidth+'" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
                         removeLink(currentLink);
-                        elem.find('video')[0].onloadedmetadata = function(e){
+                        $elem.find('video')[0].onloadedmetadata = function(e){
                             $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
                             $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
                         };
-                        if(settings.UserSettings.inlineImages.suboptions.videoHover.value){videoHover();}
                     }
+                    addHover($elem);
                 }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec(currentLink.href) !== null){
                     var imgurLinkFragments = currentLink.href.split('\/');
                     if (imgurLinkFragments[3] == "a"){
@@ -1303,8 +1308,7 @@ var embedImages = function(posts){
                             }
                         });
                         if (allDisplayed){removeLink(currentLink);}
-                        imageHover();
-                        canvasHover();
+                        addHover($currentArticle);
                     }
                 }else{
                     if(!(/&gt;&gt;/).test(mediaLink)){
@@ -1330,123 +1334,128 @@ function removeLink(currentLink){
 function pauseGifs(posts){
     posts.each(function(i,img){
         if ((/\.gif/).test(img.src)){
-            $(img).on('load',function(){
-                $(img).after('<canvas class="smallImage" width="'+img.naturalWidth+'" height="'+img.naturalHeight+'"></canvas>');
-                $(img).attr('gif',true).toggle();
-                $(img).addClass("bigImage").removeClass("smallImage");
-                var canvas = $(img).next('canvas');
+            var $img = $('img');
+            $img.on('load',function(){
+                $img.after('<canvas class="smallImage" width="'+img.naturalWidth+'" height="'+img.naturalHeight+'"></canvas>');
+                $img.attr('gif',true).toggle();
+                $img.addClass("bigImage").removeClass("smallImage");
+                var canvas = $img.next('canvas');
                 canvas[0].getContext("2d").drawImage(img,0,0);
-                canvasHover();
+                addHover($img.parent());
             });
         }
     });
 }
 
-function imageHover(){
-    if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.imageHover.value){
-        var $image = $('img');
-        $image.off("mouseenter mousemove mouseout");
-        $image.on("mouseenter", function(e){
-            if(e.target.id !== "mascot" && !$(e.target).hasClass("bigImage") && !$(e.target).data('dontHover')){
-                $(e.target).clone().removeClass("smallImage spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
-            }
-        });
-        $image.on("mousemove mouseenter", function(e){
-            var etarget = e.target;
-            var $etarget = $(etarget);
-            if(!$etarget.hasClass("bigImage") && !$etarget.data('dontHover')){
-                var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
-                var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
-                var windowWidth = $('body').innerWidth(); // Define internal dimensions
-                var windowHeight = window.innerHeight -21; // -21 so link destination doesn't overlay image
-                var visibleHeight = windowHeight - headerBarHeight;
-                var visibleWidth = windowWidth - e.clientX - 50;
-                var canFitFullHeight = windowHeight*etarget.naturalWidth/etarget.naturalHeight < visibleWidth - headerBarWidth +1;
-                var $img = $('#hoverUI > img');
-                $img.css({
-                    "max-height": canFitFullHeight ? windowHeight : visibleHeight,
-                    "max-width": visibleWidth,
-                    "top": canFitFullHeight ? (windowHeight - $img[0].height)*(e.clientY / windowHeight) : (visibleHeight - $img[0].height)*(e.clientY / visibleHeight) + headerBarHeight,
-                    "left":e.clientX + 50
-                });
-            }
-        });
-        $image.on("mouseout", function(e){
-            $('#hoverUI').html('');
-        });
+function addHover($elements){
+    if(settings.UserSettings.inlineImages.value){
+        if (settings.UserSettings.inlineImages.suboptions.imageHover.value){
+            var $image = $elements.find('img');
+            var $canvas = $elements.find('canvas');
+            if ($image.length){imageHover($image);}
+            if ($canvas.length){canvasHover($canvas);}
+        }
+        if (settings.UserSettings.inlineImages.suboptions.videoHover.value){
+            var $video = $elements.find('video');
+            if ($video.length){videoHover($video);}
+        }
     }
 }
 
-function canvasHover(){
-    if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.imageHover.value){
-        var $canvas = $('canvas');
-        $canvas.off("mouseenter mousemove mouseout");
-        $canvas.on("mouseenter", function(e){
-            if(e.target.id !== "myCanvas"){
-                $(e.target.previousSibling).clone().show().removeClass("spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
-            }
-        });
-        $canvas.on("mousemove mouseenter", function(e){
-            var etarget = e.target;
-            var $etarget = $(etarget);
-            if(!$etarget.hasClass("bigImage") && !$etarget.data('dontHover')){
-                var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
-                var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
-                var windowWidth = $('body').innerWidth(); // Define internal dimensions
-                var windowHeight = window.innerHeight -21; // -21 so link destination doesn't overlay image
-                var visibleHeight = windowHeight - headerBarHeight;
-                var visibleWidth = windowWidth - e.clientX - 50;
-                var canFitFullHeight = windowHeight*etarget.naturalWidth/etarget.naturalHeight < visibleWidth - headerBarWidth +1;
-                var $img = $('#hoverUI > img');
-                $img.css({
-                    "max-height": canFitFullHeight ? windowHeight : visibleHeight,
-                    "max-width": visibleWidth,
-                    "top": canFitFullHeight ? (windowHeight - $img[0].height)*(e.clientY / windowHeight) : (visibleHeight - $img[0].height)*(e.clientY / visibleHeight) + headerBarHeight,
-                    "left":e.clientX + 50
-                });
-            }
-        });
-        $canvas.on("mouseout", function(e){
-            $('#hoverUI').html('');
-        });
-    }
+function imageHover($image){
+    $image.on("mouseenter", function(e){
+        if(e.target.id !== "mascot" && !$(e.target).hasClass("bigImage") && !$(e.target).data('dontHover')){
+            $(e.target).clone().removeClass("smallImage spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
+        }
+    });
+    $image.on("mousemove mouseenter", function(e){
+        var etarget = e.target;
+        var $etarget = $(etarget);
+        if(!$etarget.hasClass("bigImage") && !$etarget.data('dontHover')){
+            var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
+            var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
+            var windowWidth = $('body').innerWidth(); // Define internal dimensions
+            var windowHeight = window.innerHeight -21; // -21 so link destination doesn't overlay image
+            var visibleHeight = windowHeight - headerBarHeight;
+            var visibleWidth = windowWidth - e.clientX - 50;
+            var canFitFullHeight = windowHeight*etarget.naturalWidth/etarget.naturalHeight < visibleWidth - headerBarWidth +1;
+            var $img = $('#hoverUI > img');
+            $img.css({
+                "max-height": canFitFullHeight ? windowHeight : visibleHeight,
+                "max-width": visibleWidth,
+                "top": canFitFullHeight ? (windowHeight - $img[0].height)*(e.clientY / windowHeight) : (visibleHeight - $img[0].height)*(e.clientY / visibleHeight) + headerBarHeight,
+                "left":e.clientX + 50
+            });
+        }
+    });
+    $image.on("mouseout", function(e){
+        $('#hoverUI').html('');
+    });
 }
 
-function videoHover(){
-    if(settings.UserSettings.inlineImages.value && settings.UserSettings.inlineImages.suboptions.videoHover.value){
-        $('video').off("mouseenter mousemove mouseout");
-        $('video').on("mouseenter", function(e){
-            if(e.target.id !== "mascot" && !$(e.target).hasClass("fullVideo")){
-                $(e.target).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
-                var $video = $('#hoverUI > video');
-                $video.removeAttr('width');
-                $video.on('canplaythrough', function(){
-                    if ($video.length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
-                        $video[0].muted=false;
-                        $video[0].play();
-                        $('video').on("mousemove", function(e){
-                            var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
-                            var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
-                            var windowWidth = $('body').innerWidth(); // Define internal dimensions
-                            var windowHeight = window.innerHeight;
-                            var visibleHeight = windowHeight - headerBarHeight;
-                            var visibleWidth = windowWidth - e.clientX - 50;
-                            var canFitFullHeight = windowHeight*e.target.videoWidth/e.target.videoHeight < visibleWidth - headerBarWidth +1;
-                            $video.css({
-                                "max-height": canFitFullHeight ? windowHeight : visibleHeight,
-                                "max-width": visibleWidth,
-                                "top": canFitFullHeight ? (windowHeight - $video[0].clientHeight)*(e.clientY / windowHeight) : (visibleHeight - $video[0].clientHeight)*(e.clientY / visibleHeight) + headerBarHeight,
-                                "left":e.clientX + 50
-                            });
+function canvasHover($canvas){
+    $canvas.on("mouseenter", function(e){
+        if(e.target.id !== "myCanvas"){
+            $(e.target.previousSibling).clone().show().removeClass("spoilerImage").addClass("hoverImage").appendTo('#hoverUI');
+        }
+    });
+    $canvas.on("mousemove mouseenter", function(e){
+        var etarget = e.target;
+        var $etarget = $(etarget);
+        if(!$etarget.hasClass("bigImage") && !$etarget.data('dontHover')){
+            var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
+            var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
+            var windowWidth = $('body').innerWidth(); // Define internal dimensions
+            var windowHeight = window.innerHeight -21; // -21 so link destination doesn't overlay image
+            var visibleHeight = windowHeight - headerBarHeight;
+            var visibleWidth = windowWidth - e.clientX - 50;
+            var canFitFullHeight = windowHeight*etarget.naturalWidth/etarget.naturalHeight < visibleWidth - headerBarWidth +1;
+            var $img = $('#hoverUI > img');
+            $img.css({
+                "max-height": canFitFullHeight ? windowHeight : visibleHeight,
+                "max-width": visibleWidth,
+                "top": canFitFullHeight ? (windowHeight - $img[0].height)*(e.clientY / windowHeight) : (visibleHeight - $img[0].height)*(e.clientY / visibleHeight) + headerBarHeight,
+                "left":e.clientX + 50
+            });
+        }
+    });
+    $canvas.on("mouseout", function(e){
+        $('#hoverUI').html('');
+    });
+}
+
+function videoHover($video){
+    $video.on("mouseenter", function(e){
+        if(e.target.id !== "mascot" && !$(e.target).hasClass("fullVideo")){
+            $(e.target).clone().removeClass("spoilerImage").addClass("fullVideo hoverImage").appendTo('#hoverUI');
+            var $vid = $('#hoverUI > video');
+            $vid.removeAttr('width');
+            $vid.on('canplaythrough', function(){
+                if ($vid.length){ // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
+                    $vid[0].muted=false;
+                    $vid[0].play();
+                    $video.on("mousemove", function(e){
+                        var headerBarHeight = document.getElementById('headerFixed').offsetHeight -1; // -1 due to slight offscreen to hide border-top
+                        var headerBarWidth = document.getElementById('headerFixed').offsetWidth -1; // -1 due to slight offscreen to hide border-right
+                        var windowWidth = $('body').innerWidth(); // Define internal dimensions
+                        var windowHeight = window.innerHeight;
+                        var visibleHeight = windowHeight - headerBarHeight;
+                        var visibleWidth = windowWidth - e.clientX - 50;
+                        var canFitFullHeight = windowHeight*e.target.videoWidth/e.target.videoHeight < visibleWidth - headerBarWidth +1;
+                        $vid.css({
+                            "max-height": canFitFullHeight ? windowHeight : visibleHeight,
+                            "max-width": visibleWidth,
+                            "top": canFitFullHeight ? (windowHeight - $vid[0].clientHeight)*(e.clientY / windowHeight) : (visibleHeight - $vid[0].clientHeight)*(e.clientY / visibleHeight) + headerBarHeight,
+                            "left":e.clientX + 50
                         });
-                    }
-                });
-            }
-        });
-        $('video').on("mouseout", function(e){
-            $('#hoverUI').html('');
-        });
-    }
+                    });
+                }
+            });
+        }
+    });
+    $video.on("mouseout", function(e){
+        $('#hoverUI').html('');
+    });
 }
 
 function relativeTimestamps(posts){
@@ -1545,6 +1554,7 @@ function seenPosts(){
 
 var unseenReplies = [];
 function newPosts(){
+    //console.log("ayyy");
     if (settings.UserSettings.favicon.value){
         if (unseenPosts.length){
             //console.time('lastpost');
@@ -1598,20 +1608,19 @@ function newPosts(){
                 unseenPosts = unseenPosts.slice(predictedLastSeenPostIndex + 1); // Only keep posts after the lastSeenPost
 
                 var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]),parseInt(lastSeenPost.split('_')[1])];
-                $.each(unseenReplies, function(i, unseenID){
-                    var currentID = [parseInt(unseenID.split('_')[0]),parseInt(unseenID.split('_')[1])];                        
+                var unseenRepliesTemp = []; // Avoid trying to remove entries from an array that is being iterated over
+                $.each(unseenReplies, function(i, unseenID){ // Work from a copy of the array so that removing elements from it doesn't ruin everything
+                    var currentID = [parseInt(unseenID.split('_')[0]),parseInt(unseenID.split('_')[1])];
                     if (currentID[0] < parsedLastSeenPost[0]){
-                        unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
-                        return;
-                    }else if (currentID[0] == parsedLastSeenPost[0]){
-                        if(isNaN(parsedLastSeenPost[1]) && !(isNaN(currentID[1]))){
-                            return;
-                        }else if (isNaN(currentID[1]) || currentID[1] <= parsedLastSeenPost[1]){
-                            unseenReplies.splice(i,1); // Remove seen posts from the unseen replies
-                            return;
+                        return true;
+                    }else if (currentID[0] === parsedLastSeenPost[0]){
+                        if (isNaN(currentID[1]) || (!isNaN(parsedLastSeenPost[1]) && currentID[1] <= parsedLastSeenPost[1])){
+                            return true;
                         }
                     }
+                    unseenRepliesTemp.push(unseenID); // Keep unseenIDs that are greater than the lastSeenPostID
                 });
+                unseenReplies = unseenRepliesTemp;
             }
             //console.timeEnd('lastpost');
         }
@@ -1778,6 +1787,10 @@ window.addEventListener("beforeunload", function (e){ // After user leaves the p
     if (settings.UserSettings.favicon.value){ // Save the last read posts object
         saveLastSeenPosts();
     }
+    crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+    delete crosslinkTracker[board][threadID];
+    localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
+
     //var confirmationMessage = "\o/";
 
     //(e || window.event).returnValue = confirmationMessage; //Gecko + IE
@@ -1829,11 +1842,11 @@ function notificationSpoiler(postID){
 }
 
 function labelNewPosts(newPosts, boardView){
-    var crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
-    localStorage.crosslinkTracker = "{}";
     loadYourPosts();
+    var crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
     for (var boardVal in yourPosts){
-        if (crosslinkTracker[boardVal]){
+        if (crosslinkTracker[board][threadID][boardVal]){
+            crosslinkTracker[board][threadID][boardVal] = false;
             if (yourPostsLookup[boardVal] === undefined){
                 yourPostsLookup[boardVal] = {};
             }
@@ -2193,8 +2206,8 @@ function addFileSelect(){
             $('.input-append.pull-left .btn-group').prepend('<input id="middleReplySubmit" value="Submit" class="btn btn-primary" type="button">');
             var $middleReplySubmit = $('#middleReplySubmit');
             $middleReplySubmit.on('click', function(){
-                $middleReplySubmit.val('Uploading Image').attr('disabled','disabled');
                 var fileCount = document.getElementById('file_image').files.length;
+                $middleReplySubmit.val('Uploading File'+(fileCount > 1 ? 's' : '')).attr('disabled','disabled');
                 if (fileCount){
                     $.each(document.getElementById('file_image').files, function(i,file){
                         var reader = new FileReader();
@@ -2477,7 +2490,7 @@ $(document).ready(function(){
         }
     }
     if (/[0-9]+/.test(threadID)){
-        windowFocus = true;
+        windowFocus = document.hasFocus();
         $(window).focus(function(){
             windowFocus = true;
             ThreadUpdate();
@@ -2500,14 +2513,19 @@ $(document).ready(function(){
         }
         if (/[0-9]+/.test(threadID)){
             postSubmitEvent();
-            $(document).ajaxComplete(function(event, request, ajaxSettings){
-                if (!(/inThread=true/).test(ajaxSettings.url)){
-                    if (request.responseText !== ""){
-                        response = JSON.parse(request.responseText);
-                    }else{
-                        response = {"error":"No responseText"};
-                    }
-                    if (!/api\.imgur/.test(ajaxSettings.url)){ // Don't handle imgur calls
+        }
+    }
+
+    if (!(/(search|other|statistics)/).test(threadID)){
+        $(document).ajaxComplete(function(event, request, ajaxSettings){
+            if (!(/inThread=true/).test(ajaxSettings.url)){
+                if (request.responseText !== ""){
+                    response = JSON.parse(request.responseText);
+                }else{
+                    response = {"error":"No responseText"};
+                }
+                if (!/api\.imgur/.test(ajaxSettings.url)){ // Don't handle imgur calls
+                    if (/[0-9]+/.test(threadID)){
                         if (ajaxSettings.type === "POST"){
                             if (response.error === undefined){
                                 if (response.captcha){ // If you are required to fill a captcha before posting
@@ -2522,7 +2540,11 @@ $(document).ready(function(){
                                         }
                                     }
                                     crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
-                                    crosslinkTracker[board] = true;
+                                    for (var boardVal in crosslinkTracker){
+                                        for (var threadVal in crosslinkTracker[boardVal]){
+                                            crosslinkTracker[boardVal][threadVal][board] = true;                                            
+                                        }
+                                    }
                                     localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
                                     saveYourPosts();
 
@@ -2551,10 +2573,62 @@ $(document).ready(function(){
                             }
                         }
                     }
+
+                    for (var key in response){
+                        if (response[key] !== null && response[key].posts !== undefined){
+                            var isBoard = threadID === "board";
+                            if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
+                                labelNewPosts(Object.keys(response[key].posts), true);
+                            }
+                            for (var postID in response[key].posts){
+                                if (document.getElementById(postID) !== null){ // Don't process post if filter has purged it
+                                    var newPost = $('#'+postID);
+                                    if (settings.UserSettings.inlineImages.value){ // Inline images
+                                        newPost.find('img').each(function(i, image){
+                                            var $image = $(image);
+                                            $image.addClass('smallImage');
+                                            $image.removeAttr('width height');
+                                        });
+                                        if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
+                                            delayedLoad(newPost);
+                                        }else{
+                                            inlineImages(newPost);
+                                        }
+                                    }
+                                    if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) designation for expanding threads on board view
+                                        if (yourPostsLookup[board][postID]){
+                                            newPost.find('.post_author').after('<span> (You)</span>');
+                                        }
+                                    }
+                                    if (settings.UserSettings.inlineReplies.value){
+                                        newPost.addClass("base");
+                                    }
+                                    if (settings.UserSettings.embedImages.value){embedImages(newPost);} // Embed images
+                                    if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs(newPost.find('img'));} // Stop gifs autoplaying
+                                    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);} // Add relative timestamps
+                                    if (isBoard && settings.UserSettings.filter.value){filter(newPost);} // Apply filter
+                                    if (settings.UserSettings.postQuote.value){
+                                        newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
+                                    }
+                                    if (settings.UserSettings.hidePosts.value){
+                                        newPost.children('.pull-left').removeClass('stub'); // Show hide post buttons
+                                        if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
+                                            newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
+                                        }
+                                    }
+                                    if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
+                                    if (settings.UserSettings.removeJfont.value){newPost.find('.text').removeClass('shift-jis');} // Remove japanese font formatting
+                                    if (settings.UserSettings.labelDeletions.value){newPost.find('.icon-trash').html(' [Deleted]');} // Label deletions                            
+                                    addHover(newPost);
+                                }
+                            }
+                        }
+                    }
                 }
-            });
-        }
+            }
+        });
     }
+
     var staticPosts = $('article.post');
     var onlyOP = $('article.thread:not(.backlink_container)');
     var staticPostsAndOP = staticPosts.add(onlyOP); // Save querying the staticPosts twice by extending the first query with the OP
@@ -2648,77 +2722,7 @@ $(document).ready(function(){
     if (settings.UserSettings.filter.value){filter(staticPostsAndOP);} // Filter posts
     if (settings.UserSettings.labelDeletions.value){$('.icon-trash').html(' [Deleted]');} // Label deletions
     if (threadID !== "statistics"){
-        imageHover();
-        canvasHover();
-        videoHover();
-    }
-
-    if (!(/(search|other|statistics)/).test(threadID)){
-        $(document).ajaxComplete(function(event, request, ajaxSettings){ // Parse all GET and POST delivered posts and apply SpookyX features to them
-            if (!(/inThread=true/).test(ajaxSettings.url)){
-                if (request.responseText !== ""){
-                    response = JSON.parse(request.responseText);
-                }else{
-                    response = {"error":"No responseText"};
-                }
-                if (response.error !== undefined){
-                    //console.log(response.error);
-                }else{
-                    for (var key in response){
-                        if (response[key] !== null && response[key].posts !== undefined){
-                            var isBoard = threadID === "board";
-                            if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) deignation for expanding threads on board view
-                                labelNewPosts(Object.keys(response[key].posts), true);
-                            }
-                            for (var postID in response[key].posts){
-                                if (document.getElementById(postID) !== null){ // Don't process post if filter has purged it
-                                    var newPost = $('#'+postID);
-                                    if (settings.UserSettings.inlineImages.value){ // Inline images
-                                        newPost.find('img').each(function(i, image){
-                                            var $image = $(image);
-                                            $image.addClass('smallImage');
-                                            $image.removeAttr('width height');
-                                        });
-                                        if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
-                                            delayedLoad(newPost);
-                                        }else{
-                                            inlineImages(newPost);
-                                        }
-                                    }
-                                    if (isBoard && settings.UserSettings.labelYourPosts.value){ // Handle (You) designation for expanding threads on board view
-                                        if (yourPostsLookup[board][postID]){
-                                            newPost.find('.post_author').after('<span> (You)</span>');
-                                        }
-                                    }
-                                    if (settings.UserSettings.inlineReplies.value){
-                                        newPost.addClass("base");
-                                    }
-                                    if (settings.UserSettings.embedImages.value){embedImages(newPost);} // Embed images
-                                    if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value){pauseGifs(newPost.find('img'));} // Stop gifs autoplaying
-                                    if (settings.UserSettings.relativeTimestamps.value){relativeTimestamps(newPost);} // Add relative timestamps
-                                    if (isBoard && settings.UserSettings.filter.value){filter(newPost);} // Apply filter
-                                    if (settings.UserSettings.postQuote.value){
-                                        newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote'); // Change the quote function
-                                    }
-                                    if (settings.UserSettings.hidePosts.value){
-                                        newPost.children('.pull-left').removeClass('stub'); // Show hide post buttons
-                                        if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value){
-                                            newPost.find('.post_backlink').attr('id','p_b'+newPost[0].id);
-                                        }
-                                    }
-                                    if (settings.UserSettings.postCounter.value){postCounter();} // Update post counter
-                                    if (settings.UserSettings.removeJfont.value){newPost.find('.text').removeClass('shift-jis');} // Remove japanese font formatting
-                                    if (settings.UserSettings.labelDeletions.value){newPost.find('.icon-trash').html(' [Deleted]');} // Label deletions
-                                }
-                            }
-                            imageHover();
-                            canvasHover();
-                            videoHover();
-                        }
-                    }
-                }
-            }
-        });
+        addHover(staticPostsAndOP);
     }
 
     $('#main').on('click', function(e){ // Detect clicks on page content
@@ -2745,9 +2749,7 @@ $(document).ready(function(){
                         });
                         $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
                         if (settings.UserSettings.inlineImages.value){inlineImages($('#r'+postID));} // Inline images
-                        imageHover();
-                        canvasHover();
-                        videoHover();
+                        addHover($('#i'+postID));
                     }
                 }else{
                     if ($(e.target).hasClass("inlined")){
@@ -2767,9 +2769,7 @@ $(document).ready(function(){
                         });
                         $("#i"+postID+" .post_wrapper").addClass("post_wrapperInline");
                         if (settings.UserSettings.inlineImages.value){inlineImages($('#r'+postID));} // Inline images
-                        imageHover();
-                        canvasHover();
-                        videoHover();
+                        addHover($('#i'+postID));
                     }
                 }
             }
