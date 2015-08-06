@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       31.2
+// @version       31.21
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -1334,7 +1334,7 @@ function removeLink(currentLink){
 function pauseGifs(posts){
     posts.each(function(i,img){
         if ((/\.gif/).test(img.src)){
-            var $img = $('img');
+            var $img = $(img);
             $img.on('load',function(){
                 $img.after('<canvas class="smallImage" width="'+img.naturalWidth+'" height="'+img.naturalHeight+'"></canvas>');
                 $img.attr('gif',true).toggle();
