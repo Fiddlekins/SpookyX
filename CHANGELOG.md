@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v31.21:** *(2015-08-06)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v31.21/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v31.21/README.md)
+- fixed bug where disabling gif autoplaying went horribly wrong
+
 **v31.2:** *(2015-08-06)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v31.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v31.2/README.md)
 - Altered the upload button text to more accurately reflect what is being uploaded through the file upload feature
 - fixed a bug where the crosslinkTracker wasn't fully working as intended
