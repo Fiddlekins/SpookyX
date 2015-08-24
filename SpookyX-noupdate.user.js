@@ -140,7 +140,7 @@ var settings = {
             "name": "Automatically Host Images",
             "description": "When post is submitted image links will be automatically reuploaded to Imgur in an effort to avoid having dead 4chan image links",
             "type": "select",
-            "value": {"value":"Don't reupload links","options":["Don't reupload links","Reupload 4chan links","Reupload all links"]}
+            "value": {"value":"Reupload 4chan links","options":["Don't reupload links","Reupload 4chan links","Reupload all links"]}
         },
         "embedGalleries": {
             "name": "Embed Galleries",
