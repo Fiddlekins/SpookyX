@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.0
+// @version       32.01
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -2244,7 +2244,7 @@ function addFileSelect(){
                     var fourChanOnly = settings.UserSettings.autoHost.value.value === "Reupload 4chan links";
                     var replyValue = $('#reply_chennodiscursus')[0].value;
                     var links = fourChanOnly ? replyValue.match(/http:\/\/i.4cdn.org\/.*\.(jpg|jpeg|png|gif)/ig) : replyValue.match(/http:\/\/.*\.(jpg|jpeg|png|gif)/ig);
-                    var linksLength = links.length;
+                    var linksLength = links === null ? 0 : links.length;
                     var totalUploads = linksLength + fileCount;
                     var successfulUploads = 0;
                 }
