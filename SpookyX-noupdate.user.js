@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       31.21
+// @version       32.0
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -40,6 +40,12 @@ var settings = {
             "type": "checkbox",
             "value": true,
             "suboptions": {
+                "inlineVideos": {
+                    "name": "Inline Videos",
+                    "description": "Replace thumbnails of natively posted videos with the videos themselves",
+                    "type": "checkbox",
+                    "value": true
+                },
                 "delayedLoad": {
                     "name": "Delayed Load",
                     "description": "Fullsize images are not automatically retrieved and used to replace the thumbnails. Instead this occurs on an individual basis when the thumbnails are clicked on",
@@ -116,6 +122,12 @@ var settings = {
             "type": "checkbox",
             "value": true,
             "suboptions": {
+                "embedVideos": {
+                    "name": "Embed Videos",
+                    "description": "Embed video links in thread",
+                    "type": "checkbox",
+                    "value": true
+                },
                 "imgNumMaster": {
                     "name": "Embed Count",
                     "description": "The maximum number of images (or other media) to embed in each post",
@@ -123,6 +135,12 @@ var settings = {
                     "value": 1
                 }
             }
+        },
+        "autoHost": {
+            "name": "Automatically Host Images",
+            "description": "When post is submitted image links will be automatically reuploaded to Imgur in an effort to avoid having dead 4chan image links",
+            "type": "select",
+            "value": {"value":"Don't reupload links","options":["Don't reupload links","Reupload 4chan links","Reupload all links"]}
         },
         "embedGalleries": {
             "name": "Embed Galleries",
@@ -1070,10 +1088,12 @@ function inlineImages(posts){
                     });
                 }
                 if (fullImage.match(/\.webm$/)){ // Handle post webms
-                    $currentImage.prepend('<video width="'+($(post).hasClass('thread') ? imageWidthOP : imageWidth)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
-                    $(imgLink).remove();
-                    if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
-                        addHover($currentImage);
+                    if (settings.UserSettings.inlineImages.suboptions.inlineVideos.value){
+                        $currentImage.prepend('<video width="'+($(post).hasClass('thread') ? imageWidthOP : imageWidth)+'" name="media" loop muted '+autoplayVid+'><source src="'+fullImage+'" type="video/webm"></video>');
+                        $(imgLink).remove();
+                        if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value){
+                            addHover($currentImage);
+                        }
                     }
                 }else if (!fullImage.match(/(\.pdf|\.swf)$/)){
                     $currentImage.find('img').each(function(k,image){
@@ -1257,13 +1277,15 @@ var embedImages = function(posts){
                             });
                         }
                     }else if (mediaType == "video"){
-                        mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
-                        $elem.append('<video width="'+imageWidth+'" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
-                        removeLink(currentLink);
-                        $elem.find('video')[0].onloadedmetadata = function(e){
-                            $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
-                            $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
-                        };
+                        if (settings.UserSettings.embedImages.suboptions.embedVideos.value){
+                            mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
+                            $elem.append('<video width="'+imageWidth+'" style="float:left" name="media" loop muted '+autoplayVid+' class="'+spoiler+'"><source src="'+mediaLink+'" type="video/webm"></video>');
+                            removeLink(currentLink);
+                            $elem.find('video')[0].onloadedmetadata = function(e){
+                                $(e.target).closest('.thread_image_box').find(".spoilerText").css({"top":(e.target.clientHeight/2)-6.5}); // Center spoiler text
+                                $(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">'+e.target.videoWidth+'x'+e.target.videoHeight+'</span>'); // Add file dimensions
+                            };
+                        }
                     }
                     addHover($elem);
                 }else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec(currentLink.href) !== null){
@@ -1910,8 +1932,12 @@ function linkHoverEvent(){ // Hook into the native internal link hover
     var target =  $('#backlink')[0],
         observer = new MutationObserver(function(mutation) {
             $('#backlink > article').removeClass('shitpost');
-            relativeTimestamps($('#backlink > article'));
-            embedImages($('#backlink > article'));
+            if (settings.UserSettings.relativeTimestamps.value){
+                relativeTimestamps($('#backlink > article'));
+            }
+            if (settings.UserSettings.embedImages.value){
+                embedImages($('#backlink > article'));
+            }
         }),
         config = {
             childList: true
@@ -2203,18 +2229,28 @@ function addFileSelect(){
         $('#reply_elitterae').parent().parent().append('<div class="input-prepend"><label class="add-on" for="file_image">File</label><input type="file" name="file_image" id="file_image" size="16" multiple="multiple"></div>');
         $('.input-append.pull-left .btn-group [name=reply_gattai]').attr('id','finalReplySubmit').hide();
         if (!$('#middleReplySubmit').length){
-            $('.input-append.pull-left .btn-group').prepend('<input id="middleReplySubmit" value="Submit" class="btn btn-primary" type="button">');
+            var $reply_btngroup = $('.input-append.pull-left .btn-group');
+            $reply_btngroup.prepend('<input id="middleReplySubmit" value="Submit" class="btn btn-primary" type="button">');
+            $reply_btngroup.append('<span style="float:right;"><input id="urlUploadInput" type="text" style="margin-right: 0;" placeholder="Upload via url"><input id="urlUploadSubmit" class="btn" value="Upload" type="button"></span>');
             var $middleReplySubmit = $('#middleReplySubmit');
+            var $urlUploadInput = $('#urlUploadInput');            
+            var $urlUploadSubmit = $('#urlUploadSubmit');
+            var clientId = '6a7827b84201f31';
             $middleReplySubmit.on('click', function(){
                 var fileCount = document.getElementById('file_image').files.length;
-                $middleReplySubmit.val('Uploading File'+(fileCount > 1 ? 's' : '')).attr('disabled','disabled');
-                if (fileCount){
-                    $.each(document.getElementById('file_image').files, function(i,file){
-                        var reader = new FileReader();
-                        if (/image/.test(file.type)){
-                            reader.readAsDataURL(file);
-                            var clientId = '6a7827b84201f31';
-                            reader.onloadend = function(){
+                if (settings.UserSettings.autoHost.value.value !== "Don't reupload links"){
+                    var fourChanOnly = settings.UserSettings.autoHost.value.value === "Reupload 4chan links";
+                    var replyValue = $('#reply_chennodiscursus')[0].value;
+                    var links = fourChanOnly ? replyValue.match(/http:\/\/i.4cdn.org\/.*\.(jpg|jpeg|png|gif)/ig) : replyValue.match(/http:\/\/.*\.(jpg|jpeg|png|gif)/ig);
+                    var linksLength = links.length;
+                    var totalUploads = linksLength + fileCount;
+                    var successfulUploads = 0;
+                }
+                if (fileCount || linksLength){
+                    $middleReplySubmit.val('Uploading File'+(totalUploads > 1 ? 's' : '')).attr('disabled','disabled');
+                    if (linksLength){
+                        $.each(links, function(i,link){
+                            if (!/i\.imgur\.com/i.test(link)){
                                 $.ajax({
                                     url: "https://api.imgur.com/3/image",
                                     type: 'POST',
@@ -2222,44 +2258,101 @@ function addFileSelect(){
                                         Authorization: 'Client-ID ' + clientId
                                     },
                                     data: {
-                                        image: reader.result.replace(/data:.*;base64,/,''),
-                                        type: 'base64',
-                                        name: file.name
+                                        image: link,
+                                        type: 'URL'
                                     }
                                 }).done(function(response){
-                                    fileCount--;
-                                    $('#reply_chennodiscursus')[0].value += "\n"+response.data.link.replace(/http:/,'https:');
-                                    if (!fileCount){
+                                    $('#reply_chennodiscursus')[0].value = $('#reply_chennodiscursus')[0].value.replace(link, response.data.link.replace(/http:/,'https:'));
+                                    successfulUploads++;
+                                    if (successfulUploads === totalUploads){
                                         $middleReplySubmit.val('Submitting');
-                                        $('#file_image').val('');
                                         $('#finalReplySubmit').trigger('click');
                                     }
+                                }).fail(function(e){
+                                    notifyMe("An error occurred whilst uploading", 'http://i.imgur.com/qEpGpTc.png', 'The link was: '+link+'\n' + JSON.parse(e.responseText).data.error, false);
                                 });
-                            };
-                        }else if(!/application/.test(file.type)){
-                            var data = new FormData();
-                            data.append('files[]', file);
-                            var xhr = new XMLHttpRequest();
-                            xhr.open('POST', 'https://mixtape.moe/upload.php', true);
-                            xhr.addEventListener('load', function(e){
-                                fileCount--;
-                                $('#reply_chennodiscursus')[0].value += "\n"+JSON.parse(xhr.responseText).files[0].url;
-                                if (!fileCount){
-                                    $middleReplySubmit.val('Submitting');
-                                    $('#file_image').val('');
-                                    $('#finalReplySubmit').trigger('click');
-                                }
-                            });
-                            xhr.send(data);
-                        }else{
-                            $middleReplySubmit.val('Filetype is not supported').removeAttr('disabled');
-                            setTimeout(function(){ $middleReplySubmit.val('Submit'); }, 3000);
-                        }
-                    });
+                            }
+                        });
+                    }
+                    if (fileCount){
+                        $.each(document.getElementById('file_image').files, function(i,file){
+                            var reader = new FileReader();
+                            if (/image/.test(file.type)){
+                                reader.readAsDataURL(file);
+                                reader.onloadend = function(){
+                                    $.ajax({
+                                        url: "https://api.imgur.com/3/image",
+                                        type: 'POST',
+                                        headers: {
+                                            Authorization: 'Client-ID ' + clientId
+                                        },
+                                        data: {
+                                            image: reader.result.replace(/data:.*;base64,/,''),
+                                            type: 'base64',
+                                            name: file.name
+                                        }
+                                    }).done(function(response){
+                                        fileCount--;
+                                        $('#reply_chennodiscursus')[0].value += "\n"+response.data.link.replace(/http:/,'https:');
+                                        if (!fileCount){
+                                            $('#file_image').val('');
+                                            if (successfulUploads === totalUploads){
+                                                $middleReplySubmit.val('Submitting');
+                                                $('#finalReplySubmit').trigger('click');
+                                            }
+                                        }
+                                    }).fail(function(e){
+                                        notifyMe("An error occurred whilst uploading", 'http://i.imgur.com/qEpGpTc.png', 'The file was: '+file.name+'\n' + JSON.parse(e.responseText).data.error, false);
+                                    });
+                                };
+                            }else if(!/application/.test(file.type)){
+                                var data = new FormData();
+                                data.append('files[]', file);
+                                var xhr = new XMLHttpRequest();
+                                xhr.open('POST', 'https://mixtape.moe/upload.php', true);
+                                xhr.addEventListener('load', function(e){
+                                    fileCount--;
+                                    $('#reply_chennodiscursus')[0].value += "\n"+JSON.parse(xhr.responseText).files[0].url;
+                                    if (!fileCount){
+                                        $('#file_image').val('');
+                                        if (successfulUploads === totalUploads){
+                                            $middleReplySubmit.val('Submitting');
+                                            $('#finalReplySubmit').trigger('click');
+                                        }
+                                    }
+                                });
+                                xhr.send(data);
+                            }else{
+                                $middleReplySubmit.val('Filetype is not supported').removeAttr('disabled');
+                                setTimeout(function(){ $middleReplySubmit.val('Submit'); }, 3000);
+                            }
+                        });
+                    }
                 }else{
                     $middleReplySubmit.val('Submitting').attr('disabled','disabled');
                     $('#finalReplySubmit').trigger('click');
                 }
+            });
+            $urlUploadSubmit.on('click',function(e){
+                $urlUploadSubmit.val('Uploading...');
+                $.ajax({
+                    url: "https://api.imgur.com/3/image",
+                    type: 'POST',
+                    headers: {
+                        Authorization: 'Client-ID ' + clientId
+                    },
+                    data: {
+                        image: $urlUploadInput[0].value,
+                        type: 'URL'
+                    }
+                }).done(function(response){
+                    $urlUploadInput[0].value = '';
+                    $('#reply_chennodiscursus')[0].value += "\n"+response.data.link.replace(/http:/,'https:');
+                }).fail(function(e){
+                    notifyMe("An error occurred whilst uploading", 'http://i.imgur.com/qEpGpTc.png', 'The link was: '+$urlUploadInput[0].value+'\n' + JSON.parse(e.responseText).data.error, false);
+                }).always(function(){
+                    $urlUploadSubmit.val('Upload');
+                });
             });
         }else{
             $('#middleReplySubmit').val('Submit').removeAttr('disabled');
