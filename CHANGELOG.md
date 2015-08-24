@@ -2,7 +2,7 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
-**v31.21:** *(2015-08-24)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.0/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.0/README.md)
+**v32.0:** *(2015-08-24)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.0/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.0/README.md)
 - New Feature: You can now have image links in your post automatically uploaded to Imgur. This is primarily in order to reduce the number of dead link embeds that images originally hosted on 4chan give. You can choose between hosting none, only those from 4chan, or all image links detected in your submitted post
 - Additionally there is now a input box that you can paste image links in and hit the Upload button beside it to again upload them to Imgur
 - Added 'Inline Videos' and 'Embed Videos' options. Whereas before a user was either embedding all media types or none they can now embed only images. SpookyX does not support only embedding videos and not images because this usecase is deemed superficial
