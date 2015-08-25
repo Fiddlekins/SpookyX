@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.03:** *(2015-08-25)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.03/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.03/README.md)
+- fixed bug where using the file upload system didn't submit your post after fetching the links 
+
 **v32.02:** *(2015-08-24)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.02/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.02/README.md)
 - changed default setting for automatic uploads from "Don't reupload links" to "Reupload 4chan links" to coerce people who never bother to change their settings to host temporary links
 
