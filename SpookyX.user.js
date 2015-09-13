@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.04
+// @version       32.05
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -689,10 +689,14 @@ var settings = {
 			],
 			"threadPostFunction": function (currentPost) {
 				var combined = '';
-				if ($(currentPost).hasClass('thread')) {
-					combined = $(currentPost).find('.post_file_filename')[0].href;
+				var $currentPost = $(currentPost);
+				if ($currentPost.hasClass('thread')) {
+					var $currentPostFilename = $currentPost.find('.post_file_filename');
+					if ($currentPostFilename.length) {
+						combined = $currentPostFilename[0].href;
+					}
 				} else {
-					$.each($(currentPost).find('.post_file_filename'), function () {
+					$.each($currentPost.find('.post_file_filename'), function () {
 						combined += this.href;
 					});
 				}
@@ -750,7 +754,7 @@ if (threadID === "thread") {
 	threadID = splitURL[5];
 } else if (threadID === "last") {
 	threadID = splitURL[6];
-} else if (threadID !== "search") {
+} else if (threadID !== "search" && threadID !== "reports") {
 	if (board === "_" || threadID === "page" || threadID === "ghost" || threadID === "" || threadID === undefined) {
 		if (board !== "" && board !== undefined && board !== "_") {
 			threadID = "board";
@@ -760,10 +764,10 @@ if (threadID === "thread") {
 	}
 }
 var boardPatt = new RegExp("(^|,)\\s*" + board + "\\s*(,|$)");
-/*
- console.log(splitURL);
- console.log("Board:"+board);
- console.log("ThreadID:"+threadID);*/
+
+//console.log(splitURL);
+//console.log("Board:" + board);
+//console.log("ThreadID:" + threadID);
 
 var imageWidthOP = 250;
 var imageHeightOP = 250;
@@ -958,7 +962,7 @@ shortcut = {
 				else if (e.srcElement) element = e.srcElement;
 				if (element.nodeType == 3) element = element.parentNode;
 
-				if (element.tagName == 'INPUT' || element.tagName == 'TEXTAREA') return;
+				if (element.tagName == 'INPUT' || element.tagName == 'TEXTAREA' || $(element).hasClass('post_IP_name')) return;
 			}
 
 			//Find Which key is pressed
@@ -2855,7 +2859,7 @@ $(document).ready(function () {
 	}
 
 	if (!(/(search|other|statistics)/).test(threadID)) {
-		var newPost, postID;
+		var newPost, postID, response;
 		$(document).ajaxComplete(function (event, request, ajaxSettings) {
 			if (!(/inThread=true/).test(ajaxSettings.url)) {
 				if (request.responseText !== "") {
@@ -2991,7 +2995,7 @@ $(document).ready(function () {
 	}
 
 	var staticPosts = $('article.post');
-	var onlyOP = $('article.thread:not(.backlink_container)');
+	var onlyOP = $('article.thread[data-thread-num]:not(.backlink_container)');
 	var staticPostsAndOP = staticPosts.add(onlyOP); // Save querying the staticPosts twice by extending the first query with the OP
 	addFileSelect(); // Intialise ghosting image posting
 	if (settings.UserSettings.headerBar.value) {
@@ -3287,13 +3291,14 @@ function canfav() {
 var imgIndex;
 function galleryToggle() {
 	console.time('gal');
-	if ($('#gallery:visible').length) {
+	var $imageBoxes = $('.thread_image_box');
+	if ($imageBoxes.length === 0 || $('#gallery:visible').length) {
 		$('#gallery').hide();
 	} else {
 		$('#gallery').show();
 		var viewportTop = window.scrollY;
 		var viewportBottom = viewportTop + window.innerHeight;
-		$('.thread_image_box').each(function (i, imageBox) {
+		$imageBoxes.each(function (i, imageBox) {
 			imgIndex = i;
 			if (imageBox.offsetTop + imageBox.offsetHeight > viewportTop) {
 				if (imageBox.offsetTop >= viewportBottom) {
