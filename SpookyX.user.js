@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.05
+// @version       32.1
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -119,7 +119,7 @@ var settings = {
 			}
 		},
 		"embedImages": {
-			"name": "Embed Images",
+			"name": "Embed Media",
 			"description": "Embed image (and other media) links in thread",
 			"type": "checkbox",
 			"value": true,
@@ -135,6 +135,12 @@ var settings = {
 					"description": "The maximum number of images (or other media) to embed in each post",
 					"type": "number",
 					"value": 1
+				},
+				"titleYoutubeLinks": {
+					"name": "Title YouTube links",
+					"description": "Fetches the video name and alters the link text accordingly",
+					"type": "checkbox",
+					"value": true
 				}
 			}
 		},
@@ -1360,35 +1366,38 @@ function checkFilter(input, inThreadPost) {
 }
 
 var embedImages = function (posts) {
-	var imageFiletypes = new RegExp("\\.(jpg|jpeg|png|gif)($|(\\?|:)[\\S]+$)", 'i');
-	var videoFiletypes = new RegExp("\\.(webm|gifv|mp4)($|(\\?|:)[\\S]+$)", 'i');
-	var pattImgGal = new RegExp("http[s]?://imgur.com/[^\"]*");
+	var imageFiletypes = new RegExp('\\.(jpg|jpeg|png|gif)($|(\\?|:)[\\S]+$)', 'i');
+	var videoFiletypes = new RegExp('\\.(webm|gifv|mp4)($|(\\?|:)[\\S]+$)', 'i');
+	var youtubeLink = new RegExp('(youtube\\.com|youtu\\.be)', 'i');
+	var pattImgGal = new RegExp('http[s]?://imgur.com/[^\"]*');
 	posts.each(function (index, currentArticle) {
 		var $currentArticle = $(currentArticle);
 		if (!$currentArticle.data('imgEmbed')) {
 			$currentArticle.data('imgEmbed', true);
 			var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $currentArticle.find('.thread_image_box').length;
-			$currentArticle.find(".text a").each(function (index, currentLink) {
+			$currentArticle.find('.text a').each(function (index, currentLink) {
 				if (imgNum === 0) {
 					return false;
 				}
-				var mediaType = "notMedia";
+				var mediaType = 'notMedia';
 				var mediaLink = currentLink.href;
 				if (imageFiletypes.test(mediaLink)) {
-					mediaType = "image";
+					mediaType = 'image';
 				} else if (videoFiletypes.test(mediaLink)) {
-					mediaType = "video";
+					mediaType = 'video';
+				} else if (youtubeLink.test(mediaLink)) {
+					mediaType = 'youtube';
 				}
-				if (mediaType == "image" || mediaType == "video") {
+				if (mediaType == 'image' || mediaType == 'video') {
 					imgNum--;
 					var filename = '<div class="post_file embedded_post_file"><a href="' + mediaLink + '" class="post_file_filename" rel="tooltip" title="' + mediaLink + '">' + mediaLink.match(/[^\/]*/g)[mediaLink.match(/[^\/]*/g).length - 2] + '</a></div>';
-					var spoiler = "";
+					var spoiler = '';
 					var $elem = $('<div class="thread_image_box">' + filename + '</div>').insertBefore($currentArticle.find('header'));
 					if ($(this).parents('.spoiler').length) {
 						spoiler = "spoilerImage ";
 						$elem.append('<div class="spoilerText">Spoiler</div>');
 					}
-					if (mediaType == "image") {
+					if (mediaType === 'image') {
 						$elem.append('<a href="' + mediaLink + '" target="_blank" rel="noreferrer" class="thread_image_link"><img src="' + mediaLink + '" class="lazyload post_image ' + spoiler + 'smallImage"></a>');
 						removeLink(currentLink);
 						var $image = $elem.find('img');
@@ -1400,7 +1409,7 @@ var embedImages = function (posts) {
 								$(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">' + e.target.naturalWidth + 'x' + e.target.naturalHeight + '</span>'); // Add file dimensions
 							});
 						}
-					} else if (mediaType == "video") {
+					} else if (mediaType === 'video') {
 						if (settings.UserSettings.embedImages.suboptions.embedVideos.value) {
 							mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
 							$elem.append('<video width="' + imageWidth + '" style="float:left" name="media" loop muted ' + autoplayVid + ' class="' + spoiler + '"><source src="' + mediaLink + '" type="video/webm"></video>');
@@ -1412,6 +1421,22 @@ var embedImages = function (posts) {
 						}
 					}
 					addHover($elem);
+				} else if (mediaType === 'youtube') {
+					if (settings.UserSettings.embedImages.suboptions.titleYoutubeLinks.value) {
+						var vidID = /v=[A-z0-9_-]+/.exec(mediaLink)[0].slice(2);
+						$.ajax({
+							method: 'GET',
+							url: 'https://content.googleapis.com/youtube/v3/videos',
+							data: {
+								'part': 'snippet',
+								'id': vidID,
+								'fields': 'items(id,snippet(title))',
+								'key': 'AIzaSyB5_zaen_-46Uhz1xGR-lz1YoUMHqCD6CE'
+							}
+						}).done(function (response) {
+							currentLink.innerHTML = '<i>(YouTube)</i> - ' + response.items[0].snippet.title;
+						});
+					}
 				} else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec(currentLink.href) !== null) {
 					var imgurLinkFragments = currentLink.href.split('\/');
 					if (imgurLinkFragments[3] == "a") {
