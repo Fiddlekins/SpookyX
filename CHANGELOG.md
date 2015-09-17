@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.1:** *(2015-09-17)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.1/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.1/README.md)
+- Added 'Title YouTube links' option to Embed Media setting which will rename the link to the video title
+
 **v32.05:** *(2015-09-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.05/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.05/README.md)
 - some minor bug fixes
 
