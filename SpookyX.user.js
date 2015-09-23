@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.2
+// @version       32.21
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -1196,8 +1196,7 @@ function inlineImages(posts) {
 				if (settings.UserSettings.inlineImages.suboptions.processSpoiler.value && $currentImage.find('.spoiler_box').length) {
 					$(imgLink).html('<div class="spoilerText">Spoiler</div><img class="smallImage spoilerImage">');
 					var $image = $currentImage.find('img');
-					$image.on('load', function (e) {
-						$image.unbind('load');
+					$image.one('load', function (e) {
 						$currentImage.find(".spoilerText").css({"top": (e.target.height / 2) - 6.5}); // Center spoiler text
 					});
 				}
@@ -1215,10 +1214,16 @@ function inlineImages(posts) {
 						var thumbImage = $(image).attr('src');
 						$image.attr('src', fullImage);
 						$image.error(function () { // Handle images that won't load
-							if (!$image.data("triedThumb")) {
-								$image.data("triedThumb", true);
+							if (!$image.data('tried4pleb')) {
+								$image.data('tried4pleb', true);
+								var imgLink4pleb = fullImage.replace('data.archive.moe/board', 'img.4plebs.org/boards');
+								$image.attr('src', imgLink4pleb);
+								$image.parent().attr('href', imgLink4pleb); // Change link
+							} else if (!$image.data('triedThumb')) {
+								$image.data('triedThumb', true);
 								if (fullImage !== thumbImage) { // If the image has a thumbnail aka was 4chan native then use that
 									$image.attr('src', thumbImage);
+									$image.parent().attr('href', fullImage); // Reset link if changed to 4pleb attempt
 								}
 							}
 						});
@@ -1431,13 +1436,13 @@ var embedImages = function (posts) {
 					addHover($elem);
 				} else if (mediaType === 'youtube') {
 					if (settings.UserSettings.embedImages.suboptions.titleYoutubeLinks.value) {
-						var vidID = /v=[A-z0-9_-]+/.exec(mediaLink)[0].slice(2);
+						var vidID = /[A-z0-9_-]{11}/.exec(mediaLink);
 						$.ajax({
 							method: 'GET',
 							url: 'https://content.googleapis.com/youtube/v3/videos',
 							data: {
 								'part': 'snippet',
-								'id': vidID,
+								'id': vidID[0],
 								'fields': 'items(id,snippet(title))',
 								'key': 'AIzaSyB5_zaen_-46Uhz1xGR-lz1YoUMHqCD6CE'
 							}
@@ -1986,7 +1991,8 @@ function saveLastSeenPosts() {
 				if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) < parseInt(lastSeenPosts[board][threadID].split('_')[0])) {
 					latestLastSeenPosts[board][threadID] = lastSeenPosts[board][threadID];
 				} else if (parseInt(latestLastSeenPosts[board][threadID].split('_')[0]) === parseInt(lastSeenPosts[board][threadID].split('_')[0])) {
-					if (!isNaN(lastSeenPosts[board][threadID].split('_')[1]) && isNaN(latestLastSeenPosts[board][threadID].split('_')[1]) || parseInt(latestLastSeenPosts[board][threadID].split('_')[1]) < parseInt(lastSeenPosts[board][threadID].split('_')[1])) {
+					if (!isNaN(lastSeenPosts[board][threadID].split('_')[1]) && isNaN(latestLastSeenPosts[board][threadID].split('_')[1]) ||
+						parseInt(latestLastSeenPosts[board][threadID].split('_')[1]) < parseInt(lastSeenPosts[board][threadID].split('_')[1])) {
 						latestLastSeenPosts[board][threadID] = lastSeenPosts[board][threadID];
 					}
 				}
@@ -2849,13 +2855,15 @@ $(document).ready(function () {
 				method: "GET",
 				data: {"board": board, "num": threadID, "inThread": true}
 			}).done(function (response) {
-				var firstLoadedPostID = $('article.post')[0].id;
+				var firstLoadedPostID = $('article.post').length ? $('article.post')[0].id : null;
 				var postList = Object.keys(response[threadID].posts);
-				for (var i = 0, len = postList.length; i < len; i++) {
-					if (postList[i] !== firstLoadedPostID) {
-						notLoadedPostCount++;
-					} else {
-						break;
+				if (postList) {
+					for (var i = 0, len = postList.length; i < len; i++) {
+						if (postList[i] !== firstLoadedPostID) {
+							notLoadedPostCount++;
+						} else {
+							break;
+						}
 					}
 				}
 				postCounter();
