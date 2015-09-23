@@ -2,6 +2,11 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.21:** *(2015-09-24)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.21/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.21/README.md)
+- When archived images are missing SpookyX will now attempt to retrieve a copy from 4plebs (since browsing old moe threads I noticed 4pleb had live copies). Naturally this change will have no effect if you're browsing 4plebs
+- fixed a bug that occurred when loading a thread with no replies
+- fixed bug where someone youtube links would cause SpookyX to fail
+
 **v32.2:** *(2015-09-21)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.2/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.2/README.md)
 - Added 'Hide New Posts' option under Recursive Hiding which when enabled will hide any new posts retrived by the autorefresher that reply to a post that is hidden
 
