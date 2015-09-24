@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.21
+// @version       32.22
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -1388,7 +1388,8 @@ var embedImages = function (posts) {
 		if (!$currentArticle.data('imgEmbed')) {
 			$currentArticle.data('imgEmbed', true);
 			var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $currentArticle.find('.thread_image_box').length;
-			$currentArticle.find('.text a').each(function (index, currentLink) {
+			var isOP = $currentArticle.hasClass('thread');
+			(isOP ? $currentArticle.children('.text').find('a') : $currentArticle.find('.text a')).each(function (index, currentLink) {
 				if (imgNum === 0) {
 					return false;
 				}
@@ -1405,7 +1406,7 @@ var embedImages = function (posts) {
 					imgNum--;
 					var filename = '<div class="post_file embedded_post_file"><a href="' + mediaLink + '" class="post_file_filename" rel="tooltip" title="' + mediaLink + '">' + mediaLink.match(/[^\/]*/g)[mediaLink.match(/[^\/]*/g).length - 2] + '</a></div>';
 					var spoiler = '';
-					var $elem = $('<div class="thread_image_box">' + filename + '</div>').insertBefore($currentArticle.find('header'));
+					var $elem = $('<div class="thread_image_box">' + filename + '</div>').insertBefore((isOP ? $currentArticle.children('header') : $currentArticle.find('header')));
 					if ($(this).parents('.spoiler').length) {
 						spoiler = "spoilerImage ";
 						$elem.append('<div class="spoilerText">Spoiler</div>');
@@ -2002,22 +2003,25 @@ function saveLastSeenPosts() {
 	}
 	localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts); // Save it again
 }
-window.addEventListener('beforeunload', function () { // After user leaves the page
-	if (settings.UserSettings.labelYourPosts.value) { // Save the your posts object
-		saveYourPosts();
-	}
-	if (settings.UserSettings.favicon.value) { // Save the last read posts object
-		saveLastSeenPosts();
-	}
-	crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
-	delete crosslinkTracker[board][threadID];
-	localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
+if (/[0-9]+/.test(threadID)) {
+	// Don't save these things on reload if you're not in a thread
+	window.addEventListener('beforeunload', function () { // After user leaves the page
+		if (settings.UserSettings.labelYourPosts.value) { // Save the your posts object
+			saveYourPosts();
+		}
+		if (settings.UserSettings.favicon.value) { // Save the last read posts object
+			saveLastSeenPosts();
+		}
+		crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+		delete crosslinkTracker[board][threadID];
+		localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
 
-	//var confirmationMessage = "\o/";
+		//var confirmationMessage = "\o/";
 
-	//(e || window.event).returnValue = confirmationMessage; //Gecko + IE
-	//return confirmationMessage;                            //Webkit, Safari, Chrome
-});
+		//(e || window.event).returnValue = confirmationMessage; //Gecko + IE
+		//return confirmationMessage;                            //Webkit, Safari, Chrome
+	});
+}
 
 function notificationSpoiler(postID) {
 	var temp = $('#' + postID + ' .text').clone(); // Make a copy of the post text element to avoid changing the original
@@ -2856,13 +2860,15 @@ $(document).ready(function () {
 				data: {"board": board, "num": threadID, "inThread": true}
 			}).done(function (response) {
 				var firstLoadedPostID = $('article.post').length ? $('article.post')[0].id : null;
-				var postList = Object.keys(response[threadID].posts);
-				if (postList) {
-					for (var i = 0, len = postList.length; i < len; i++) {
-						if (postList[i] !== firstLoadedPostID) {
-							notLoadedPostCount++;
-						} else {
-							break;
+				if (response[threadID].posts) {
+					var postList = Object.keys(response[threadID].posts);
+					if (postList) {
+						for (var i = 0, len = postList.length; i < len; i++) {
+							if (postList[i] !== firstLoadedPostID) {
+								notLoadedPostCount++;
+							} else {
+								break;
+							}
 						}
 					}
 				}
@@ -3127,7 +3133,7 @@ $(document).ready(function () {
 		});
 	}
 	if (settings.UserSettings.embedImages.value) {
-		embedImages(staticPosts);
+		embedImages(staticPostsAndOP);
 	} // Embed images
 	if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value) {
 		pauseGifs($('img'));
