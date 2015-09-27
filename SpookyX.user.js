@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.23
+// @version       32.24
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -779,6 +779,50 @@ if (threadID === "thread") {
 }
 var boardPatt = new RegExp("(^|,)\\s*" + board + "\\s*(,|$)");
 
+var Page = {
+	is: function (type) {
+		if (Page.cache[type] !== undefined) {
+			return Page.cache[type];
+		} else {
+			if (Page.hasOwnProperty(type)) {
+				Page.cache[type] = Page[type]();
+				return Page.cache[type];
+			}
+			var typeArray = type.split(',');
+			for (var i = 0; i < typeArray.length; i++) {
+				if (Page.is(typeArray[i])) {
+					Page.cache[type] = true;
+					return true;
+				}
+			}
+			Page.cache[type] = false;
+			return false;
+		}
+	},
+	cache: {},
+	'thread': function () {
+		return /[0-9]+/.test(threadID);
+	},
+	'board': function () {
+		return /board/.test(threadID);
+	},
+	'gallery': function () {
+		return /gallery/.test(threadID);
+	},
+	'other': function () {
+		return /other/.test(threadID);
+	},
+	'quests': function () {
+		return /quests/.test(threadID);
+	},
+	'search': function () {
+		return /search/.test(threadID);
+	},
+	'statistics': function () {
+		return /statistics/.test(threadID);
+	}
+};
+
 //console.log(splitURL);
 //console.log("Board:" + board);
 //console.log("ThreadID:" + threadID);
@@ -795,7 +839,7 @@ if (settings.UserSettings.inlineImages.suboptions.customSize.value) {
 }
 
 var yourPostsLookup = {};
-if (/^(board|[0-9]+)$/.test(threadID)) {
+if (Page.is('board,thread')) {
 	var crosslinkTracker = {};
 	if (localStorage.crosslinkTracker !== undefined) {
 		crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
@@ -1200,7 +1244,7 @@ function inlineImages(posts) {
 						$currentImage.find(".spoilerText").css({"top": (e.target.height / 2) - 6.5}); // Center spoiler text
 					});
 				}
-				if (fullImage.match(/\.webm$/)) { // Handle post webms
+				if (/\.webm$/i.test(fullImage)) { // Handle post webms
 					if (settings.UserSettings.inlineImages.suboptions.inlineVideos.value) {
 						$currentImage.prepend('<video width="' + ($(post).hasClass('thread') ? imageWidthOP : imageWidth) + '" name="media" loop muted ' + autoplayVid + '><source src="' + fullImage + '" type="video/webm"></video>');
 						$(imgLink).remove();
@@ -1208,7 +1252,7 @@ function inlineImages(posts) {
 							addHover($currentImage);
 						}
 					}
-				} else if (!fullImage.match(/(\.pdf|\.swf)$/)) {
+				} else if (!/\.(pdf|swf)$/i.test(fullImage)) {
 					$currentImage.find('img').each(function (k, image) {
 						var $image = $(image);
 						var thumbImage = $(image).attr('src');
@@ -1227,6 +1271,7 @@ function inlineImages(posts) {
 								}
 							}
 						});
+						addHover($currentImage);
 					});
 				}
 			});
@@ -1876,7 +1921,7 @@ function newPosts() {
 }
 
 function postCounter() {
-	if (!/(other|statistics)/.test(threadID)) {
+	if (!Page.is('other,statistics')) {
 		var postCount = notLoadedPostCount + $('.post_wrapper, div.thread').length;
 		var hiddenPostCount = $('.stub').length - $('.pull-left > .btn-toggle-post:visible').length; // Count total minus those that aren't visible to take account for hiding a whole thread on a board
 		var imageCount = $('.thread_image_box').length;
@@ -2003,7 +2048,7 @@ function saveLastSeenPosts() {
 	}
 	localStorage.lastSeenPosts = JSON.stringify(lastSeenPosts); // Save it again
 }
-if (/[0-9]+/.test(threadID)) {
+if (Page.is('thread')) {
 	// Don't save these things on reload if you're not in a thread
 	window.addEventListener('beforeunload', function () { // After user leaves the page
 		if (settings.UserSettings.labelYourPosts.value) { // Save the your posts object
@@ -2686,7 +2731,7 @@ $(document).ready(function () {
 	if (settings.UserSettings.gallery.value) {
 		$('body').append('<div id="gallery" style="display:none;"></div>');
 	}
-	if (/[0-9]+/.test(threadID)) { // If in a thread
+	if (Page.is('thread')) { // If in a thread
 		$($('.navbar .nav')[1]).append('<li><a href="//boards.4chan.org/' + board + '/thread/' + threadID + '">View thread on 4chan</a></li>'); // Add view thread on 4chan link
 	}
 	$('.headerBar > a[title="SpookyX Settings"], a[title=Close]').on('click', function () {
@@ -2854,7 +2899,7 @@ $(document).ready(function () {
 		updateExportLink(); // Recreate the export link
 	});
 	if (settings.UserSettings.postCounter.suboptions.countUnloaded.value) {
-		if (/[0-9]+/.test(threadID)) { // Count the posts that aren't loaded (eg. in last/50 mode)
+		if (Page.is('thread')) { // Count the posts that aren't loaded (eg. in last/50 mode)
 			$.ajax({
 				url: "/_/api/chan/thread/",
 				method: "GET",
@@ -2877,7 +2922,7 @@ $(document).ready(function () {
 			});
 		}
 	}
-	if (/[0-9]+/.test(threadID)) {
+	if (Page.is('thread')) {
 		windowFocus = document.hasFocus();
 		$(window).focus(function () {
 			windowFocus = true;
@@ -2903,12 +2948,12 @@ $(document).ready(function () {
 				}
 			}
 		}
-		if (/[0-9]+/.test(threadID)) {
+		if (Page.is('thread')) {
 			postSubmitEvent();
 		}
 	}
 
-	if (!(/(search|other|statistics)/).test(threadID)) {
+	if (!Page.is('search,other,statistics')) {
 		var $newPost, postID, response;
 		$(document).ajaxComplete(function (event, request, ajaxSettings) {
 			if (!/inThread=true/i.test(ajaxSettings.url) && /api\/chan\/thread\/\?/i.test(ajaxSettings.url) || ((ajaxSettings.type === 'POST') && /\/submit\//i.test(ajaxSettings.url) )) {
@@ -2927,7 +2972,7 @@ $(document).ready(function () {
 				} else {
 					response = {"error": "No responseText"};
 				}
-				if (/[0-9]+/.test(threadID)) {
+				if (Page.is('thread')) {
 					if (ajaxSettings.type === 'POST') {
 						if (response.error === undefined) {
 							if (response.captcha) { // If you are required to fill a captcha before posting
@@ -2986,8 +3031,7 @@ $(document).ready(function () {
 
 				for (var key in response) {
 					if (response.hasOwnProperty(key) && response[key] !== null && response[key].posts !== undefined) {
-						var isBoard = threadID === "board";
-						if (isBoard && settings.UserSettings.labelYourPosts.value) { // Handle (You) deignation for expanding threads on board view
+						if (Page.is('board') && settings.UserSettings.labelYourPosts.value) { // Handle (You) deignation for expanding threads on board view
 							labelNewPosts(Object.keys(response[key].posts), true);
 						}
 						for (postID in response[key].posts) {
@@ -3005,7 +3049,7 @@ $(document).ready(function () {
 										inlineImages($newPost);
 									}
 								} // Inline images
-								if (isBoard && settings.UserSettings.labelYourPosts.value) {
+								if (Page.is('board') && settings.UserSettings.labelYourPosts.value) {
 									if (yourPostsLookup[board][postID]) {
 										$newPost.find('.post_author').after('<span> (You)</span>');
 									}
@@ -3022,7 +3066,7 @@ $(document).ready(function () {
 								if (settings.UserSettings.relativeTimestamps.value) {
 									relativeTimestamps($newPost);
 								} // Add relative timestamps
-								if (isBoard && settings.UserSettings.filter.value) {
+								if (Page.is('board') && settings.UserSettings.filter.value) {
 									filter($newPost);
 								} // Apply filter
 								if (settings.UserSettings.postQuote.value) {
@@ -3082,12 +3126,11 @@ $(document).ready(function () {
 		if (localStorage.expandpref === "yes") {
 			localStorage.expandpref = "no";
 		} // Disable native inline image expansion (might require a reload after to work?)
-		if (threadID !== "statistics") { // Stop this interfering with the images it displays
-			var designateOPimages = /(search|quests)/.test(threadID);
+		if (!Page.is('statistics')) { // Stop this interfering with the images it displays
 			$('#main img').each(function (i, image) {
 				var $image = $(image);
 				$image.addClass('smallImage');
-				if (designateOPimages) {
+				if (Page.is('search,quests')) {
 					if ($image.attr('width') >= 249 || $image.attr('height') >= 249) { // Assuming OP images are 250px limited across all archives might be false
 						$image.addClass('thread_image');
 					}
@@ -3110,7 +3153,7 @@ $(document).ready(function () {
 		});
 	}
 	if (settings.UserSettings.labelYourPosts.value) { // Label your posts
-		if (/(search|board|quest|gallery)/.test(threadID)) {
+		if (Page.is('search,board,quests,gallery')) {
 			if (board === "_") { // Handle finding the board per post for all-board searches
 				$('article.post').each(function (i, post) {
 					var postBoard = $(post).find('.post_show_board').html().replace(/\//g, '');
@@ -3146,11 +3189,11 @@ $(document).ready(function () {
 	if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value) {
 		pauseGifs($('img'));
 	} // Stop gifs autoplaying
-	if (threadID !== "other" && settings.UserSettings.relativeTimestamps.value) {
+	if (!Page.is('other') && settings.UserSettings.relativeTimestamps.value) {
 		relativeTimestamps(staticPostsAndOP);
 		linkHoverEvent();
 	} // Initiate relative timestamps
-	if (/[0-9]+/.test(threadID) && settings.UserSettings.postQuote.value) {
+	if (Page.is('thread') && settings.UserSettings.postQuote.value) {
 		$('.post_data > [data-function=quote]').each(function () {
 			$(this).removeAttr('data-function'); // Disable native quote function
 			$(this).addClass('postQuote'); // Make it findable so that inline posts will be handled
@@ -3621,7 +3664,7 @@ $(function () {
 	shortcut.add("o", function () {
 		populateSettingsMenu();
 	}, {"disable_in_input": true});
-	if (/[0-9]+/.test(threadID)) {
+	if (Page.is('thread')) {
 		seenPosts();
 		ThreadUpdate();
 		window.setInterval(function () {
