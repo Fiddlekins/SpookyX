@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.24:** *(2015-09-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.24/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.24/README.md)
+- fixed bug introduced with last update where native images weren't being handled properly
+
 **v32.23:** *(2015-09-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.23/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.23/README.md)
 - Adjusted page layout so that the odd pages like the discussion one don't have an unecessary scrollbar
 - fixed bug where video hover wasn't playing the video
