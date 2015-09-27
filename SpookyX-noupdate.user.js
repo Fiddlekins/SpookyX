@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.24
+// @version       32.3
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -44,7 +44,15 @@ var settings = {
 					"name": "Inline Videos",
 					"description": "Replace thumbnails of natively posted videos with the videos themselves",
 					"type": "checkbox",
-					"value": true
+					"value": true,
+					"suboptions": {
+						"firefoxCompatibility": {
+							"name": "Firefox Compatibility Mode",
+							"description": "Turn this on to allow you to use the controls on an expanded video without collapsing it",
+							"type": "checkbox",
+							"value": false
+						}
+					}
 				},
 				"delayedLoad": {
 					"name": "Delayed Load",
@@ -2415,6 +2423,7 @@ function adjustReplybox() {
 	}
 	if (settings.UserSettings.adjustReplybox.suboptions.removeReset.value) {
 		$('#reply .btn[type=reset]').remove();
+		$('#reply .btn-group > .btn').css('border-radius', '4px');
 	}
 }
 
@@ -2958,7 +2967,16 @@ $(document).ready(function () {
 				console.debug(ajaxSettings.url);
 				if (request.responseText !== '') {
 					try {
-						response = JSON.parse(request.responseText);
+						if (request.responseText.charAt(0) === '<') {
+							console.log('The following is the request responseText:');
+							console.log(request.responseText);
+							response = {
+								"error": "SpookyX encountered an error when parsing the response. The connection" +
+								" probably timed out. Feel free to give Fiddlekins the console log to have a look at."
+							};
+						} else {
+							response = JSON.parse(request.responseText);
+						}
 					} catch (e) {
 						response = {"error": "SpookyX encountered an error when parsing the response."};
 						console.log('The following is the request responseText:');
@@ -3323,24 +3341,31 @@ $(document).ready(function () {
 				image.trigger("mouseenter");
 			}
 		} else if (settings.UserSettings.inlineImages.value && e.target.nodeName === "VIDEO") { // Expand videos
-			var video = $(e.target);
-			video.toggleClass("bigImage"); // Make it full opacity to override spoilering
-			video.closest('.thread_image_box').find('.spoilerText').toggle(); // Toggle the Spoiler text
-			if (video.hasClass("fullVideo")) {
-				video[0].pause();
-				video[0].muted = true;
-				video.attr('width', (video.closest('article').hasClass('thread') ? imageWidthOP : imageWidth));
-				video.removeAttr('controls');
-				video.removeClass("fullVideo");
+			var video = e.target;
+			var $video = $(video);
+			$video.toggleClass('bigImage'); // Make it full opacity to override spoilering
+			$video.closest('.thread_image_box').find('.spoilerText').toggle(); // Toggle the Spoiler text
+			if ($video.hasClass('fullVideo')) {
+				if (!settings.UserSettings.inlineImages.suboptions.inlineVideos.suboptions.firefoxCompatibility.value ||
+					e.pageY < (video.offsetTop + video.videoHeight - 28)) { // Firefox blows. FF controls are 28px tall at this point
+					video.pause();
+					video.muted = true;
+					$video.attr('width', ($video.closest('article').hasClass('thread') ? imageWidthOP : imageWidth));
+					$video.removeAttr('controls');
+					$video.removeClass("fullVideo");
+					window.setTimeout(function () { // Firefox can suck my dick
+						video.pause();
+					}, 0);
+				}
 			} else {
-				video.removeAttr('width');
-				video.attr('controls', "");
-				video.addClass("fullVideo");
-				video[0].muted = false;
-				video[0].play();
+				$video.removeAttr('width');
+				$video.attr('controls', '');
+				$video.addClass("fullVideo");
+				video.muted = false;
+				video.play();
 			}
 			$('#hoverUI').html('');
-			video.trigger("mouseenter");
+			$video.trigger("mouseenter");
 		} else if (e.target.className === "btn-toggle-post" || e.target.parentNode.className === "btn-toggle-post") { // If a hide post button is clicked
 			var button = e.target.className === "btn-toggle-post" ? e.target : e.target.parentNode;
 			if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value) { // If recursive toggling is enabled
