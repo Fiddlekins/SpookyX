@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.22
+// @version       32.23
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -2670,6 +2670,7 @@ $(document).ready(function () {
 	}
 	$body.append('<div id="hoverUI"></div>');
 	var $letters = $('.letters');
+	$letters.prependTo('.container-fluid'); // Move it to remove the unecessary scrolling on certain pages
 	if ($letters.length) {
 		$letters.html('<span class="boardList">' + $letters.html() + '</span><span class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;" style="margin-right:10px;">Settings</a></span>');
 		$letters.clone().hide().insertAfter('.letters');
@@ -2908,146 +2909,153 @@ $(document).ready(function () {
 	if (!(/(search|other|statistics)/).test(threadID)) {
 		var $newPost, postID, response;
 		$(document).ajaxComplete(function (event, request, ajaxSettings) {
-			if (!(/inThread=true/).test(ajaxSettings.url)) {
-				if (request.responseText !== "") {
-					response = JSON.parse(request.responseText);
+			if (!/inThread=true/i.test(ajaxSettings.url) && /api\/chan\/thread\/\?/i.test(ajaxSettings.url) || ((ajaxSettings.type === 'POST') && /\/submit\//i.test(ajaxSettings.url) )) {
+				console.debug(ajaxSettings.url);
+				if (request.responseText !== '') {
+					try {
+						response = JSON.parse(request.responseText);
+					} catch (e) {
+						response = {"error": "SpookyX encountered an error when parsing the response."};
+						console.log('The following is the request responseText:');
+						console.log(request.responseText);
+						alert('A nasty error has occurred. Please take a screenshot of your console and give it to ' +
+							'Fiddlekins to deal with.\n\n(You can typically access the console by pressing ctrl+shift+J ' +
+							'or pressing F12 and navigating to the console tab.)');
+					}
 				} else {
 					response = {"error": "No responseText"};
 				}
-				if (!/api\.imgur/.test(ajaxSettings.url)) { // Don't handle imgur calls
-					if (/[0-9]+/.test(threadID)) {
-						if (ajaxSettings.type === "POST") {
-							if (response.error === undefined) {
-								if (response.captcha) { // If you are required to fill a captcha before posting
-									//console.log(response);
-								} else {
-									for (postID in response[threadID].posts) {
-										if (response[threadID].posts.hasOwnProperty(postID) && response[threadID].posts[postID].comment.replace(/[\r\n]/g, '') == lastSubmittedContent.replace(/[\r\n]/g, '')) {
-											yourPosts[board][threadID].push(postID);
-											$newPost = $('#' + postID);
-											$newPost.find('.post_author').after('<span> (You)</span>');
-											if (settings.UserSettings.filter.value) {
-												filter($newPost);
-											} // Apply filter
-										}
+				if (/[0-9]+/.test(threadID)) {
+					if (ajaxSettings.type === 'POST') {
+						if (response.error === undefined) {
+							if (response.captcha) { // If you are required to fill a captcha before posting
+								//console.log(response);
+							} else {
+								for (postID in response[threadID].posts) {
+									if (response[threadID].posts.hasOwnProperty(postID) && response[threadID].posts[postID].comment.replace(/[\r\n]/g, '') == lastSubmittedContent.replace(/[\r\n]/g, '')) {
+										yourPosts[board][threadID].push(postID);
+										$newPost = $('#' + postID);
+										$newPost.find('.post_author').after('<span> (You)</span>');
+										if (settings.UserSettings.filter.value) {
+											filter($newPost);
+										} // Apply filter
 									}
-									crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
-									for (var boardVal in crosslinkTracker) {
-										if (crosslinkTracker.hasOwnProperty(boardVal)) {
-											for (var threadVal in crosslinkTracker[boardVal]) {
-												if (crosslinkTracker[boardVal].hasOwnProperty(threadVal)) {
-													crosslinkTracker[boardVal][threadVal][board] = true;
-												}
+								}
+								crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
+								for (var boardVal in crosslinkTracker) {
+									if (crosslinkTracker.hasOwnProperty(boardVal)) {
+										for (var threadVal in crosslinkTracker[boardVal]) {
+											if (crosslinkTracker[boardVal].hasOwnProperty(threadVal)) {
+												crosslinkTracker[boardVal][threadVal][board] = true;
 											}
 										}
 									}
-									localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
-									saveYourPosts();
+								}
+								localStorage.crosslinkTracker = JSON.stringify(crosslinkTracker);
+								saveYourPosts();
 
-									labelNewPosts(Object.keys(response[threadID].posts), false);
-									addFileSelect(); // Refresh the added file upload
-								}
-							} else {
-								if (settings.UserSettings.notifications.value) {
-									notifyMe("An error occurred whilst posting", faviconNotification, response.error, false);
-								}
+								labelNewPosts(Object.keys(response[threadID].posts), false);
+								addFileSelect(); // Refresh the added file upload
 							}
-							$('#middleReplySubmit').val('Submit').removeAttr('disabled'); // Reset submit button
 						} else {
-							if (response.error !== undefined) {
-								//console.log(response.error);
-							} else {
-								if (response[threadID] !== undefined) {
-									for (postID in response[threadID].posts) {
-										if (settings.UserSettings.filter.value) {
-											filter($('#' + postID));
-										} // Apply filter
-									}
-									labelNewPosts(Object.keys(response[threadID].posts), false);
-									addFileSelect(); // Refresh the added file upload
-								} else {
-									//console.log("Not in a thread");
+							if (settings.UserSettings.notifications.value) {
+								notifyMe("An error occurred whilst posting", faviconNotification, response.error, false);
+							}
+						}
+						$('#middleReplySubmit').val('Submit').removeAttr('disabled'); // Reset submit button
+					} else {
+						if (response.error !== undefined) {
+							//console.log(response.error);
+						} else {
+							if (response[threadID] !== undefined) {
+								for (postID in response[threadID].posts) {
+									if (settings.UserSettings.filter.value) {
+										filter($('#' + postID));
+									} // Apply filter
 								}
+								labelNewPosts(Object.keys(response[threadID].posts), false);
+								addFileSelect(); // Refresh the added file upload
+							} else {
+								//console.log("Not in a thread");
 							}
 						}
 					}
+				}
 
-					for (var key in response) {
-						if (response.hasOwnProperty(key) && response[key] !== null && response[key].posts !== undefined) {
-							var isBoard = threadID === "board";
-							if (isBoard && settings.UserSettings.labelYourPosts.value) { // Handle (You) deignation for expanding threads on board view
-								labelNewPosts(Object.keys(response[key].posts), true);
-							}
-							for (postID in response[key].posts) {
-								if (response[key].posts.hasOwnProperty(postID) && document.getElementById(postID) !== null) { // Don't process post if filter has purged it
-									$newPost = $('#' + postID);
-									if (settings.UserSettings.inlineImages.value) {
-										$newPost.find('img').each(function (i, image) {
-											var $image = $(image);
-											$image.addClass('smallImage');
-											$image.removeAttr('width height');
-										});
-										if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value) {
-											delayedLoad($newPost);
-										} else {
-											inlineImages($newPost);
-										}
-									} // Inline images
-									if (isBoard && settings.UserSettings.labelYourPosts.value) {
-										if (yourPostsLookup[board][postID]) {
-											$newPost.find('.post_author').after('<span> (You)</span>');
-										}
-									} // Handle (You) designation for expanding threads on board view
-									if (settings.UserSettings.inlineReplies.value) {
-										$newPost.addClass("base");
-									} // Prep inline responses
-									if (settings.UserSettings.embedImages.value) {
-										embedImages($newPost);
-									} // Embed images
-									if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value) {
-										pauseGifs($newPost.find('img'));
-									} // Stop gifs autoplaying
-									if (settings.UserSettings.relativeTimestamps.value) {
-										relativeTimestamps($newPost);
-									} // Add relative timestamps
-									if (isBoard && settings.UserSettings.filter.value) {
-										filter($newPost);
-									} // Apply filter
-									if (settings.UserSettings.postQuote.value) {
-										$newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote');
-									} // Change the quote function
-									if (settings.UserSettings.hidePosts.value) {
-										$newPost.children('.pull-left').removeClass('stub');
-										if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value) {
-											$newPost.find('.post_backlink').attr('id', 'p_b' + postID);
-											if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.suboptions.hideNewPosts.value) {
-												var checkedBacklinks = {};
-												$newPost.find('.text .backlink').each(function (i, backlink) {
-													if (!checkedBacklinks[backlink.dataset.board + backlink.dataset.post]) { // Prevent reprocessing duplicate links
-														checkedBacklinks[backlink.dataset.board + backlink.dataset.post] = true;
-														var backlinkPost = $('#' + backlink.dataset.post);
-														if (backlink.dataset.board === board && backlinkPost.length) { // If linked post is present in thread
-															if (!backlinkPost.is(':visible')) { // Linked post isn't visible
-																togglePost(postID, 'hide');
-																return false;
-															}
+				for (var key in response) {
+					if (response.hasOwnProperty(key) && response[key] !== null && response[key].posts !== undefined) {
+						var isBoard = threadID === "board";
+						if (isBoard && settings.UserSettings.labelYourPosts.value) { // Handle (You) deignation for expanding threads on board view
+							labelNewPosts(Object.keys(response[key].posts), true);
+						}
+						for (postID in response[key].posts) {
+							if (response[key].posts.hasOwnProperty(postID) && document.getElementById(postID) !== null) { // Don't process post if filter has purged it
+								$newPost = $('#' + postID);
+								if (settings.UserSettings.inlineImages.value) {
+									$newPost.find('img').each(function (i, image) {
+										var $image = $(image);
+										$image.addClass('smallImage');
+										$image.removeAttr('width height');
+									});
+									if (settings.UserSettings.inlineImages.suboptions.delayedLoad.value) {
+										delayedLoad($newPost);
+									} else {
+										inlineImages($newPost);
+									}
+								} // Inline images
+								if (isBoard && settings.UserSettings.labelYourPosts.value) {
+									if (yourPostsLookup[board][postID]) {
+										$newPost.find('.post_author').after('<span> (You)</span>');
+									}
+								} // Handle (You) designation for expanding threads on board view
+								if (settings.UserSettings.inlineReplies.value) {
+									$newPost.addClass("base");
+								} // Prep inline responses
+								if (settings.UserSettings.embedImages.value) {
+									embedImages($newPost);
+								} // Embed images
+								if (settings.UserSettings.inlineImages.value && !settings.UserSettings.inlineImages.suboptions.autoplayGifs.value) {
+									pauseGifs($newPost.find('img'));
+								} // Stop gifs autoplaying
+								if (settings.UserSettings.relativeTimestamps.value) {
+									relativeTimestamps($newPost);
+								} // Add relative timestamps
+								if (isBoard && settings.UserSettings.filter.value) {
+									filter($newPost);
+								} // Apply filter
+								if (settings.UserSettings.postQuote.value) {
+									$newPost.find('.post_data > [data-function=quote]').removeAttr('data-function').addClass('postQuote');
+								} // Change the quote function
+								if (settings.UserSettings.hidePosts.value) {
+									$newPost.children('.pull-left').removeClass('stub');
+									if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value) {
+										$newPost.find('.post_backlink').attr('id', 'p_b' + postID);
+										if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.suboptions.hideNewPosts.value) {
+											var checkedBacklinks = {};
+											$newPost.find('.text .backlink').each(function (i, backlink) {
+												if (!checkedBacklinks[backlink.dataset.board + backlink.dataset.post]) { // Prevent reprocessing duplicate links
+													checkedBacklinks[backlink.dataset.board + backlink.dataset.post] = true;
+													var backlinkPost = $('#' + backlink.dataset.post);
+													if (backlink.dataset.board === board && backlinkPost.length) { // If linked post is present in thread
+														if (!backlinkPost.is(':visible')) { // Linked post isn't visible
+															togglePost(postID, 'hide');
+															return false;
 														}
 													}
-												});
-											}
+												}
+											});
 										}
-									} // Show hide post buttons
-									if (settings.UserSettings.postCounter.value) {
-										postCounter();
-									} // Update post counter
-									if (settings.UserSettings.removeJfont.value) {
-										$newPost.find('.text').removeClass('shift-jis');
-									} // Remove japanese font formatting
-									if (settings.UserSettings.labelDeletions.value) {
-										$newPost.find('.icon-trash').html(' [Deleted]');
-									} // Label deletions                            
-									addHover($newPost);
-								}
+									}
+								} // Show hide post buttons
+								if (settings.UserSettings.postCounter.value) {
+									postCounter();
+								} // Update post counter
+								if (settings.UserSettings.removeJfont.value) {
+									$newPost.find('.text').removeClass('shift-jis');
+								} // Remove japanese font formatting
+								if (settings.UserSettings.labelDeletions.value) {
+									$newPost.find('.icon-trash').html(' [Deleted]');
+								} // Label deletions
 							}
 						}
 					}
@@ -3169,9 +3177,6 @@ $(document).ready(function () {
 	if (settings.UserSettings.labelDeletions.value) {
 		$('.icon-trash').html(' [Deleted]');
 	} // Label deletions
-	if (threadID !== "statistics") {
-		addHover(staticPostsAndOP);
-	}
 
 	$('#main').on('click', function (e) { // Detect clicks on page content
 		if (settings.UserSettings.inlineReplies.value && $(e.target).hasClass("backlink")) { // Inline replies
