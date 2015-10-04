@@ -2,6 +2,10 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.31:** *(2015-10-04)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.31/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.31/README.md)
+- fixed bug where native videos weren't having the hover feature applied correctly
+- removed dead sites from the list of matches, change one that redirects
+
 **v32.3:** *(2015-09-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.3/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.3/README.md)
 - Added the new 'Firefox Compatibility Mode' setting as a suboption of Inline Videos. Enabling this fixes the inability to use video controls on inline expanded videos in FireFox but creates regions of unresponsiveness on other browsers. Only enable if you're on FireFox or a fork of it
 - fixed bug where a collapsed video would continue playing in firefox
