@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.32:** *(2015-10-07)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.32/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.32/README.md)
+- >4ch.archive.horse immediately moves back to desustorage.org
+
 **v32.31:** *(2015-10-04)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.31/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.31/README.md)
 - fixed bug where native videos weren't having the hover feature applied correctly
 - removed dead sites from the list of matches, change one that redirects
