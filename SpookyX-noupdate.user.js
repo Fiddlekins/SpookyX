@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.32
+// @version       32.33
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -761,6 +761,16 @@ if (settings.UserSettings.inlineImages.suboptions.autoplayVids.value) {
 	autoplayVid = 'autoplay';
 }
 
+var filetypes = {
+	IMAGES: ['jpg', 'jpeg', 'png', 'gif'],
+	VIDEOS: ['webm', 'mp4', 'gifv']
+};
+
+var pattImageFiletypes = new RegExp('\\.(' + filetypes.IMAGES.join('|') + ')($|(\\?|:)[\\S]+$)', 'i');
+var pattVideoFiletypes = new RegExp('\\.(' + filetypes.VIDEOS.join('|') + ')($|(\\?|:)[\\S]+$)', 'i');
+var pattYoutubeLink = new RegExp('(youtube\\.com|youtu\\.be)', 'i');
+var pattImgGal = new RegExp('http[s]?://imgur.com/[^\"]*');
+
 var splitURL = (document.URL).toLowerCase().split("/");
 var board = splitURL[3];
 var threadID = splitURL[4];
@@ -1422,10 +1432,6 @@ function checkFilter(input, inThreadPost) {
 }
 
 var embedImages = function (posts) {
-	var imageFiletypes = new RegExp('\\.(jpg|jpeg|png|gif)($|(\\?|:)[\\S]+$)', 'i');
-	var videoFiletypes = new RegExp('\\.(webm|gifv|mp4)($|(\\?|:)[\\S]+$)', 'i');
-	var youtubeLink = new RegExp('(youtube\\.com|youtu\\.be)', 'i');
-	var pattImgGal = new RegExp('http[s]?://imgur.com/[^\"]*');
 	posts.each(function (index, currentArticle) {
 		var $currentArticle = $(currentArticle);
 		if (!$currentArticle.data('imgEmbed')) {
@@ -1438,11 +1444,11 @@ var embedImages = function (posts) {
 				}
 				var mediaType = 'notMedia';
 				var mediaLink = currentLink.href;
-				if (imageFiletypes.test(mediaLink)) {
+				if (pattImageFiletypes.test(mediaLink)) {
 					mediaType = 'image';
-				} else if (videoFiletypes.test(mediaLink)) {
+				} else if (pattVideoFiletypes.test(mediaLink)) {
 					mediaType = 'video';
-				} else if (youtubeLink.test(mediaLink)) {
+				} else if (pattYoutubeLink.test(mediaLink)) {
 					mediaType = 'youtube';
 				}
 				if (mediaType == 'image' || mediaType == 'video') {
@@ -2264,8 +2270,7 @@ function mascot(mascotImageLink) {
 				$('.container-fluid').prepend('<div id="mascotContainer"></div>');
 				$mascotContainer = $('#mascotContainer'); // Refresh selector
 			}
-			var videoFiletypes = new RegExp('.(webm|gifv|mp4)($|\\?[\\S]+$)', 'i');
-			if (videoFiletypes.test(mascotImageLink)) {
+			if (pattVideoFiletypes.test(mascotImageLink)) {
 				$mascotContainer.children('img').remove();
 				if (!$mascotContainer.children().length) {
 					$mascotContainer.html('<video id="mascot" style="position:fixed; z-index:-1;" name="media" loop muted autoplay><source src="' + mascotImageLink + '" type="video/webm"></video>');
@@ -2542,7 +2547,11 @@ function addFileSelect() {
 				if (settings.UserSettings.autoHost.value.value !== "Don't reupload links") {
 					var fourChanOnly = settings.UserSettings.autoHost.value.value === "Reupload 4chan links";
 					var replyValue = $('#reply_chennodiscursus')[0].value;
-					var links = fourChanOnly ? replyValue.match(/https?:\/\/(i\.4cdn\.org|pbs\.twimg\.com)\/.*\.(jpg|jpeg|png|gif)/ig) : replyValue.match(/https?:\/\/.*\.(jpg|jpeg|png|gif)/ig);
+					var concatFileTypes = filetypes.IMAGES.join('|');//+ '|' + filetypes.VIDEOS.join('|');
+					var linkPatt = fourChanOnly ?
+						new RegExp('https?:\\/\\/(i\\.4cdn\\.org|pbs\\.twimg\\.com)\\/.*\\.(' + concatFileTypes + ')', 'ig') :
+						new RegExp('https?:\\/\\/.*\\.(' + concatFileTypes + ')', 'ig');
+					var links = replyValue.match(linkPatt);
 					var linksLength = links === null ? 0 : links.length;
 					var totalUploads = linksLength + fileCount;
 					var successfulUploads = 0;
@@ -2578,7 +2587,7 @@ function addFileSelect() {
 					if (fileCount) {
 						$.each(document.getElementById('file_image').files, function (i, file) {
 							var reader = new FileReader();
-							if (/image/.test(file.type)) {
+							if (false && /image/.test(file.type)) { // Disable Imgur usage, don't remove code in case it needs to be restored
 								reader.readAsDataURL(file);
 								reader.onloadend = function () {
 									$.ajax({
@@ -2615,6 +2624,7 @@ function addFileSelect() {
 								xhr.addEventListener('load', function (e) {
 									fileCount--;
 									$('#reply_chennodiscursus')[0].value += "\n" + JSON.parse(xhr.responseText).files[0].url;
+									successfulUploads++;
 									if (!fileCount) {
 										$('#file_image').val('');
 										if (successfulUploads === totalUploads) {
