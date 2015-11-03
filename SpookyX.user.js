@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.33
+// @version       32.34
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -27,6 +27,10 @@
 // @downloadURL   https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js
 // @icon          http://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
+
+if (GM_info === undefined) {
+	var GM_info = {script: {version: '32.34'}};
+}
 
 var settings = {
 	"UserSettings": {
@@ -488,7 +492,7 @@ var settings = {
 					"name": "Right margin",
 					"description": "Specify the width in pixels of the gap between the end of the posts and the right side of the screen. Negative values set it to equal the mascot width",
 					"type": "number",
-					"value": -1
+					"value": 0
 				},
 				"align": {
 					"name": "Align",
