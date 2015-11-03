@@ -2,6 +2,10 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.34:** *(2015-11-03)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.34/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.34/README.md)
+- Adjusted the default setting for the right margin so that it doesn't add a scrollbar when no mascot is selected, as per default
+- Added a fix that should enable the script to be served with a webpage rather than relying on a *monkey extension
+
 **v32.33:** *(2015-10-13)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.33/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.33/README.md)
 - image uploads from local files go to mixtape.moe now instead of Imgur since the latter has a tendency to compress/shrink large images. Upload via url is not supported by mixtape.moe unfortunately so those images still go to Imgur
 - fixed bug with file upload not executing post submit process correctly
