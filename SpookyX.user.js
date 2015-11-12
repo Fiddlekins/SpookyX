@@ -2,11 +2,10 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.34
+// @version       32.35
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
-// @include       https://*archive.moe/*
 // @include       http://archive.loveisover.me/*
 // @include       https://archive.loveisover.me/*
 // @include       http://archive.nyafuu.org/*
@@ -15,6 +14,10 @@
 // @include       https://*fgts.jp/*
 // @include       http://desustorage.org/*
 // @include       https://desustorage.org/*
+// @include       http://4ch.be/*
+// @include       https://4ch.be/*
+// @include       http://arch.b4k.co/*
+// @include       https://arch.b4k.co/*
 // @include       http://*ch.archive.horse*
 // @include       https://*ch.archive.horse*
 // @include       http://boards.fireden.net/*
@@ -29,7 +32,7 @@
 // ==/UserScript==
 
 if (GM_info === undefined) {
-	var GM_info = {script: {version: '32.34'}};
+	var GM_info = {script: {version: '32.35'}};
 }
 
 var settings = {
@@ -1503,7 +1506,9 @@ var embedImages = function (posts) {
 								'key': 'AIzaSyB5_zaen_-46Uhz1xGR-lz1YoUMHqCD6CE'
 							}
 						}).done(function (response) {
-							currentLink.innerHTML = '<i>(YouTube)</i> - ' + response.items[0].snippet.title;
+							if (response.items.length) {
+								currentLink.innerHTML = '<i>(YouTube)</i> - ' + response.items[0].snippet.title;
+							}
 						});
 					}
 				} else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec(currentLink.href) !== null) {
@@ -1800,7 +1805,7 @@ function changeTimestamp(timeElement, postTimestamp) {
 	}
 }
 
-var lastSeenPost;
+var lastSeenPost = threadID;
 var unseenPosts = [];
 function seenPosts() {
 	var $backlinkContainer = $('article.backlink_container');
@@ -2732,6 +2737,10 @@ $(document).ready(function () {
 	}
 	$body.append('<div id="hoverUI"></div>');
 	var $letters = $('.letters');
+	if ($letters.length === 0) {
+		$body.prepend('<div class="letters"></div>'); // Add the letters bar if it's not present
+		$letters = $('.letters'); // Refresh selector
+	}
 	$letters.prependTo('.container-fluid'); // Move it to remove the unecessary scrolling on certain pages
 	if ($letters.length) {
 		$letters.html('<span class="boardList">' + $letters.html() + '</span><span class="headerBar"><div class="threadStats"></div><a title="SpookyX Settings" href="javascript:;" style="margin-right:10px;">Settings</a></span>');
@@ -2742,7 +2751,7 @@ $(document).ready(function () {
 	} else { // Insert settings link when on board index
 		$('.container-fluid').append('<div class="headerBar" style="position: fixed; right: 0; top: 0;"><a title="SpookyX Settings" href="javascript:;">Settings</a></div>');
 	}
-	$body.append('<div id="settingsMenu" class="thread_form_wrap" style="display: none;"><input type="file" id="fileInput" style="display:none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a id="settingsExport" title="Export" href="javascript:;">Export</a> | <a id="settingsImport" title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.' + GM_info.script.version + '</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a target="_blank" href="https://archive.moe/a/thread/126054592" style="text-decoration: underline;">Feedback</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>');
+	$body.append('<div id="settingsMenu" class="thread_form_wrap" style="display: none;"><input type="file" id="fileInput" style="display:none;"><div id="settingsHeader"><div class="sections-list"><a href="javascript:;" class="active">Main</a> | <a href="javascript:;">Filter</a></div><div class="credits"><a id="settingsExport" title="Export" href="javascript:;">Export</a> | <a id="settingsImport" title="Import" href="javascript:;">Import</a> | <a title="Reset Settings" href="javascript:;">Reset Settings</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX" style="text-decoration: underline;">SpookyX</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/blob/master/CHANGELOG.md" style="text-decoration: underline;">v.' + GM_info.script.version + '</a> | <a target="_blank" href="https://github.com/Fiddlekins/SpookyX/issues" style="text-decoration: underline;">Issues</a> | <a title="Close" href="javascript:;">Close</a></div></div><div id="menuSeparator"></div><div id="settingsContent"></div></div>');
 	if (settings.UserSettings.gallery.value) {
 		$('body').append('<div id="gallery" style="display:none;"></div>');
 	}
@@ -3251,18 +3260,20 @@ $(document).ready(function () {
 		if (settings.UserSettings.inlineReplies.value && $(e.target).hasClass("backlink")) { // Inline replies
 			if (!e.originalEvent.ctrlKey && e.which == 1) {
 				e.preventDefault();
-				var postID = e.target.dataset.post.replace(',', '_'); // Replace to deal with crossboard links
-				var rootPostID = e.target.closest('article.base').id;
-				if (e.target.parentNode.className == "post_backlink") {
-					if ($(e.target).hasClass("inlined")) {
-						$(e.target).removeClass("inlined");
+				var etarget = e.target;
+				var $etarget = $(etarget);
+				var postID = etarget.dataset.post.replace(',', '_'); // Replace to deal with crossboard links
+				var rootPostID = $etarget.closest('article.base').attr('id');
+				if (etarget.parentNode.className == "post_backlink") {
+					if ($etarget.hasClass("inlined")) {
+						$etarget.removeClass("inlined");
 						$('.sub' + rootPostID).each(function (index, currentPost) {
 							$("#" + currentPost.id.substr(1) + ".forwarded").removeClass("forwarded");
 						});
 						$('#i' + postID + '.sub' + rootPostID).remove();
 					} else {
-						$(e.target).addClass("inlined");
-						$(e.target.parentNode.parentNode).after('<div class="inline sub' + rootPostID + '" id="i' + postID + '"></div>');
+						$etarget.addClass("inlined");
+						$(etarget.parentNode.parentNode).after('<div class="inline sub' + rootPostID + '" id="i' + postID + '"></div>');
 						$("#" + postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id", "r" + postID).show().appendTo($("#i" + postID + '.sub' + rootPostID));
 						$("#" + rootPostID + '.base .inline').each(function (index, currentPost) {
 							if (!$(currentPost).hasClass('sub' + rootPostID)) {
@@ -3276,15 +3287,15 @@ $(document).ready(function () {
 						addHover($('#i' + postID));
 					}
 				} else {
-					if ($(e.target).hasClass("inlined")) {
-						$(e.target).removeClass("inlined");
+					if ($etarget.hasClass("inlined")) {
+						$etarget.removeClass("inlined");
 						$('.sub' + rootPostID).each(function (index, currentPost) {
 							$("#" + currentPost.id.substr(1) + ".forwarded").removeClass("forwarded");
 						});
 						$('#i' + postID + '.sub' + rootPostID).remove();
 					} else {
-						$(e.target).addClass("inlined");
-						$(e.target.parentNode).after('<div class="inline sub' + rootPostID + '" id="i' + postID + '"></div>');
+						$etarget.addClass("inlined");
+						$(etarget.parentNode).after('<div class="inline sub' + rootPostID + '" id="i' + postID + '"></div>');
 						$("#" + postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id", "r" + postID).show().appendTo($("#i" + postID + '.sub' + rootPostID));
 						$("#" + rootPostID + '.base .inline').each(function (index, currentPost) {
 							if (!$(currentPost).hasClass('sub' + rootPostID)) {
