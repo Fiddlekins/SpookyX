@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.35
+// @version       32.4
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -32,7 +32,7 @@
 // ==/UserScript==
 
 if (GM_info === undefined) {
-	var GM_info = {script: {version: '32.35'}};
+	var GM_info = {script: {version: '32.4'}};
 }
 
 var settings = {
@@ -313,6 +313,12 @@ var settings = {
 			"description": "Clicking the post number will insert highlighted text into the reply box",
 			"type": "checkbox",
 			"value": true
+		},
+		"revealSpoilers": {
+			"name": "Reveal Spoilers",
+			"description": "Spoilered text will be displayed without needing to hover over it",
+			"type": "checkbox",
+			"value": false
 		},
 		"filter": {
 			"name": "Filter",
@@ -845,6 +851,42 @@ var Page = {
 //console.log(splitURL);
 //console.log("Board:" + board);
 //console.log("ThreadID:" + threadID);
+
+
+// As taken from http://stackoverflow.com/questions/15761939/firing-css-hover-using-jquery
+function allowMockHover() {
+
+	// iterate over all styleSheets
+	for (var i = 0, l = document.styleSheets.length; i < l; i++) {
+		var s = document.styleSheets[i];
+		if (s.cssRules == null) continue;
+
+		// iterate over all rules in styleSheet
+		for (var x = 0, rl = s.cssRules.length; x < rl; x++) {
+			var r = s.cssRules[x];
+			if (r.selectorText && r.selectorText.indexOf(':hover') >= 0) {
+				fixRule(r);
+			}
+		}
+	}
+
+}
+
+function fixRule(rule) {
+
+	// if the current rule has several selectors, treat them separately:
+	var parts = rule.selectorText.split(',');
+	for (var i = 0, l = parts.length; i < l; i++) {
+		if (parts[i].indexOf(':hover') >= 0) {
+			// update selector to be same + selector with class
+			parts[i] = [parts[i], parts[i].replace(/:hover/gi, '.mock-hover')].join(',');
+		}
+	}
+
+	// update rule
+	rule.selectorText = parts.join(',');
+}
+
 
 var imageWidthOP = 250;
 var imageHeightOP = 250;
@@ -2698,6 +2740,15 @@ function saveSettings() {
 	localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
 }
 
+var hoveredTextColourPicker;
+function revealSpoilers() {
+	if (settings.UserSettings.revealSpoilers.value) {
+		$('#SpookyX-css-hovered-spoilers').html('.spoiler {color:' + hoveredTextColourPicker + '!important;}');
+	} else {
+		$('#SpookyX-css-hovered-spoilers').html('');
+	}
+}
+
 $(document).ready(function () {
 	var $body = $('body');
 	var $head = $('head');
@@ -2705,8 +2756,16 @@ $(document).ready(function () {
 	var $postBackgroundColourPicker = $('#postBackgroundColourPicker');
 	var postBackgroundColourPicker = $postBackgroundColourPicker.css('background-color'); // Set the colour
 	$postBackgroundColourPicker.remove(); // Delete the element afterwards
+
+	allowMockHover(); // Process the stylesheets to add a custom class to all hovered element instances so that we can force the style on a test element
+	var $hoveredTextColourPicker = $('<div class="spoiler mock-hover" style="position: fixed; top: -1000px;">hoveredTextColourPicker</div>'); // Create an element to get the hovered text colour from
+	$body.append($hoveredTextColourPicker);
+	hoveredTextColourPicker = $hoveredTextColourPicker.css('color'); // Set the colour
+	$hoveredTextColourPicker.remove(); // Delete the element afterwards
+
 	$head.after('<style type="text/css" id="SpookyX-css"></style>');
 	$head.after('<style type="text/css" id="SpookyX-css-word-break"></style>'); // Add style element that controls that one thing
+	$head.after('<style type="text/css" id="SpookyX-css-hovered-spoilers"></style>'); // Add style element that controls that one thing
 	$('#SpookyX-css').append('.imgur-embed-iframe-pub{float: left; margin: 10px 10px 0 0!important;}.post_wrapper .pull-left, article.backlink_container > div#backlink .pull-left{display:none;}' +
 		'#gallery{position:fixed; width:100%; height:100%; top:0; left:0; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7);}.unseenPost{border-top: red solid 1px;}' +
 		'.hoverImage{position:fixed;float:none!important;}.bigImage{opacity: 1!important; max-width:100%;}.smallImage{max-width:' + imageWidth + 'px; max-height:' + imageHeight + 'px}' +
@@ -2900,20 +2959,22 @@ $(document).ready(function () {
 			} else {
 				settingPath.value = value;
 			}
-			if (elementPath.substr(0, 6) == "mascot") { // Live update changes in mascot settings
-				if (e.target.name == "Mascot image" || e.target.name == "Mascot") {
+			if (elementPath.substr(0, 6) === "mascot") { // Live update changes in mascot settings
+				if (e.target.name === "Mascot image" || e.target.name === "Mascot") {
 					mascot(parseMascotImageValue());
 				} else {
 					mascot('');
 				}
-			} else if (elementPath.substr(0, 8) == "postFlow") {
+			} else if (elementPath.substr(0, 8) === "postFlow") {
 				postFlow();
-			} else if (elementPath.substr(0, 14) == "adjustReplybox") {
+			} else if (elementPath.substr(0, 14) === "adjustReplybox") {
 				adjustReplybox();
-			} else if (elementPath.substr(0, 11) == "postCounter") {
+			} else if (elementPath.substr(0, 11) === "postCounter") {
 				postCounter();
-			} else if (elementPath.substr(0, 9) == "headerBar") {
+			} else if (elementPath.substr(0, 9) === "headerBar") {
 				headerBar();
+			} else if (elementPath === "revealSpoilers") {
+				revealSpoilers();
 			}
 		}
 		if (e.target.name === "Custom Favicons" || (e.target.name === "Favicon" && e.target.checked)) {
@@ -3147,6 +3208,7 @@ $(document).ready(function () {
 	var onlyOP = $('article.thread[data-thread-num]:not(.backlink_container)');
 	var staticPostsAndOP = staticPosts.add(onlyOP); // Save querying the staticPosts twice by extending the first query with the OP
 	addFileSelect(); // Intialise ghosting image posting
+	revealSpoilers();
 	if (settings.UserSettings.headerBar.value) {
 		headerBar();
 	} // Customise headerbar behaviour
