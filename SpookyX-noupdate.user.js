@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.4
+// @version       32.41
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -30,7 +30,7 @@
 // ==/UserScript==
 
 if (GM_info === undefined) {
-	var GM_info = {script: {version: '32.4'}};
+	var GM_info = {script: {version: '32.41'}};
 }
 
 var settings = {
@@ -1553,7 +1553,11 @@ var embedImages = function (posts) {
 					}
 				} else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec(currentLink.href) !== null) {
 					var imgurLinkFragments = currentLink.href.split('\/');
-					if (imgurLinkFragments[3] == "a") {
+					if (imgurLinkFragments[3] == "") {
+						// Do nothing with dodgy link
+					} else if (imgurLinkFragments[3] == "r") {
+						// TODO: add in an actual way of handling this
+					} else if (imgurLinkFragments[3] == "a") {
 						imgurLinkFragments[4] = imgurLinkFragments[4].replace(/#[0-9]+/, ''); // Remove the trailing image number
 						if (settings.UserSettings.embedGalleries.suboptions.showDetails.value) {
 							$currentArticle.find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/' + imgurLinkFragments[4] + '"><a href="//imgur.com/a/' + imgurLinkFragments[4] + '"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
@@ -3040,7 +3044,8 @@ $(document).ready(function () {
 		var $newPost, postID, response;
 		$(document).ajaxComplete(function (event, request, ajaxSettings) {
 			if (!/inThread=true/i.test(ajaxSettings.url) && /api\/chan\/thread\/\?/i.test(ajaxSettings.url) || ((ajaxSettings.type === 'POST') && /\/submit\//i.test(ajaxSettings.url) )) {
-				console.debug(ajaxSettings.url);
+				console.log(ajaxSettings.url);
+				console.log(request.responseText);
 				if (request.responseText !== '') {
 					try {
 						if (request.responseText.charAt(0) === '<') {
