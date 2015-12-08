@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.41:** *(2015-12-08)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.41/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.41/README.md)
+- fixed bug with dodgy imgur links breaking the script
+
 **v32.4:** *(2015-11-12)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.4/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.4/README.md)
 - Added 'Reveal Spoilers' option which will show the spoilered text when not hovered over
 
