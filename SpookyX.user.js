@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.41
+// @version       32.42
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -32,7 +32,7 @@
 // ==/UserScript==
 
 if (GM_info === undefined) {
-	var GM_info = {script: {version: '32.41'}};
+	var GM_info = {script: {version: '32.42'}};
 }
 
 var settings = {
@@ -2761,10 +2761,21 @@ $(document).ready(function () {
 	var postBackgroundColourPicker = $postBackgroundColourPicker.css('background-color'); // Set the colour
 	$postBackgroundColourPicker.remove(); // Delete the element afterwards
 
-	allowMockHover(); // Process the stylesheets to add a custom class to all hovered element instances so that we can force the style on a test element
+	var mockHoverFailed = false;
+	try { // Firefox can fail with a security error (something to do with stylesheets from multiple domains)
+		allowMockHover(); // Process the stylesheets to add a custom class to all hovered element instances so that we can force the style on a test element
+	} catch (e) {
+		mockHoverFailed = true;
+	}
 	var $hoveredTextColourPicker = $('<div class="spoiler mock-hover" style="position: fixed; top: -1000px;">hoveredTextColourPicker</div>'); // Create an element to get the hovered text colour from
 	$body.append($hoveredTextColourPicker);
 	hoveredTextColourPicker = $hoveredTextColourPicker.css('color'); // Set the colour
+	if (mockHoverFailed) {
+		// Use inverted regular font colour then
+		hoveredTextColourPicker = hoveredTextColourPicker.replace(/([0-9]+)[^0-9]+([0-9]+)[^0-9]+([0-9]+)/, function ($0, $1, $2, $3) {
+			return (255 - $1) + ', ' + (255 - $2) + ', ' + (255 - $3);
+		});
+	}
 	$hoveredTextColourPicker.remove(); // Delete the element afterwards
 
 	$head.after('<style type="text/css" id="SpookyX-css"></style>');
