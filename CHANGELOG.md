@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.43:** *(2016-03-01)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.43/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.43/README.md)
+- fixed bug where posting a link to youtube mainpage (eg. not a specific video) crashed the script
+
 **v32.42:** *(2016-02-27)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.42/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.42/README.md)
 - fixed bug where Firefox couldn't handle the bants
 
