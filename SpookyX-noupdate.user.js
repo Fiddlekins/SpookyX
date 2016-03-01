@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.42
+// @version       32.43
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -30,7 +30,7 @@
 // ==/UserScript==
 
 if (GM_info === undefined) {
-	var GM_info = {script: {version: '32.42'}};
+	var GM_info = {script: {version: '32.43'}};
 }
 
 var settings = {
@@ -1536,20 +1536,22 @@ var embedImages = function (posts) {
 				} else if (mediaType === 'youtube') {
 					if (settings.UserSettings.embedImages.suboptions.titleYoutubeLinks.value) {
 						var vidID = /[A-z0-9_-]{11}/.exec(mediaLink);
-						$.ajax({
-							method: 'GET',
-							url: 'https://content.googleapis.com/youtube/v3/videos',
-							data: {
-								'part': 'snippet',
-								'id': vidID[0],
-								'fields': 'items(id,snippet(title))',
-								'key': 'AIzaSyB5_zaen_-46Uhz1xGR-lz1YoUMHqCD6CE'
-							}
-						}).done(function (response) {
-							if (response.items.length) {
-								currentLink.innerHTML = '<i>(YouTube)</i> - ' + response.items[0].snippet.title;
-							}
-						});
+						if (vidID) {
+							$.ajax({
+								method: 'GET',
+								url: 'https://content.googleapis.com/youtube/v3/videos',
+								data: {
+									'part': 'snippet',
+									'id': vidID[0],
+									'fields': 'items(id,snippet(title))',
+									'key': 'AIzaSyB5_zaen_-46Uhz1xGR-lz1YoUMHqCD6CE'
+								}
+							}).done(function (response) {
+								if (response.items.length) {
+									currentLink.innerHTML = '<i>(YouTube)</i> - ' + response.items[0].snippet.title;
+								}
+							});
+						}
 					}
 				} else if (settings.UserSettings.embedGalleries.value && pattImgGal.exec(currentLink.href) !== null) {
 					var imgurLinkFragments = currentLink.href.split('\/');
