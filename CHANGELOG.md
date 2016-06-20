@@ -2,7 +2,7 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
-**v32.45:** *(2016-03-01)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.45/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.45/README.md)
+**v32.45:** *(2016-06-20)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.45/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.45/README.md)
 - added cuckchan.org to the list
 
 **v32.43:** *(2016-03-01)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.43/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.43/README.md)
