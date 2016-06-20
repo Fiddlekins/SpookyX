@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.43
+// @version       32.45
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -14,6 +14,8 @@
 // @include       https://*fgts.jp/*
 // @include       http://desustorage.org/*
 // @include       https://desustorage.org/*
+// @include       http://cuckchan.org/*
+// @include       https://cuckchan.org/*
 // @include       http://4ch.be/*
 // @include       https://4ch.be/*
 // @include       http://arch.b4k.co/*
@@ -32,7 +34,7 @@
 // ==/UserScript==
 
 if (GM_info === undefined) {
-	var GM_info = {script: {version: '32.43'}};
+	var GM_info = {script: {version: '32.45'}};
 }
 
 var settings = {
@@ -596,10 +598,10 @@ var settings = {
 			"value": [
 				{"comment": "#/久保島のミズゴロウ/;"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				return $(currentPost).find('.post_author').html();
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				return response['name_processed'];
 			}
 		},
@@ -609,10 +611,10 @@ var settings = {
 				{"comment": "#/!!/90sanF9F3Z/;"},
 				{"comment": "#/!!T2TCnNZDvZu/;"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				return $(currentPost).find('.post_tripcode').html();
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				return response['trip_processed'];
 			}
 		},
@@ -627,10 +629,10 @@ var settings = {
 				{"comment": "#/bUAl+t9X/; "},
 				{"comment": "# It's also worth noting that prefixing it with 'ID:' can cause the filter to fail to accurately detect when using recursive filtering. To assure it works fully stick to just using the hash like 'bUAl+t9X'"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				return $(currentPost).find('.poster_hash').html();
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				return response['poster_hash_processed'];
 			}
 		},
@@ -645,10 +647,10 @@ var settings = {
 				{"comment": "# For recursive filter to always work you will need to add regex lines for M, A & D for Moderators, Admins and Developers respectively"},
 				{"comment": "# e.g. /A/; will filter Admins accurately always whilst /Admin/; won't always work for recursively filtered posts"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				return $(currentPost).find('.post_level').html();
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				return response['capcode'];
 			}
 		},
@@ -657,10 +659,10 @@ var settings = {
 			"value": [
 				{"comment": "#/(^|[^A-z])quest([^A-z]|$)/i;boards:tg;"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				return $(currentPost).find('.post_title').html();
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				return response['title_processed'];
 			}
 		},
@@ -669,10 +671,10 @@ var settings = {
 			"value": [
 				{"comment": "#/daki[\\\\S]*/i; boards:tg;"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				return $(currentPost).find('.text').html();
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				return response['comment'];
 			}
 		},
@@ -682,28 +684,28 @@ var settings = {
 				{"comment": "#Remove kebob"},
 				{"comment": "#/turkey/i;mode:remove;"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				return $(currentPost).find('.flag').attr('title');
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				return response['poster_country_name_processed'];
 			}
 		},
 		"filename": {
 			"name": "Filename",
 			"value": [],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				var combined = '';
 				if ($(currentPost).hasClass('thread')) {
 					combined = $(currentPost).find('.post_file_filename').html();
 				} else {
-					$.each($(currentPost).find('.post_file_filename'), function () {
+					$.each($(currentPost).find('.post_file_filename'), function(){
 						combined += this.innerHTML;
 					});
 				}
 				return combined;
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				if (response['media'] === null || response['media'] === undefined) {
 					return '';
 				}
@@ -716,7 +718,7 @@ var settings = {
 				{"comment": "# Filter by site for example:"},
 				{"comment": "#/tumblr/;"}
 			],
-			"threadPostFunction": function (currentPost) {
+			"threadPostFunction": function(currentPost){
 				var combined = '';
 				var $currentPost = $(currentPost);
 				if ($currentPost.hasClass('thread')) {
@@ -725,13 +727,13 @@ var settings = {
 						combined = $currentPostFilename[0].href;
 					}
 				} else {
-					$.each($currentPost.find('.post_file_filename'), function () {
+					$.each($currentPost.find('.post_file_filename'), function(){
 						combined += this.href;
 					});
 				}
 				return combined;
 			},
-			"responseObjFunction": function (response) {
+			"responseObjFunction": function(response){
 				if (response['media'] === null || response['media'] === undefined) {
 					return '';
 				}
@@ -805,7 +807,7 @@ if (threadID === "thread") {
 var boardPatt = new RegExp("(^|,)\\s*" + board + "\\s*(,|$)");
 
 var Page = {
-	is: function (type) {
+	is: function(type){
 		if (Page.cache[type] !== undefined) {
 			return Page.cache[type];
 		} else {
@@ -825,25 +827,25 @@ var Page = {
 		}
 	},
 	cache: {},
-	'thread': function () {
+	'thread': function(){
 		return /[0-9]+/.test(threadID);
 	},
-	'board': function () {
+	'board': function(){
 		return /board/.test(threadID);
 	},
-	'gallery': function () {
+	'gallery': function(){
 		return /gallery/.test(threadID);
 	},
-	'other': function () {
+	'other': function(){
 		return /other/.test(threadID);
 	},
-	'quests': function () {
+	'quests': function(){
 		return /quests/.test(threadID);
 	},
-	'search': function () {
+	'search': function(){
 		return /search/.test(threadID);
 	},
-	'statistics': function () {
+	'statistics': function(){
 		return /statistics/.test(threadID);
 	}
 };
@@ -854,7 +856,7 @@ var Page = {
 
 
 // As taken from http://stackoverflow.com/questions/15761939/firing-css-hover-using-jquery
-function allowMockHover() {
+function allowMockHover(){
 
 	// iterate over all styleSheets
 	for (var i = 0, l = document.styleSheets.length; i < l; i++) {
@@ -872,7 +874,7 @@ function allowMockHover() {
 
 }
 
-function fixRule(rule) {
+function fixRule(rule){
 
 	// if the current rule has several selectors, treat them separately:
 	var parts = rule.selectorText.split(',');
@@ -918,7 +920,7 @@ var faviconAlert;
 var faviconNotification;
 var faviconState = "unlit";
 
-function generateFavicons() { // Generate dynamic favicons
+function generateFavicons(){ // Generate dynamic favicons
 	if (settings.UserSettings.favicon.suboptions.customFavicons.value) {
 		switch (settings.UserSettings.favicon.suboptions.customFavicons.suboptions.lit.value) {
 			case "0":
@@ -954,7 +956,7 @@ function generateFavicons() { // Generate dynamic favicons
 		var nativeFavicon = $('<img src="/favicon.ico">');
 		var overlayFavicon = $('<img src="data:image/png;base64,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">');
 		var ctx = faviconCanvas.getContext('2d');
-		nativeFavicon.on('load', function (e) {
+		nativeFavicon.on('load', function(e){
 			faviconCanvas.height = e.target.naturalHeight;
 			faviconCanvas.width = e.target.naturalWidth;
 			ctx.drawImage(e.target, 0, 0); // Draw native favicon
@@ -1014,7 +1016,7 @@ function generateFavicons() { // Generate dynamic favicons
 	}
 }
 
-function setFavicon() {
+function setFavicon(){
 	if (faviconState === "unlit") {
 		$('#favicon').attr("href", faviconUnlit);
 	} else if (faviconState === "lit") {
@@ -1024,7 +1026,7 @@ function setFavicon() {
 	}
 }
 
-function ThreadUpdate() {
+function ThreadUpdate(){
 	if (settings.UserSettings.newPosts.value) {
 		newPosts();
 	}
@@ -1037,7 +1039,7 @@ function ThreadUpdate() {
  * @param {*} def default value ( if result undefined )
  * @returns {*}
  */
-function objpath(obj, path, def) {
+function objpath(obj, path, def){
 	var i, len;
 
 	for (i = 0, path = path.split('.'), len = path.length; i < len; i++) {
@@ -1051,7 +1053,7 @@ function objpath(obj, path, def) {
 
 shortcut = {
 	'all_shortcuts': {},//All the shortcuts are stored in this array
-	'add': function (shortcut_combination, callback, opt) {
+	'add': function(shortcut_combination, callback, opt){
 		//Provide a set of default options
 		var default_options = {
 			'type': 'keydown',
@@ -1072,7 +1074,7 @@ shortcut = {
 		shortcut_combination = shortcut_combination.toLowerCase();
 
 		//The function to be called at keypress
-		var func = function (e) {
+		var func = function(e){
 			e = e || window.event;
 
 			if (opt.disable_in_input) { //Don't enable shortcut keys in Input, Textarea fields
@@ -1255,7 +1257,7 @@ shortcut = {
 	},
 
 	//Remove the shortcut - just specify the shortcut and I will remove the binding
-	'remove': function (shortcut_combination) {
+	'remove': function(shortcut_combination){
 		shortcut_combination = shortcut_combination.toLowerCase();
 		var binding = this.all_shortcuts[shortcut_combination];
 		delete(this.all_shortcuts[shortcut_combination]);
@@ -1270,12 +1272,12 @@ shortcut = {
 	}
 };
 
-function delayedLoad(posts) {
-	posts.each(function (i, post) {
-		($(post).hasClass('thread') ? $(post).children('.thread_image_box').find('img') : $(post).find('img')).each(function (i, image) {
+function delayedLoad(posts){
+	posts.each(function(i, post){
+		($(post).hasClass('thread') ? $(post).children('.thread_image_box').find('img') : $(post).find('img')).each(function(i, image){
 			var $image = $(image);
 			$image.data('dontHover', true); // Stop imageHover displaying the thumbnails
-			$image.on('click', function (e) { // Stop the OP from returning all the sub images and thus duplicating them
+			$image.on('click', function(e){ // Stop the OP from returning all the sub images and thus duplicating them
 				if (!e.originalEvent.ctrlKey && e.which == 1) {
 					e.preventDefault();
 					var $target = $(e.target);
@@ -1291,17 +1293,17 @@ function delayedLoad(posts) {
 	});
 }
 
-function inlineImages(posts) {
-	posts.each(function (i, post) {
+function inlineImages(posts){
+	posts.each(function(i, post){
 		var $post = $(post);
-		($post.hasClass('thread') ? $post.children('.thread_image_box') : $post.find('.thread_image_box')).each(function (i, currentImage) {
+		($post.hasClass('thread') ? $post.children('.thread_image_box') : $post.find('.thread_image_box')).each(function(i, currentImage){
 			var $currentImage = $(currentImage);
-			$currentImage.find('>a').each(function (j, imgLink) {
+			$currentImage.find('>a').each(function(j, imgLink){
 				var fullImage = imgLink.href;
 				if (settings.UserSettings.inlineImages.suboptions.processSpoiler.value && $currentImage.find('.spoiler_box').length) {
 					$(imgLink).html('<div class="spoilerText">Spoiler</div><img class="smallImage spoilerImage">');
 					var $image = $currentImage.find('img');
-					$image.one('load', function (e) {
+					$image.one('load', function(e){
 						$currentImage.find(".spoilerText").css({"top": (e.target.height / 2) - 6.5}); // Center spoiler text
 					});
 				}
@@ -1312,11 +1314,11 @@ function inlineImages(posts) {
 						addHover($currentImage);
 					}
 				} else if (!/\.(pdf|swf)$/i.test(fullImage)) {
-					$currentImage.find('img').each(function (k, image) {
+					$currentImage.find('img').each(function(k, image){
 						var $image = $(image);
 						var thumbImage = $(image).attr('src');
 						$image.attr('src', fullImage);
-						$image.error(function () { // Handle images that won't load
+						$image.error(function(){ // Handle images that won't load
 							if (!$image.data('tried4pleb')) {
 								$image.data('tried4pleb', true);
 								var imgLink4pleb = fullImage.replace('data.archive.moe/board', 'img.4plebs.org/boards');
@@ -1338,7 +1340,7 @@ function inlineImages(posts) {
 	});
 }
 
-function getSelectionText() {
+function getSelectionText(){
 	var text = "";
 	if (window.getSelection) {
 		text = window.getSelection().toString();
@@ -1348,7 +1350,7 @@ function getSelectionText() {
 	return text;
 }
 
-function togglePost(postID, mode) {
+function togglePost(postID, mode){
 	var $postID = $('#' + postID);
 	if (mode == "hide") {
 		$postID.css({'display': 'none'});
@@ -1363,12 +1365,12 @@ function togglePost(postID, mode) {
 	postCounter(); // Update hidden post counter
 }
 
-function recursiveToggle(postID, mode) {
+function recursiveToggle(postID, mode){
 	var checkedPostCollection = {};
 	var postList = [postID];
 	for (var i = 0; i < postList.length; i++) {
 		checkedPostCollection[postList[i]] = true;
-		$('#p_b' + postList[i] + ' > a').each(function (i, backlink) {
+		$('#p_b' + postList[i] + ' > a').each(function(i, backlink){
 			var backlinkID = backlink.dataset.post;
 			if (!checkedPostCollection[backlinkID]) {
 				postList.push(backlinkID);
@@ -1380,13 +1382,13 @@ function recursiveToggle(postID, mode) {
 	}
 }
 
-function filter(posts) {
-	posts.each(function (index, currentPost) {
+function filter(posts){
+	posts.each(function(index, currentPost){
 		var $currentPost = $(currentPost);
 		if (!/!!UG0p3gRn3T1/.test($currentPost.find('.post_tripcode').html())) {
 			if (settings.UserSettings.filter.suboptions.recursiveFiltering.value && !$currentPost.hasClass('thread')) { // Recursive filter and not OP
 				var checkedBacklinks = {};
-				$currentPost.find('.text .backlink').each(function (i, backlink) {
+				$currentPost.find('.text .backlink').each(function(i, backlink){
 					if (!checkedBacklinks[backlink.dataset.board + backlink.dataset.post]) { // Prevent reprocessing duplicate links
 						checkedBacklinks[backlink.dataset.board + backlink.dataset.post] = true;
 						var backlinkPost = $('#' + backlink.dataset.post);
@@ -1407,9 +1409,9 @@ function filter(posts) {
 								url: "/_/api/chan/post/",
 								data: {"board": backlink.dataset.board, "num": backlink.dataset.post},
 								type: "GET"
-							}).done(function (response) {
+							}).done(function(response){
 								processPosts(checkFilter(response, false), $currentPost, currentPost);
-								$currentPost.find('.backlink_list .backlink').each(function (j, replyBacklink) { // Filter replies
+								$currentPost.find('.backlink_list .backlink').each(function(j, replyBacklink){ // Filter replies
 									filter($('#' + replyBacklink.dataset.post));
 								});
 							});
@@ -1424,7 +1426,7 @@ function filter(posts) {
 	});
 }
 
-function processPosts(type, $currentPost, currentPost) {
+function processPosts(type, $currentPost, currentPost){
 	switch (type) {
 		case 1:
 			$currentPost.addClass('shitpost');
@@ -1441,7 +1443,7 @@ function processPosts(type, $currentPost, currentPost) {
 	}
 }
 
-function checkFilter(input, inThreadPost) {
+function checkFilter(input, inThreadPost){
 	var output = 0;
 	for (var filterType in settings.FilterSettings) {
 		if (settings.FilterSettings.hasOwnProperty(filterType)) {
@@ -1482,14 +1484,14 @@ function checkFilter(input, inThreadPost) {
 	return output;
 }
 
-var embedImages = function (posts) {
-	posts.each(function (index, currentArticle) {
+var embedImages = function(posts){
+	posts.each(function(index, currentArticle){
 		var $currentArticle = $(currentArticle);
 		if (!$currentArticle.data('imgEmbed')) {
 			$currentArticle.data('imgEmbed', true);
 			var imgNum = settings.UserSettings.embedImages.suboptions.imgNumMaster.value - $currentArticle.find('.thread_image_box').length;
 			var isOP = $currentArticle.hasClass('thread');
-			(isOP ? $currentArticle.children('.text').find('a') : $currentArticle.find('.text a')).each(function (index, currentLink) {
+			(isOP ? $currentArticle.children('.text').find('a') : $currentArticle.find('.text a')).each(function(index, currentLink){
 				if (imgNum === 0) {
 					return false;
 				}
@@ -1517,7 +1519,7 @@ var embedImages = function (posts) {
 						var $image = $elem.find('img');
 						if (!$image.attr('loadEventSet')) {
 							$image.attr('loadEventSet', true);
-							$image.on('load', function (e) {
+							$image.on('load', function(e){
 								$image.unbind('load');
 								$(e.target).closest('.thread_image_box').find(".spoilerText").css({"top": (e.target.height / 2) - 6.5}); // Center spoiler text
 								$(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">' + e.target.naturalWidth + 'x' + e.target.naturalHeight + '</span>'); // Add file dimensions
@@ -1528,7 +1530,7 @@ var embedImages = function (posts) {
 							mediaLink = mediaLink.replace(/\.gifv$/g, ".webm"); // Only tested to work with Imgur
 							$elem.append('<video width="' + imageWidth + '" style="float:left" name="media" loop muted ' + autoplayVid + ' class="' + spoiler + '"><source src="' + mediaLink + '" type="video/webm"></video>');
 							removeLink(currentLink);
-							$elem.find('video')[0].onloadedmetadata = function (e) {
+							$elem.find('video')[0].onloadedmetadata = function(e){
 								$(e.target).closest('.thread_image_box').find(".spoilerText").css({"top": (e.target.clientHeight / 2) - 6.5}); // Center spoiler text
 								$(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">' + e.target.videoWidth + 'x' + e.target.videoHeight + '</span>'); // Add file dimensions
 							};
@@ -1548,7 +1550,7 @@ var embedImages = function (posts) {
 									'fields': 'items(id,snippet(title))',
 									'key': 'AIzaSyB5_zaen_-46Uhz1xGR-lz1YoUMHqCD6CE'
 								}
-							}).done(function (response) {
+							}).done(function(response){
 								if (response.items.length) {
 									currentLink.innerHTML = '<i>(YouTube)</i> - ' + response.items[0].snippet.title;
 								}
@@ -1573,7 +1575,7 @@ var embedImages = function (posts) {
 						var link = pattImgGal.exec(currentLink.href);
 						var individualImages = link[0].match(/[A-z0-9]{7}/g);
 						var allDisplayed = true; // Track whether all of the linked images get inserted so that if not the link can be kept
-						$.each(individualImages, function (i, imgID) {
+						$.each(individualImages, function(i, imgID){
 							if (imgNum) {
 								imgNum--;
 								var filename = '<div class="post_file embedded_post_file"><a href="https://i.imgur.com/' + imgID + '.jpg" class="post_file_filename" rel="tooltip" title="https://i.imgur.com/' + imgID + '.jpg">' + imgID + '.jpg</a></div>';
@@ -1589,11 +1591,11 @@ var embedImages = function (posts) {
 							}
 						});
 						$currentArticle.find(".post_wrapper").prepend('<style>.thread_image_box{min-height:' + imageHeight + 'px;}.post_wrapper header{min-width:400px;}</style>');
-						$currentArticle.find('.thread_image_box img').each(function (i, image) {
+						$currentArticle.find('.thread_image_box img').each(function(i, image){
 							var $image = $(image);
 							if (!$image.attr('loadEventSet')) {
 								$image.attr('loadEventSet', true);
-								$image.on("load", function (e) {
+								$image.on("load", function(e){
 									$image.unbind('load');
 									$(e.target).closest('.thread_image_box').find(".spoilerText").css({"top": (e.target.height / 2) - 6.5}); // Center spoiler text
 									$(e.target).closest('.thread_image_box').append('<br><span class="post_file_metadata">' + e.target.naturalWidth + 'x' + e.target.naturalHeight + '</span>'); // Add file dimensions
@@ -1615,7 +1617,7 @@ var embedImages = function (posts) {
 	});
 };
 
-function removeLink(currentLink) {
+function removeLink(currentLink){
 	if ($(currentLink)[0].nextSibling !== null) {
 		if ($(currentLink)[0].nextSibling.nodeName == "BR") {
 			if ($(currentLink)[0].previousSibling === null || $(currentLink)[0].previousSibling.nodeName !== "#text" || $(currentLink)[0].previousSibling.nodeValue == " ") {
@@ -1626,11 +1628,11 @@ function removeLink(currentLink) {
 	$(currentLink).remove();
 }
 
-function pauseGifs(posts) {
-	posts.each(function (i, img) {
+function pauseGifs(posts){
+	posts.each(function(i, img){
 		if ((/\.gif/).test(img.src)) {
 			var $img = $(img);
-			$img.on('load', function () {
+			$img.on('load', function(){
 				$img.after('<canvas class="smallImage" width="' + img.naturalWidth + '" height="' + img.naturalHeight + '"></canvas>');
 				$img.attr('gif', true).toggle();
 				$img.addClass("bigImage").removeClass("smallImage");
@@ -1642,7 +1644,7 @@ function pauseGifs(posts) {
 	});
 }
 
-function addHover($elements) {
+function addHover($elements){
 	if (settings.UserSettings.inlineImages.value) {
 		if (settings.UserSettings.inlineImages.suboptions.imageHover.value) {
 			var $image = $elements.find('img');
@@ -1663,13 +1665,13 @@ function addHover($elements) {
 	}
 }
 
-function imageHover($image) {
-	$image.on('mouseenter', function (e) {
+function imageHover($image){
+	$image.on('mouseenter', function(e){
 		if (e.target.id !== 'mascot' && !$(e.target).hasClass('bigImage') && !$(e.target).data('dontHover')) {
 			$(e.target).clone().removeClass('smallImage spoilerImage').addClass('hoverImage').appendTo('#hoverUI');
 		}
 	});
-	$image.on('mousemove mouseenter', function (e) {
+	$image.on('mousemove mouseenter', function(e){
 		var etarget = e.target;
 		var $etarget = $(etarget);
 		if (!$etarget.hasClass('bigImage') && !$etarget.data('dontHover')) {
@@ -1690,18 +1692,18 @@ function imageHover($image) {
 			});
 		}
 	});
-	$image.on('mouseout', function () {
+	$image.on('mouseout', function(){
 		$('#hoverUI').html('');
 	});
 }
 
-function canvasHover($canvas) {
-	$canvas.on('mouseenter', function (e) {
+function canvasHover($canvas){
+	$canvas.on('mouseenter', function(e){
 		if (e.target.id !== 'myCanvas') {
 			$(e.target.previousSibling).clone().show().removeClass('spoilerImage').addClass('hoverImage').appendTo('#hoverUI');
 		}
 	});
-	$canvas.on('mousemove mouseenter', function (e) {
+	$canvas.on('mousemove mouseenter', function(e){
 		var etarget = e.target;
 		var $etarget = $(etarget);
 		if (!$etarget.hasClass('bigImage') && !$etarget.data('dontHover')) {
@@ -1722,23 +1724,23 @@ function canvasHover($canvas) {
 			});
 		}
 	});
-	$canvas.on('mouseout', function () {
+	$canvas.on('mouseout', function(){
 		$('#hoverUI').html('');
 	});
 }
 
-function videoHover($video) {
-	$video.on('mouseenter', function (e) {
+function videoHover($video){
+	$video.on('mouseenter', function(e){
 		if (e.target.id !== 'mascot' && !$(e.target).hasClass('fullVideo')) {
 			$(e.target).clone().removeClass('spoilerImage').addClass('fullVideo hoverImage').appendTo('#hoverUI');
 			var $hoverUI = $('#hoverUI');
 			var $vid = $hoverUI.children('video');
 			$vid.removeAttr('width');
-			$vid.on('canplaythrough', function () {
+			$vid.on('canplaythrough', function(){
 				if ($vid.length) { // Check if video still exists. This is to prevent the problem where mousing out too soon still triggers the canplay event
 					$vid[0].muted = false;
 					$vid[0].play();
-					$video.on('mousemove', function (e) {
+					$video.on('mousemove', function(e){
 						var headerBarHeight = document.getElementById('headerFixed').offsetHeight - 1; // -1 due to slight offscreen to hide border-top
 						var headerBarWidth = document.getElementById('headerFixed').offsetWidth - 1; // -1 due to slight offscreen to hide border-right
 						var windowWidth = $('body').innerWidth(); // Define internal dimensions
@@ -1757,13 +1759,13 @@ function videoHover($video) {
 			});
 		}
 	});
-	$video.on('mouseout', function () {
+	$video.on('mouseout', function(){
 		$('#hoverUI').html('');
 	});
 }
 
-function relativeTimestamps(posts) {
-	posts.find('time').each(function (index, timeElement) {
+function relativeTimestamps(posts){
+	posts.find('time').each(function(index, timeElement){
 		if (!$(timeElement).data('relativeTime')) {
 			$(timeElement).data('relativeTime', true);
 			changeTimestamp(timeElement, Date.parse($(timeElement).attr('datetime')));
@@ -1771,7 +1773,7 @@ function relativeTimestamps(posts) {
 	});
 }
 
-function convertMS(ms) {
+function convertMS(ms){
 	var d, h, m, s;
 	s = Math.floor(ms / 1000);
 	m = Math.floor(s / 60);
@@ -1785,7 +1787,7 @@ function convertMS(ms) {
 	return {y: y, d: d, h: h, m: m, s: s};
 }
 
-function changeTimestamp(timeElement, postTimestamp) {
+function changeTimestamp(timeElement, postTimestamp){
 	var currentTimestamp = Date.now();
 	var diffMS = currentTimestamp - postTimestamp;
 	if (diffMS < 0) {
@@ -1799,54 +1801,54 @@ function changeTimestamp(timeElement, postTimestamp) {
 	var seconds = diff.s === 1 ? 'second' : 'seconds';
 	if (diff.y) {
 		$(timeElement).html(diff.y + ' ' + years + ' and ' + diff.d + ' ' + days + ' ago');
-		setTimeout(function () {
+		setTimeout(function(){
 			changeTimestamp(timeElement, postTimestamp);
 		}, 365.25 * 24 * 60 * 60 * 1000);
 	} else if (diff.d) {
 		if (diff.d >= 2) {
 			$(timeElement).html(diff.d + ' ' + days + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, 24 * 60 * 60 * 1000);
 		} else {
 			$(timeElement).html(diff.d + ' ' + days + ' and ' + diff.h + ' ' + hours + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, 60 * 60 * 1000);
 		}
 	} else if (diff.h) {
 		if (diff.h >= 2) {
 			$(timeElement).html(diff.h + ' ' + hours + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, (60 - diff.m) * 60 * 1000);
 		} else {
 			$(timeElement).html(diff.h + ' ' + hours + ' and ' + diff.m + ' ' + minutes + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, 10 * 60 * 1000);
 		}
 	} else if (diff.m) {
 		if (diff.m >= 10) {
 			$(timeElement).html(diff.m + ' ' + minutes + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, 5 * 60 * 1000);
 		} else {
 			$(timeElement).html(diff.m + ' ' + minutes + ' and ' + diff.s + ' ' + seconds + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, 60 * 1000);
 		}
 	} else {
 		if (diff.s >= 20) {
 			$(timeElement).html(diff.s + ' ' + seconds + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, 20 * 1000);
 		} else {
 			$(timeElement).html(diff.s + ' ' + seconds + ' ago');
-			setTimeout(function () {
+			setTimeout(function(){
 				changeTimestamp(timeElement, postTimestamp);
 			}, 9 * 1000);
 		}
@@ -1855,11 +1857,11 @@ function changeTimestamp(timeElement, postTimestamp) {
 
 var lastSeenPost = threadID;
 var unseenPosts = [];
-function seenPosts() {
+function seenPosts(){
 	var $backlinkContainer = $('article.backlink_container');
 	$backlinkContainer.attr('id', "0"); // Prevent error when it's undefined
 	var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]), parseInt(lastSeenPost.split('_')[1])];
-	$('article').each(function (index, currentArticle) { // Add unseen posts to array
+	$('article').each(function(index, currentArticle){ // Add unseen posts to array
 		var currentID = [parseInt(currentArticle.id.split('_')[0]), parseInt(currentArticle.id.split('_')[1])];
 		if (currentID[0] > parsedLastSeenPost[0]) {
 			unseenPosts.push(currentArticle.id);
@@ -1878,7 +1880,7 @@ function seenPosts() {
 }
 
 var unseenReplies = [];
-function newPosts() {
+function newPosts(){
 	if (settings.UserSettings.favicon.value) {
 		if (unseenPosts.length) {
 			var predictedLastSeenPostIndex = -1;
@@ -1932,7 +1934,7 @@ function newPosts() {
 
 				var parsedLastSeenPost = [parseInt(lastSeenPost.split('_')[0]), parseInt(lastSeenPost.split('_')[1])];
 				var unseenRepliesTemp = []; // Avoid trying to remove entries from an array that is being iterated over
-				$.each(unseenReplies, function (i, unseenID) { // Work from a copy of the array so that removing elements from it doesn't ruin everything
+				$.each(unseenReplies, function(i, unseenID){ // Work from a copy of the array so that removing elements from it doesn't ruin everything
 					var currentID = [parseInt(unseenID.split('_')[0]), parseInt(unseenID.split('_')[1])];
 					if (currentID[0] < parsedLastSeenPost[0]) {
 						return true;
@@ -1970,7 +1972,7 @@ function newPosts() {
 			}
 		}
 	} else { // Original newpost counter code
-		$('article').each(function (index, currentArticle) {
+		$('article').each(function(index, currentArticle){
 			if (!$(currentArticle).data('seen')) {
 				$(currentArticle).data('seen', true);
 				newPostCount += 1;
@@ -1983,10 +1985,10 @@ function newPosts() {
 	document.title = "(" + newPostCount + ") " + DocumentTitle;
 }
 
-function postCounter() {
+function postCounter(){
 	if (!Page.is('other,statistics')) {
 		var postCount = notLoadedPostCount + $('.post_wrapper, div.thread').length;
-		var hiddenPostCount = $('.stub').length - $('.pull-left > .btn-toggle-post:visible').length; // Count total minus those that aren't visible to take account for hiding a whole thread on a board
+		var hiddenPostCount = $('.stub').length - $('.pull-left').children('.btn-toggle-post').filter(':visible').length; // Count total minus those that aren't visible to take account for hiding a whole thread on a board
 		var imageCount = $('.thread_image_box').length;
 		var limits = settings.UserSettings.postCounter.suboptions.limits.value;
 		var countHidden = settings.UserSettings.postCounter.suboptions.countHidden.value;
@@ -2015,7 +2017,7 @@ function postCounter() {
 }
 
 var pokemon = ["bulbasaur", "ivysaur", "venusaur", "charmander", "charmeleon", "charizard", "squirtle", "wartortle", "blastoise", "caterpie", "metapod", "butterfree", "weedle", "kakuna", "beedrill", "pidgey", "pidgeotto", "pidgeot", "rattata", "raticate", "spearow", "fearow", "ekans", "arbok", "pikachu", "raichu", "sandshrew", "sandslash", "nidoran?", "nidorina", "nidoqueen", "nidoran?", "nidorino", "nidoking", "clefairy", "clefable", "vulpix", "ninetales", "jigglypuff", "wigglytuff", "zubat", "golbat", "oddish", "gloom", "vileplume", "paras", "parasect", "venonat", "venomoth", "diglett", "dugtrio", "meowth", "persian", "psyduck", "golduck", "mankey", "primeape", "growlithe", "arcanine", "poliwag", "poliwhirl", "poliwrath", "abra", "kadabra", "alakazam", "machop", "machoke", "machamp", "bellsprout", "weepinbell", "victreebel", "tentacool", "tentacruel", "geodude", "graveler", "golem", "ponyta", "rapidash", "slowpoke", "slowbro", "magnemite", "magneton", "farfetch'd", "doduo", "dodrio", "seel", "dewgong", "grimer", "muk", "shellder", "cloyster", "gastly", "haunter", "gengar", "onix", "drowzee", "hypno", "krabby", "kingler", "voltorb", "electrode", "exeggcute", "exeggutor", "cubone", "marowak", "hitmonlee", "hitmonchan", "lickitung", "koffing", "weezing", "rhyhorn", "rhydon", "chansey", "tangela", "kangaskhan", "horsea", "seadra", "goldeen", "seaking", "staryu", "starmie", "mr. mime", "scyther", "jynx", "electabuzz", "magmar", "pinsir", "tauros", "magikarp", "gyarados", "lapras", "ditto", "eevee", "vaporeon", "jolteon", "flareon", "porygon", "omanyte", "omastar", "kabuto", "kabutops", "aerodactyl", "snorlax", "articuno", "zapdos", "moltres", "dratini", "dragonair", "dragonite", "mewtwo", "mew", "chikorita", "bayleef", "meganium", "cyndaquil", "quilava", "typhlosion", "totodile", "croconaw", "feraligatr", "sentret", "furret", "hoothoot", "noctowl", "ledyba", "ledian", "spinarak", "ariados", "crobat", "chinchou", "lanturn", "pichu", "cleffa", "igglybuff", "togepi", "togetic", "natu", "xatu", "mareep", "flaaffy", "ampharos", "bellossom", "marill", "azumarill", "sudowoodo", "politoed", "hoppip", "skiploom", "jumpluff", "aipom", "sunkern", "sunflora", "yanma", "wooper", "quagsire", "espeon", "umbreon", "murkrow", "slowking", "misdreavus", "unown", "wobbuffet", "girafarig", "pineco", "forretress", "dunsparce", "gligar", "steelix", "snubbull", "granbull", "qwilfish", "scizor", "shuckle", "heracross", "sneasel", "teddiursa", "ursaring", "slugma", "magcargo", "swinub", "piloswine", "corsola", "remoraid", "octillery", "delibird", "mantine", "skarmory", "houndour", "houndoom", "kingdra", "phanpy", "donphan", "porygon2", "stantler", "smeargle", "tyrogue", "hitmontop", "smoochum", "elekid", "magby", "miltank", "blissey", "raikou", "entei", "suicune", "larvitar", "pupitar", "tyranitar", "lugia", "ho-oh", "celebi", "treecko", "grovyle", "sceptile", "torchic", "combusken", "blaziken", "mudkip", "marshtomp", "swampert", "poochyena", "mightyena", "zigzagoon", "linoone", "wurmple", "silcoon", "beautifly", "cascoon", "dustox", "lotad", "lombre", "ludicolo", "seedot", "nuzleaf", "shiftry", "taillow", "swellow", "wingull", "pelipper", "ralts", "kirlia", "gardevoir", "surskit", "masquerain", "shroomish", "breloom", "slakoth", "vigoroth", "slaking", "nincada", "ninjask", "shedinja", "whismur", "loudred", "exploud", "makuhita", "hariyama", "azurill", "nosepass", "skitty", "delcatty", "sableye", "mawile", "aron", "lairon", "aggron", "meditite", "medicham", "electrike", "manectric", "plusle", "minun", "volbeat", "illumise", "roselia", "gulpin", "swalot", "carvanha", "sharpedo", "wailmer", "wailord", "numel", "camerupt", "torkoal", "spoink", "grumpig", "spinda", "trapinch", "vibrava", "flygon", "cacnea", "cacturne", "swablu", "altaria", "zangoose", "seviper", "lunatone", "solrock", "barboach", "whiscash", "corphish", "crawdaunt", "baltoy", "claydol", "lileep", "cradily", "anorith", "armaldo", "feebas", "milotic", "castform", "kecleon", "shuppet", "banette", "duskull", "dusclops", "tropius", "chimecho", "absol", "wynaut", "snorunt", "glalie", "spheal", "sealeo", "walrein", "clamperl", "huntail", "gorebyss", "relicanth", "luvdisc", "bagon", "shelgon", "salamence", "beldum", "metang", "metagross", "regirock", "regice", "registeel", "latias", "latios", "kyogre", "groudon", "rayquaza", "jirachi", "deoxys", "turtwig", "grotle", "torterra", "chimchar", "monferno", "infernape", "piplup", "prinplup", "empoleon", "starly", "staravia", "staraptor", "bidoof", "bibarel", "kricketot", "kricketune", "shinx", "luxio", "luxray", "budew", "roserade", "cranidos", "rampardos", "shieldon", "bastiodon", "burmy", "wormadam", "mothim", "combee", "vespiquen", "pachirisu", "buizel", "floatzel", "cherubi", "cherrim", "shellos", "gastrodon", "ambipom", "drifloon", "drifblim", "buneary", "lopunny", "mismagius", "honchkrow", "glameow", "purugly", "chingling", "stunky", "skuntank", "bronzor", "bronzong", "bonsly", "mime jr.", "happiny", "chatot", "spiritomb", "gible", "gabite", "garchomp", "munchlax", "riolu", "lucario", "hippopotas", "hippowdon", "skorupi", "drapion", "croagunk", "toxicroak", "carnivine", "finneon", "lumineon", "mantyke", "snover", "abomasnow", "weavile", "magnezone", "lickilicky", "rhyperior", "tangrowth", "electivire", "magmortar", "togekiss", "yanmega", "leafeon", "glaceon", "gliscor", "mamoswine", "porygon-z", "gallade", "probopass", "dusknoir", "froslass", "rotom", "uxie", "mesprit", "azelf", "dialga", "palkia", "heatran", "regigigas", "giratina", "cresselia", "phione", "manaphy", "darkrai", "shaymin", "arceus", "victini", "snivy", "servine", "serperior", "tepig", "pignite", "emboar", "oshawott", "dewott", "samurott", "patrat", "watchog", "lillipup", "herdier", "stoutland", "purrloin", "liepard", "pansage", "simisage", "pansear", "simisear", "panpour", "simipour", "munna", "musharna", "pidove", "tranquill", "unfezant", "blitzle", "zebstrika", "roggenrola", "boldore", "gigalith", "woobat", "swoobat", "drilbur", "excadrill", "audino", "timburr", "gurdurr", "conkeldurr", "tympole", "palpitoad", "seismitoad", "throh", "sawk", "sewaddle", "swadloon", "leavanny", "venipede", "whirlipede", "scolipede", "cottonee", "whimsicott", "petilil", "lilligant", "basculin", "sandile", "krokorok", "krookodile", "darumaka", "darmanitan", "maractus", "dwebble", "crustle", "scraggy", "scrafty", "sigilyph", "yamask", "cofagrigus", "tirtouga", "carracosta", "archen", "archeops", "trubbish", "garbodor", "zorua", "zoroark", "minccino", "cinccino", "gothita", "gothorita", "gothitelle", "solosis", "duosion", "reuniclus", "ducklett", "swanna", "vanillite", "vanillish", "vanilluxe", "deerling", "sawsbuck", "emolga", "karrablast", "escavalier", "foongus", "amoonguss", "frillish", "jellicent", "alomomola", "joltik", "galvantula", "ferroseed", "ferrothorn", "klink", "klang", "klinklang", "tynamo", "eelektrik", "eelektross", "elgyem", "beheeyem", "litwick", "lampent", "chandelure", "axew", "fraxure", "haxorus", "cubchoo", "beartic", "cryogonal", "shelmet", "accelgor", "stunfisk", "mienfoo", "mienshao", "druddigon", "golett", "golurk", "pawniard", "bisharp", "bouffalant", "rufflet", "braviary", "vullaby", "mandibuzz", "heatmor", "durant", "deino", "zweilous", "hydreigon", "larvesta", "volcarona", "cobalion", "terrakion", "virizion", "tornadus", "thundurus", "reshiram", "zekrom", "landorus", "kyurem", "keldeo", "meloetta", "genesect", "chespin", "quilladin", "chesnaught", "fennekin", "braixen", "delphox", "froakie", "frogadier", "greninja", "bunnelby", "diggersby", "fletchling", "fletchinder", "talonflame", "scatterbug", "spewpa", "vivillon", "litleo", "pyroar", "flabébé", "floette", "florges", "skiddo", "gogoat", "pancham", "pangoro", "furfrou", "espurr", "meowstic", "honedge", "doublade", "aegislash", "spritzee", "aromatisse", "swirlix", "slurpuff", "inkay", "malamar", "binacle", "barbaracle", "skrelp", "dragalge", "clauncher", "clawitzer", "helioptile", "heliolisk", "tyrunt", "tyrantrum", "amaura", "aurorus", "sylveon", "hawlucha", "dedenne", "carbink", "goomy", "sliggoo", "goodra", "klefki", "phantump", "trevenant", "pumpkaboo", "gourgeist", "bergmite", "avalugg", "noibat", "noivern", "xerneas", "yveltal", "zygarde", "diancie", "hoopa", "volcanion"];
-function notifyMe(title, icon, body, timeFade) {
+function notifyMe(title, icon, body, timeFade){
 	if (!Notification) {
 		alert('Please us a modern version of Chrome, Firefox, Opera or Firefox.');
 		return;
@@ -2033,11 +2035,11 @@ function notifyMe(title, icon, body, timeFade) {
 		body: body
 	});
 	if (timeFade) {
-		notification.onshow = function () {
+		notification.onshow = function(){
 			setTimeout(notification.close.bind(notification), 5000);
 		};
 	}
-	notification.onclick = function () {
+	notification.onclick = function(){
 		window.focus();
 	};
 }
@@ -2063,7 +2065,7 @@ if (settings.UserSettings.favicon.value) {
 	}
 	lastSeenPost = lastSeenPosts[board][threadID];
 }
-function loadYourPosts() {
+function loadYourPosts(){
 	if (localStorage.yourPosts === undefined) {
 		yourPosts = {};
 		localStorage.yourPosts = "{}";
@@ -2078,7 +2080,7 @@ function loadYourPosts() {
 		yourPosts[board][threadID] = [];
 	}
 }
-function saveYourPosts() {
+function saveYourPosts(){
 	if (yourPosts[board][threadID].length) { // If you posted during the thread. Prevents saving of empty arrays
 		if (localStorage.yourPosts === undefined) {
 			localStorage.yourPosts = JSON.stringify(yourPosts);
@@ -2087,7 +2089,7 @@ function saveYourPosts() {
 		}
 	}
 }
-function saveLastSeenPosts() {
+function saveLastSeenPosts(){
 	lastSeenPosts[board][threadID] = lastSeenPost;
 	if (localStorage.lastSeenPosts !== undefined) {
 		var latestLastSeenPosts = JSON.parse(localStorage.lastSeenPosts); // Get the most recent version of the stored object
@@ -2113,7 +2115,7 @@ function saveLastSeenPosts() {
 }
 if (Page.is('thread')) {
 	// Don't save these things on reload if you're not in a thread
-	window.addEventListener('beforeunload', function () { // After user leaves the page
+	window.addEventListener('beforeunload', function(){ // After user leaves the page
 		if (settings.UserSettings.labelYourPosts.value) { // Save the your posts object
 			saveYourPosts();
 		}
@@ -2131,17 +2133,17 @@ if (Page.is('thread')) {
 	});
 }
 
-function notificationSpoiler(postID) {
+function notificationSpoiler(postID){
 	var temp = $('#' + postID + ' .text').clone(); // Make a copy of the post text element to avoid changing the original
 	if (settings.UserSettings.notifications.suboptions.spoiler.value) {
-		$(temp).find('.spoiler').each(function (i, spoiler) {
+		$(temp).find('.spoiler').each(function(i, spoiler){
 			var newSpoilerText = '';
 			for (var j = 0, spoilerLength = $(spoiler).text().length; j < spoilerLength; j++) {
 				newSpoilerText += "&#x2588"; // Convert spoilered characters into black block characters
 			}
 			spoiler.innerHTML = newSpoilerText;
 		});
-		$(temp).find('br').each(function (i, br) {
+		$(temp).find('br').each(function(i, br){
 			$(br).after('\n');
 		});
 	}
@@ -2177,7 +2179,7 @@ function notificationSpoiler(postID) {
 	}
 }
 
-function labelNewPosts(newPosts, boardView) {
+function labelNewPosts(newPosts, boardView){
 	loadYourPosts();
 	var crosslinkTracker = JSON.parse(localStorage.crosslinkTracker);
 	for (var boardVal in yourPosts) {
@@ -2195,15 +2197,15 @@ function labelNewPosts(newPosts, boardView) {
 			}
 		}
 	}
-	$.each(newPosts, function (i, postID) { // For each post returned by update
+	$.each(newPosts, function(i, postID){ // For each post returned by update
 		var notificationTriggered = false;
-		$('#' + postID + ' .backlink').each(function (i, link) { // For each post content backlink
+		$('#' + postID + ' .backlink').each(function(i, link){ // For each post content backlink
 			var linkBoard = link.dataset.board;
 			if (yourPostsLookup[linkBoard] !== undefined) {
 				var linkID = link.dataset.post.replace(',', '_');
 				if (yourPostsLookup[linkBoard][linkID]) { // If the link points to your post
 					if (!notificationTriggered && !boardView) {
-						if (!settings.UserSettings.filter.value || !settings.UserSettings.filter.suboptions.filterNotifications.value || $('#' + postID + ':visible').length) { // Filter notifications
+						if (!settings.UserSettings.filter.value || !settings.UserSettings.filter.suboptions.filterNotifications.value || $('#' + postID).filter(':visible').length) { // Filter notifications
 							if (settings.UserSettings.notifications.value) {
 								notifyMe($('#' + postID + ' .post_poster_data').text().trim() + " replied to you", faviconNotification, notificationSpoiler(postID), true);
 							}
@@ -2229,10 +2231,10 @@ function labelNewPosts(newPosts, boardView) {
 }
 
 var lastSubmittedContent;
-function postSubmitEvent() {
+function postSubmitEvent(){
 	window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
 	var target = $('#reply [type=submit]')[0],
-		observer = new MutationObserver(function () {
+		observer = new MutationObserver(function(){
 			lastSubmittedContent = $('#reply_chennodiscursus')[0].value;
 		}),
 		config = {
@@ -2243,11 +2245,11 @@ function postSubmitEvent() {
 	}
 }
 
-function linkHoverEvent() { // Hook into the native internal link hover
+function linkHoverEvent(){ // Hook into the native internal link hover
 	window.MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
 	var $backlink = $('#backlink');
 	var target = $backlink[0],
-		observer = new MutationObserver(function () {
+		observer = new MutationObserver(function(){
 			var $hoverpost = $backlink.children('article');
 			$hoverpost.removeClass('shitpost');
 			if (settings.UserSettings.relativeTimestamps.value) {
@@ -2258,7 +2260,7 @@ function linkHoverEvent() { // Hook into the native internal link hover
 			}
 
 			if (settings.UserSettings.inlineImages.value) { // Inline images
-				$hoverpost.find('img').each(function (i, image) {
+				$hoverpost.find('img').each(function(i, image){
 					var $image = $(image);
 					$image.addClass('smallImage');
 					$image.removeAttr('width height');
@@ -2278,7 +2280,7 @@ function linkHoverEvent() { // Hook into the native internal link hover
 	}
 }
 
-function mascot(mascotImageLink) {
+function mascot(mascotImageLink){
 	var $mascot = $('#mascot');
 	if (settings.UserSettings.mascot.value) {
 		if (!$('#mascotBackground').length) {
@@ -2363,7 +2365,7 @@ function mascot(mascotImageLink) {
 		if ($mascotContainer.children('video').length) {
 			$mascot[0].muted = settings.UserSettings.mascot.suboptions.mute.value;
 		}
-		$mascot.on('load', function () { // Wait for Mascot to load (otherwise margins won't read size properly)
+		$mascot.on('load', function(){ // Wait for Mascot to load (otherwise margins won't read size properly)
 			postFlow(); // Restructure the postFlow
 		});
 	} else {
@@ -2372,7 +2374,7 @@ function mascot(mascotImageLink) {
 	}
 }
 
-function parseMascotImageValue() {
+function parseMascotImageValue(){
 	var mascotImageLink;
 	if (isNaN(parseInt(settings.UserSettings.mascot.suboptions.mascotImage.value))) {
 		if (settings.UserSettings.mascot.suboptions.mascotImage.value === undefined || settings.UserSettings.mascot.suboptions.mascotImage.value === '') {
@@ -2386,12 +2388,12 @@ function parseMascotImageValue() {
 	return mascotImageLink;
 }
 
-function postFlow() {
+function postFlow(){
 	if (settings.UserSettings.postFlow.value) {
 		var align = settings.UserSettings.postFlow.suboptions.align.value.value;
 		var leftMargin = settings.UserSettings.postFlow.suboptions.leftMargin.value;
 		var rightMargin = settings.UserSettings.postFlow.suboptions.rightMargin.value;
-		$('article.thread').each(function (i, threadOP) {
+		$('article.thread').each(function(i, threadOP){
 			var $threadOP = $(threadOP);
 			if ($threadOP.children('.thread_image_box').length) { // Stop posts for intruding in short OPs
 				var opTextHeight = $threadOP.children('.thread_image_box')[0].offsetHeight + 10 - 20 - $threadOP.children('header')[0].offsetHeight - $threadOP.children('.thread_tools_bottom')[0].offsetHeight;
@@ -2467,7 +2469,7 @@ function postFlow() {
 	}
 }
 
-function adjustReplybox() {
+function adjustReplybox(){
 	if (settings.UserSettings.adjustReplybox.value) {
 		$('#reply_chennodiscursus').css({
 			"width": settings.UserSettings.adjustReplybox.suboptions.width.value
@@ -2483,12 +2485,15 @@ function adjustReplybox() {
 	}
 }
 
-function headerBar() {
+function headerBar(){
+	var $headerFixed = $('#headerFixed');
+	var $headerBar = $headerFixed.find('.headerBar');
+	var $boardList = $headerFixed.find('.boardList');
 	$(window).off('mousewheel');
 	if (settings.UserSettings.headerBar.suboptions.shortcut.value) {
 		if (!shortcut.all_shortcuts.h) {
-			shortcut.add("h", function () {
-				$('#headerFixed').toggleClass('shortcutHidden');
+			shortcut.add("h", function(){
+				$headerFixed.toggleClass('shortcutHidden');
 			}, {"disable_in_input": true});
 		}
 	} else {
@@ -2497,99 +2502,99 @@ function headerBar() {
 		}
 	}
 	if (settings.UserSettings.headerBar.suboptions.behaviour.value.value === "Collapse to button") { // If in collapse mode
-		$('#headerFixed').removeClass('shortcutHidden'); // Un-hide
-		if ($('#headerFixed a[title="Show headerbar"]:visible').length) {
+		$headerFixed.removeClass('shortcutHidden'); // Un-hide
+		if ($headerFixed.find('a[title="Show headerbar"]').filter(':visible').length) {
 			if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.settings.value) {
-				$('#headerFixed .headerBar > a[title="SpookyX Settings"]').show();
+				$headerBar.children('a[title="SpookyX Settings"]').show();
 			} else {
-				$('#headerFixed .headerBar > a[title="SpookyX Settings"]').hide();
+				$headerBar.children('a[title="SpookyX Settings"]').hide();
 			}
 			if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.postCounter.value) {
-				$('#headerFixed .headerBar > .threadStats').show();
+				$headerBar.children('.threadStats').show();
 			} else {
-				$('#headerFixed .headerBar > .threadStats').hide();
+				$headerBar.children('.threadStats').hide();
 			}
 		}
 		if (!$('.collapseButton').length) { // Only add the collapse buttons if they don't already exist
-			$('#headerFixed > .boardList').after('<a class="collapseButton" title="Show headerbar" href="javascript:;" style="float:right; display:none; font-family:monospace;">[+]</a>');
-			$('#headerFixed .headerBar').append('<a class="collapseButton" title="Hide headerbar" href="javascript:;" style="font-family:monospace;">[-]</a>');
+			$boardList.after('<a class="collapseButton" title="Show headerbar" href="javascript:;" style="float:right; display:none; font-family:monospace;">[+]</a>');
+			$headerBar.append('<a class="collapseButton" title="Hide headerbar" href="javascript:;" style="font-family:monospace;">[-]</a>');
 		}
-		$('#headerFixed .headerBar a[title="Hide headerbar"]').on('click', function () { // Add click events to the buttons
-			$('#headerFixed .boardList').hide();
+		$headerBar.find('a[title="Hide headerbar"]').on('click', function(){ // Add click events to the buttons
+			$boardList.hide();
 			if (!settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.settings.value) {
-				$('#headerFixed .headerBar > a[title="SpookyX Settings"]').hide();
+				$headerBar.children('a[title="SpookyX Settings"]').hide();
 			}
 			if (!settings.UserSettings.headerBar.suboptions.behaviour.suboptions.contractedForm.suboptions.postCounter.value) {
-				$('#headerFixed .headerBar > .threadStats').hide();
+				$headerBar.children('.threadStats').hide();
 			}
-			$('#headerFixed .headerBar a[title="Hide headerbar"]').hide();
-			$('#headerFixed a[title="Show headerbar"]').show();
-			$('#headerFixed').css({
+			$headerBar.find('a[title="Hide headerbar"]').hide();
+			$headerFixed.find('a[title="Show headerbar"]').show();
+			$headerFixed.css({
 				"left": "initial",
 				"padding": "0 10px"
 			});
 		});
-		$('#headerFixed a[title="Show headerbar"]').on('click', function () { // Add click events to the buttons
-			$('#headerFixed .boardList').show();
-			$('#headerFixed .headerBar > .threadStats').show();
-			$('#headerFixed .headerBar > a[title="SpookyX Settings"]').show();
-			$('#headerFixed .headerBar a[title="Hide headerbar"]').show();
-			$('#headerFixed a[title="Show headerbar"]').hide();
-			$('#headerFixed').css({
+		$headerFixed.find('a[title="Show headerbar"]').on('click', function(){ // Add click events to the buttons
+			$boardList.show();
+			$headerBar.children('.threadStats').show();
+			$headerBar.children('a[title="SpookyX Settings"]').show();
+			$headerBar.find('a[title="Hide headerbar"]').show();
+			$headerFixed.find('a[title="Show headerbar"]').hide();
+			$headerFixed.css({
 				"left": "-1px",
 				"padding": "0 10px 0 30px"
 			});
 		});
 		if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.scroll.value) { // Add a scroll event that collapses it
-			$('#headerFixed').removeClass('shortcutHidden');
-			$(window).on('mousewheel', function (e) {
+			$headerFixed.removeClass('shortcutHidden');
+			$(window).on('mousewheel', function(e){
 				if (!$(e.target).closest('#settingsMenu').length) {
 					if (e.deltaY > 0) {
-						$('#headerFixed a[title="Show headerbar"]').trigger('click');
+						$headerFixed.find('a[title="Show headerbar"]').trigger('click');
 					} else {
-						$('#headerFixed .headerBar a[title="Hide headerbar"]').trigger('click');
+						$headerBar.find('a[title="Hide headerbar"]').trigger('click');
 					}
 				}
 			});
 		}
 		if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.defaultHidden.value) { // Collapse on pageload
-			$('#headerFixed .headerBar a[title="Hide headerbar"]').trigger('click');
+			$headerBar.find('a[title="Hide headerbar"]').trigger('click');
 		} else {
-			$('#headerFixed a[title="Show headerbar"]').trigger('click');
+			$headerFixed.find('a[title="Show headerbar"]').trigger('click');
 		}
 	} else { // Else remove any collapse stuff
 		$('.collapseButton').remove();
-		$('#headerFixed .boardList').show();
-		$('#headerFixed .headerBar > .threadStats').show();
-		$('#headerFixed .headerBar > a[title="SpookyX Settings"]').show();
-		$('#headerFixed').css({
+		$boardList.show();
+		$headerBar.children('.threadStats').show();
+		$headerBar.children('a[title="SpookyX Settings"]').show();
+		$headerFixed.css({
 			"left": "-1px",
 			"padding": "0 10px 0 30px"
 		});
 		if (settings.UserSettings.headerBar.suboptions.behaviour.value.value === "Full hide") { // If full hide mode
 			if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.scroll.value) { // Add scroll event that hides it
-				$(window).on('mousewheel', function (e) {
+				$(window).on('mousewheel', function(e){
 					if (!$(e.target).closest('#settingsMenu').length) {
 						if (e.deltaY > 0) {
-							$('#headerFixed').removeClass('shortcutHidden');
+							$headerFixed.removeClass('shortcutHidden');
 						} else {
-							$('#headerFixed').addClass('shortcutHidden');
+							$headerFixed.addClass('shortcutHidden');
 						}
 					}
 				});
 			}
 			if (settings.UserSettings.headerBar.suboptions.behaviour.suboptions.defaultHidden.value) { // Hide on pageload
-				$('#headerFixed').addClass('shortcutHidden');
+				$headerFixed.addClass('shortcutHidden');
 			} else {
-				$('#headerFixed').removeClass('shortcutHidden');
+				$headerFixed.removeClass('shortcutHidden');
 			}
 		} else {
-			$('#headerFixed').removeClass('shortcutHidden'); // Unhide it if always show mode
+			$headerFixed.removeClass('shortcutHidden'); // Unhide it if always show mode
 		}
 	}
 }
 
-function addFileSelect() {
+function addFileSelect(){
 	if (!$('#file_image').length) {
 		$('#reply_elitterae').parent().parent().append('<div class="input-prepend"><label class="add-on" for="file_image">File</label><input type="file" name="file_image" id="file_image" size="16" multiple="multiple"></div>');
 		$('.input-append.pull-left .btn-group [name=reply_gattai]').attr('id', 'finalReplySubmit').hide();
@@ -2601,7 +2606,7 @@ function addFileSelect() {
 			var $urlUploadInput = $('#urlUploadInput');
 			var $urlUploadSubmit = $('#urlUploadSubmit');
 			var clientId = '6a7827b84201f31';
-			$middleReplySubmit.on('click', function () {
+			$middleReplySubmit.on('click', function(){
 				var fileCount = document.getElementById('file_image').files.length;
 				if (settings.UserSettings.autoHost.value.value !== "Don't reupload links") {
 					var fourChanOnly = settings.UserSettings.autoHost.value.value === "Reupload 4chan links";
@@ -2618,7 +2623,7 @@ function addFileSelect() {
 				if (fileCount || linksLength) {
 					$middleReplySubmit.val('Uploading File' + (totalUploads > 1 ? 's' : '')).attr('disabled', 'disabled');
 					if (linksLength) {
-						$.each(links, function (i, link) {
+						$.each(links, function(i, link){
 							if (!/i\.imgur\.com/i.test(link)) {
 								$.ajax({
 									url: "https://api.imgur.com/3/image",
@@ -2630,25 +2635,25 @@ function addFileSelect() {
 										image: link,
 										type: 'URL'
 									}
-								}).done(function (response) {
+								}).done(function(response){
 									document.getElementById('reply_chennodiscursus').value = document.getElementById('reply_chennodiscursus').value.replace(link, response.data.link.replace(/http:/, 'https:'));
 									successfulUploads++;
 									if (successfulUploads === totalUploads) {
 										$middleReplySubmit.val('Submitting');
 										$('#finalReplySubmit').trigger('click');
 									}
-								}).fail(function (e) {
+								}).fail(function(e){
 									notifyMe("An error occurred whilst uploading", 'http://i.imgur.com/qEpGpTc.png', 'The link was: ' + link + '\n' + JSON.parse(e.responseText).data.error, false);
 								});
 							}
 						});
 					}
 					if (fileCount) {
-						$.each(document.getElementById('file_image').files, function (i, file) {
+						$.each(document.getElementById('file_image').files, function(i, file){
 							var reader = new FileReader();
 							if (false && /image/.test(file.type)) { // Disable Imgur usage, don't remove code in case it needs to be restored
 								reader.readAsDataURL(file);
-								reader.onloadend = function () {
+								reader.onloadend = function(){
 									$.ajax({
 										url: "https://api.imgur.com/3/image",
 										type: 'POST',
@@ -2660,7 +2665,7 @@ function addFileSelect() {
 											type: 'base64',
 											name: file.name
 										}
-									}).done(function (response) {
+									}).done(function(response){
 										fileCount--;
 										$('#reply_chennodiscursus')[0].value += "\n" + response.data.link.replace(/http:/, 'https:');
 										successfulUploads++;
@@ -2671,7 +2676,7 @@ function addFileSelect() {
 												$('#finalReplySubmit').trigger('click');
 											}
 										}
-									}).fail(function (e) {
+									}).fail(function(e){
 										notifyMe("An error occurred whilst uploading", 'http://i.imgur.com/qEpGpTc.png', 'The file was: ' + file.name + '\n' + JSON.parse(e.responseText).data.error, false);
 									});
 								};
@@ -2680,7 +2685,7 @@ function addFileSelect() {
 								data.append('files[]', file);
 								var xhr = new XMLHttpRequest();
 								xhr.open('POST', 'https://mixtape.moe/upload.php', true);
-								xhr.addEventListener('load', function (e) {
+								xhr.addEventListener('load', function(e){
 									fileCount--;
 									$('#reply_chennodiscursus')[0].value += "\n" + JSON.parse(xhr.responseText).files[0].url;
 									successfulUploads++;
@@ -2695,7 +2700,7 @@ function addFileSelect() {
 								xhr.send(data);
 							} else {
 								$middleReplySubmit.val('Filetype is not supported').removeAttr('disabled');
-								setTimeout(function () {
+								setTimeout(function(){
 									$middleReplySubmit.val('Submit');
 								}, 3000);
 							}
@@ -2706,7 +2711,7 @@ function addFileSelect() {
 					$('#finalReplySubmit').trigger('click');
 				}
 			});
-			$urlUploadSubmit.on('click', function () {
+			$urlUploadSubmit.on('click', function(){
 				$urlUploadSubmit.val('Uploading...');
 				$.ajax({
 					url: "https://api.imgur.com/3/image",
@@ -2718,12 +2723,12 @@ function addFileSelect() {
 						image: $urlUploadInput[0].value,
 						type: 'URL'
 					}
-				}).done(function (response) {
+				}).done(function(response){
 					$urlUploadInput[0].value = '';
 					$('#reply_chennodiscursus')[0].value += "\n" + response.data.link.replace(/http:/, 'https:');
-				}).fail(function (e) {
+				}).fail(function(e){
 					notifyMe("An error occurred whilst uploading", 'http://i.imgur.com/qEpGpTc.png', 'The link was: ' + $urlUploadInput[0].value + '\n' + JSON.parse(e.responseText).data.error, false);
-				}).always(function () {
+				}).always(function(){
 					$urlUploadSubmit.val('Upload');
 				});
 			});
@@ -2733,13 +2738,13 @@ function addFileSelect() {
 	}
 }
 
-function updateExportLink() { // Define the export settings link with the latest version of the settings
+function updateExportLink(){ // Define the export settings link with the latest version of the settings
 	var $settingsExport = $('#settingsExport');
 	$settingsExport.attr('download', 'SpookyX v.' + GM_info.script.version + '-' + Date.now() + '.json');
 	$settingsExport.attr('href', 'data:' + 'text/plain' + ';charset=utf-8,' + encodeURIComponent(JSON.stringify(settings)));
 }
 
-function saveSettings() {
+function saveSettings(){
 	settingsStore = {};
 	settingsStore.UserSettings = settingsStrip(settings.UserSettings);
 	settingsStore.FilterSettings = settingsStrip(settings.FilterSettings);
@@ -2747,7 +2752,7 @@ function saveSettings() {
 }
 
 var hoveredTextColourPicker;
-function revealSpoilers() {
+function revealSpoilers(){
 	if (settings.UserSettings.revealSpoilers.value) {
 		$('#SpookyX-css-hovered-spoilers').html('.spoiler {color:' + hoveredTextColourPicker + '!important;}');
 	} else {
@@ -2755,7 +2760,7 @@ function revealSpoilers() {
 	}
 }
 
-$(document).ready(function () {
+$(document).ready(function(){
 	var $body = $('body');
 	var $head = $('head');
 	$body.append('<div id="postBackgroundColourPicker" class="thread_form_wrap" style="display:none;"></div>'); // Create an element to get the post colour from
@@ -2774,7 +2779,7 @@ $(document).ready(function () {
 	hoveredTextColourPicker = $hoveredTextColourPicker.css('color'); // Set the colour
 	if (mockHoverFailed) {
 		// Use inverted regular font colour then
-		hoveredTextColourPicker = hoveredTextColourPicker.replace(/([0-9]+)[^0-9]+([0-9]+)[^0-9]+([0-9]+)/, function ($0, $1, $2, $3) {
+		hoveredTextColourPicker = hoveredTextColourPicker.replace(/([0-9]+)[^0-9]+([0-9]+)[^0-9]+([0-9]+)/, function($0, $1, $2, $3){
 			return (255 - $1) + ', ' + (255 - $2) + ', ' + (255 - $3);
 		});
 	}
@@ -2834,10 +2839,10 @@ $(document).ready(function () {
 	if (Page.is('thread')) { // If in a thread
 		$($('.navbar .nav')[1]).append('<li><a href="//boards.4chan.org/' + board + '/thread/' + threadID + '">View thread on 4chan</a></li>'); // Add view thread on 4chan link
 	}
-	$('.headerBar > a[title="SpookyX Settings"], a[title=Close]').on('click', function () {
+	$('.headerBar > a[title="SpookyX Settings"], a[title=Close]').on('click', function(){
 		populateSettingsMenu();
 	});
-	$(window).on('scroll', function () {
+	$(window).on('scroll', function(){
 		if (window.scrollY > 40) {
 			$('#headerFixed').show();
 		} else {
@@ -2847,7 +2852,7 @@ $(document).ready(function () {
 	if (window.scrollY > 42) { // Show headerbar on pageload if necessary
 		$('#headerFixed').show();
 	}
-	$('.sections-list').on('click', function (e) { // Main settings tabs change on click
+	$('.sections-list').on('click', function(e){ // Main settings tabs change on click
 		if (e.target.tagName === "A") {
 			$('#settingsContent #' + $('.sections-list .active').html()).hide();
 			$('.sections-list .active').removeClass('active');
@@ -2855,7 +2860,7 @@ $(document).ready(function () {
 			$('#settingsContent #' + $('.sections-list .active').html()).show();
 		}
 	});
-	$('#settingsContent').on('click', function (e) { // Filter subtabs change on click
+	$('#settingsContent').on('click', function(e){ // Filter subtabs change on click
 		if (e.target.parentNode.className === "filters-list") {
 			var filterSubmenu = $(e.target).attr('name');
 			$('#filter_' + $('.filters-list .active').attr('name')).hide();
@@ -2864,7 +2869,7 @@ $(document).ready(function () {
 			$('#filter_' + filterSubmenu).show();
 		}
 	});
-	$('#settingsMenu .credits > a').on('click', function (e) { // Set up the import/export/reset links
+	$('#settingsMenu .credits > a').on('click', function(e){ // Set up the import/export/reset links
 		if (e.target.title === "Import") { // Import settings
 			$('#fileInput').trigger('click');
 		} else if (e.target.title === "Reset Settings") {
@@ -2874,7 +2879,7 @@ $(document).ready(function () {
 			populateSettingsMenu();
 		}
 	});
-	$('#fileInput').on('change', function () { // When the undisplayed file input element changes import settings
+	$('#fileInput').on('change', function(){ // When the undisplayed file input element changes import settings
 		if (typeof window.FileReader !== 'function') {
 			alert("The file API isn't supported on this browser.");
 			return;
@@ -2885,7 +2890,7 @@ $(document).ready(function () {
 			alert("Please select a file.");
 		} else {
 			var fr = new FileReader();
-			fr.onload = function () {
+			fr.onload = function(){
 				settings = JSON.parse(fr.result);
 				saveSettings(); // Save the settings
 				populateSettingsMenu(); // Double populate to display changed settings
@@ -2895,16 +2900,16 @@ $(document).ready(function () {
 			fr.readAsText(file);
 		}
 	});
-	$('#settingsContent').on('change', function (e) {
+	$('#settingsContent').on('change', function(e){
 		if ($(e.target).hasClass('filterTextarea')) {
 			var store = [];
-			$.each(e.target.value.split('\n'), function (i, line) {
+			$.each(e.target.value.split('\n'), function(i, line){
 				var lineStore = {};
 				if (line.trim().substr(0, 1) == "#") {
 					lineStore.comment = line;
 				} else {
 					line = line.replace(/\\;/g, '<delimitedSemiColon>');
-					$.each(line.split(';'), function (i, fragment) {
+					$.each(line.split(';'), function(i, fragment){
 						if (fragment !== "") {
 							if (!i) {
 								var regex = fragment.trim().replace(/<delimitedSemiColon>/g, ';');
@@ -2953,7 +2958,7 @@ $(document).ready(function () {
 				for (var suboption in settingPath.suboptions) {
 					if (settingPath.suboptions.hasOwnProperty(suboption) && settingPath.suboptions[suboption].if !== undefined) {
 						var ifMet = false;
-						$.each(settingPath.suboptions[suboption].if, function (i, v) {
+						$.each(settingPath.suboptions[suboption].if, function(i, v){
 							if (testPatt.test(v)) {
 								ifMet = true;
 								return false;
@@ -3006,7 +3011,7 @@ $(document).ready(function () {
 				url: "/_/api/chan/thread/",
 				method: "GET",
 				data: {"board": board, "num": threadID, "inThread": true}
-			}).done(function (response) {
+			}).done(function(response){
 				var firstLoadedPostID = $('article.post').length ? $('article.post')[0].id : null;
 				if (response[threadID].posts) {
 					var postList = Object.keys(response[threadID].posts);
@@ -3026,11 +3031,11 @@ $(document).ready(function () {
 	}
 	if (Page.is('thread')) {
 		windowFocus = document.hasFocus();
-		$(window).focus(function () {
+		$(window).focus(function(){
 			windowFocus = true;
 			ThreadUpdate();
 		});
-		$(window).blur(function () {
+		$(window).blur(function(){
 			windowFocus = false;
 		});
 		$('#' + unseenPosts[0]).addClass('unseenPost'); // Add the unseen class to the first of the unseen posts
@@ -3057,7 +3062,7 @@ $(document).ready(function () {
 
 	if (!Page.is('search,other,statistics')) {
 		var $newPost, postID, response;
-		$(document).ajaxComplete(function (event, request, ajaxSettings) {
+		$(document).ajaxComplete(function(event, request, ajaxSettings){
 			if (!/inThread=true/i.test(ajaxSettings.url) && /api\/chan\/thread\/\?/i.test(ajaxSettings.url) || ((ajaxSettings.type === 'POST') && /\/submit\//i.test(ajaxSettings.url) )) {
 				console.log(ajaxSettings.url);
 				console.log(request.responseText);
@@ -3150,7 +3155,7 @@ $(document).ready(function () {
 							if (response[key].posts.hasOwnProperty(postID) && document.getElementById(postID) !== null) { // Don't process post if filter has purged it
 								$newPost = $('#' + postID);
 								if (settings.UserSettings.inlineImages.value) {
-									$newPost.find('img').each(function (i, image) {
+									$newPost.find('img').each(function(i, image){
 										var $image = $(image);
 										$image.addClass('smallImage');
 										$image.removeAttr('width height');
@@ -3190,7 +3195,7 @@ $(document).ready(function () {
 										$newPost.find('.post_backlink').attr('id', 'p_b' + postID);
 										if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.suboptions.hideNewPosts.value) {
 											var checkedBacklinks = {};
-											$newPost.find('.text .backlink').each(function (i, backlink) {
+											$newPost.find('.text .backlink').each(function(i, backlink){
 												if (!checkedBacklinks[backlink.dataset.board + backlink.dataset.post]) { // Prevent reprocessing duplicate links
 													checkedBacklinks[backlink.dataset.board + backlink.dataset.post] = true;
 													var backlinkPost = $('#' + backlink.dataset.post);
@@ -3240,7 +3245,7 @@ $(document).ready(function () {
 			localStorage.expandpref = "no";
 		} // Disable native inline image expansion (might require a reload after to work?)
 		if (!Page.is('statistics')) { // Stop this interfering with the images it displays
-			$('#main img').each(function (i, image) {
+			$('#main img').each(function(i, image){
 				var $image = $(image);
 				$image.addClass('smallImage');
 				if (Page.is('search,quests')) {
@@ -3261,14 +3266,14 @@ $(document).ready(function () {
 		$('.shift-jis').removeClass('shift-jis');
 	} // Remove japanese font formatting
 	if (settings.UserSettings.inlineReplies.value) { // Inline replies
-		staticPostsAndOP.each(function (i, post) {
+		staticPostsAndOP.each(function(i, post){
 			$(post).addClass("base");
 		});
 	}
 	if (settings.UserSettings.labelYourPosts.value) { // Label your posts
 		if (Page.is('search,board,quests,gallery')) {
 			if (board === "_") { // Handle finding the board per post for all-board searches
-				$('article.post').each(function (i, post) {
+				$('article.post').each(function(i, post){
 					var postBoard = $(post).find('.post_show_board').html().replace(/\//g, '');
 					if (yourPostsLookup[postBoard] !== undefined) {
 						if (yourPostsLookup[postBoard][post.id]) {
@@ -3278,7 +3283,7 @@ $(document).ready(function () {
 				});
 			} else { // Handle the lack of threadID for board indexes and single-board searches
 				if (yourPostsLookup[board] !== undefined) {
-					$('article.post, article.thread').each(function (i, post) {
+					$('article.post, article.thread').each(function(i, post){
 						if (yourPostsLookup[board][post.id]) {
 							$(post).find('.post_author').after('<span> (You)</span>');
 						}
@@ -3286,11 +3291,11 @@ $(document).ready(function () {
 				}
 			}
 		} else { // Handle regular threads by iterating over the yourPosts values for that specific thread (better performance than per each post parsing)
-			$.each(yourPosts[board][threadID], function (i, v) { // Parse all backlinks present on pageload
-				$('#' + v + ' .post_author').after('<span> (You)</span>');
+			$.each(yourPosts[board][threadID], function(i, v){ // Parse all backlinks present on pageload
+				$('#' + v).find('.post_author').after('<span> (You)</span>');
 			});
 		}
-		$('.backlink').each(function (i, backlink) {
+		$('.backlink').each(function(i, backlink){
 			if (yourPostsLookup[backlink.dataset.board] !== undefined && yourPostsLookup[backlink.dataset.board][backlink.dataset.post.replace(',', '_')]) {
 				backlink.textContent += ' (You)';
 			}
@@ -3307,7 +3312,7 @@ $(document).ready(function () {
 		linkHoverEvent();
 	} // Initiate relative timestamps
 	if (Page.is('thread') && settings.UserSettings.postQuote.value) {
-		$('.post_data > [data-function=quote]').each(function () {
+		$('.post_data > [data-function=quote]').each(function(){
 			$(this).removeAttr('data-function'); // Disable native quote function
 			$(this).addClass('postQuote'); // Make it findable so that inline posts will be handled
 		});
@@ -3315,10 +3320,10 @@ $(document).ready(function () {
 	if (settings.UserSettings.hidePosts.value) {
 		$('.pull-left.stub').removeClass('stub'); // Show hide post buttons
 		if (settings.UserSettings.hidePosts.suboptions.recursiveHiding.value) {
-			$('article.post').each(function (i, val) {
+			$('article.post').each(function(i, val){
 				$(val).find('.post_backlink').attr('id', 'p_b' + val.id);
 			});
-			$('article.post:hidden').each(function (i, post) { // Recursively hide pre-hidden posts
+			$('article.post').filter(':hidden').each(function(i, post){ // Recursively hide pre-hidden posts
 				recursiveToggle(post.id, "hide");
 			});
 		}
@@ -3336,7 +3341,7 @@ $(document).ready(function () {
 		$('.icon-trash').html(' [Deleted]');
 	} // Label deletions
 
-	$('#main').on('click', function (e) { // Detect clicks on page content
+	$('#main').on('click', function(e){ // Detect clicks on page content
 		if (settings.UserSettings.inlineReplies.value && $(e.target).hasClass("backlink")) { // Inline replies
 			if (!e.originalEvent.ctrlKey && e.which == 1) {
 				e.preventDefault();
@@ -3347,7 +3352,7 @@ $(document).ready(function () {
 				if (etarget.parentNode.className == "post_backlink") {
 					if ($etarget.hasClass("inlined")) {
 						$etarget.removeClass("inlined");
-						$('.sub' + rootPostID).each(function (index, currentPost) {
+						$('.sub' + rootPostID).each(function(index, currentPost){
 							$("#" + currentPost.id.substr(1) + ".forwarded").removeClass("forwarded");
 						});
 						$('#i' + postID + '.sub' + rootPostID).remove();
@@ -3355,7 +3360,7 @@ $(document).ready(function () {
 						$etarget.addClass("inlined");
 						$(etarget.parentNode.parentNode).after('<div class="inline sub' + rootPostID + '" id="i' + postID + '"></div>');
 						$("#" + postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id", "r" + postID).show().appendTo($("#i" + postID + '.sub' + rootPostID));
-						$("#" + rootPostID + '.base .inline').each(function (index, currentPost) {
+						$("#" + rootPostID + '.base .inline').each(function(index, currentPost){
 							if (!$(currentPost).hasClass('sub' + rootPostID)) {
 								$(currentPost).attr("class", "inline sub" + rootPostID);
 							}
@@ -3369,7 +3374,7 @@ $(document).ready(function () {
 				} else {
 					if ($etarget.hasClass("inlined")) {
 						$etarget.removeClass("inlined");
-						$('.sub' + rootPostID).each(function (index, currentPost) {
+						$('.sub' + rootPostID).each(function(index, currentPost){
 							$("#" + currentPost.id.substr(1) + ".forwarded").removeClass("forwarded");
 						});
 						$('#i' + postID + '.sub' + rootPostID).remove();
@@ -3377,7 +3382,7 @@ $(document).ready(function () {
 						$etarget.addClass("inlined");
 						$(etarget.parentNode).after('<div class="inline sub' + rootPostID + '" id="i' + postID + '"></div>');
 						$("#" + postID).addClass("forwarded").clone().removeClass("forwarded base post").attr("id", "r" + postID).show().appendTo($("#i" + postID + '.sub' + rootPostID));
-						$("#" + rootPostID + '.base .inline').each(function (index, currentPost) {
+						$("#" + rootPostID + '.base .inline').each(function(index, currentPost){
 							if (!$(currentPost).hasClass('sub' + rootPostID)) {
 								$(currentPost).attr("class", "inline sub" + rootPostID);
 							}
@@ -3452,7 +3457,7 @@ $(document).ready(function () {
 					$video.attr('width', ($video.closest('article').hasClass('thread') ? imageWidthOP : imageWidth));
 					$video.removeAttr('controls');
 					$video.removeClass("fullVideo");
-					window.setTimeout(function () { // Firefox can suck my dick
+					window.setTimeout(function(){ // Firefox can suck my dick
 						video.pause();
 					}, 0);
 				}
@@ -3474,7 +3479,7 @@ $(document).ready(function () {
 					recursiveToggle($('article.doc_id_' + button.attributes["data-doc-id"].value).attr('id'), "hide");
 				}
 			}
-			var waitForNativeHide = setInterval(function () { // Calling postCounter immediately does so before the native site toggles everything
+			var waitForNativeHide = setInterval(function(){ // Calling postCounter immediately does so before the native site toggles everything
 				if ($(button).closest('.post, .thread').css('display') === "none") {
 					clearInterval(waitForNativeHide);
 					postCounter(); // Update post counter
@@ -3484,7 +3489,7 @@ $(document).ready(function () {
 	});
 });
 
-var executeShortcut = function (shortcut) {
+var executeShortcut = function(shortcut){
 	var input = document.getElementById('reply_chennodiscursus');
 
 	if (input.selectionStart !== undefined) {
@@ -3499,7 +3504,7 @@ var executeShortcut = function (shortcut) {
 	}
 };
 
-function quickReply() {
+function quickReply(){
 	$('#reply').toggleClass("quickReply");
 	$('#reply fieldset > div:nth-child(1)').css("width", "");
 	if ($('#reply').hasClass("showQROptions")) {
@@ -3507,7 +3512,7 @@ function quickReply() {
 	}
 }
 
-function quickReplyOptions() {
+function quickReplyOptions(){
 	$('#reply').toggleClass("showQROptions");
 	$('#reply.quickReply .pull-left:not(.input-append)').toggle();
 }
@@ -3517,22 +3522,22 @@ favican.src = settings.UserSettings.favicon.suboptions.customFavicons.suboptions
 var exclam = document.createElement("IMG");
 exclam.src = settings.UserSettings.favicon.suboptions.customFavicons.suboptions.alertOverlay.value;
 
-function canfav() {
+function canfav(){
 	$('#myCanvas').toggle();
 	$('#myCanvas')[0].getContext("2d").drawImage(favican, 0, 0);
 	$('#myCanvas')[0].getContext("2d").drawImage(exclam, 0, 0);
 }
 var imgIndex;
-function galleryToggle() {
+function galleryToggle(){
 	console.time('gal');
 	var $imageBoxes = $('.thread_image_box');
-	if ($imageBoxes.length === 0 || $('#gallery:visible').length) {
+	if ($imageBoxes.length === 0 || $('#gallery').filter(':visible').length) {
 		$('#gallery').hide();
 	} else {
 		$('#gallery').show();
 		var viewportTop = window.scrollY;
 		var viewportBottom = viewportTop + window.innerHeight;
-		$imageBoxes.each(function (i, imageBox) {
+		$imageBoxes.each(function(i, imageBox){
 			imgIndex = i;
 			if (imageBox.offsetTop + imageBox.offsetHeight > viewportTop) {
 				if (imageBox.offsetTop >= viewportBottom) {
@@ -3552,8 +3557,8 @@ function galleryToggle() {
 	console.timeEnd('gal');
 }
 
-function galleryChange(direction) {
-	if ($('#gallery:visible').length) {
+function galleryChange(direction){
+	if ($('#gallery').filter(':visible').length) {
 		if (direction == "left") {
 			if (imgIndex === 0) {
 				imgIndex = $('.thread_image_box').length - 1;
@@ -3573,7 +3578,7 @@ function galleryChange(direction) {
 	}
 }
 
-function galleryUpdate() {
+function galleryUpdate(){
 	if ($('#gallery').length) {
 		var imgList = $('.thread_image_box');
 		if ($(imgList[imgIndex]).find('img').length) {
@@ -3588,7 +3593,7 @@ function galleryUpdate() {
 	}
 }
 
-function populateSettingsMenu() {
+function populateSettingsMenu(){
 	if ($('#settingsMenu').is(":visible")) {
 		$('#settingsMenu').hide();
 	} else {
@@ -3605,13 +3610,13 @@ function populateSettingsMenu() {
 		$('#settingsContent .suboption-list > :visible:last').addClass('last');
 		$('#settingsContent > div').hide(); //  Hide all tabs
 		$('#settingsContent #' + $('.sections-list .active').html()).show(); // Show active tab
-		$('#settingsContent select, #settingsContent input').each(function (i, el) {
+		$('#settingsContent select, #settingsContent input').each(function(i, el){
 			if (el.type !== "checkbox") { // Add the top margins for non-checkboxes to align description with name
 				$(el).parent().next().addClass('selectDescription');
 			}
 			if (el.nodeName === "SELECT") { // Hide the settings join line for select options that start with one or less visible suboptions
 				var visibleSubopsCount = 0;
-				$(el).closest('div:not(.settingFlexContainer)').children('.suboption-list').children().each(function (i, subop) {
+				$(el).closest('div:not(.settingFlexContainer)').children('.suboption-list').children().each(function(i, subop){
 					if ($(subop).css('display') !== "none") {
 						visibleSubopsCount++;
 					}
@@ -3625,7 +3630,7 @@ function populateSettingsMenu() {
 	}
 }
 
-function generateFilterHTML() {
+function generateFilterHTML(){
 	var settingsHTML = '';
 	var type;
 	settingsHTML += '<div class="filters-list"><a href="javascript:;" class="active" name="guide">Guide</a>';
@@ -3639,7 +3644,7 @@ function generateFilterHTML() {
 	for (type in settings.FilterSettings) {
 		if (settings.FilterSettings.hasOwnProperty(type)) {
 			settingsHTML += '<div id="filter_' + type + '" style="display: none;"><textarea name="' + type + '" spellcheck="false" class="filterTextarea">';
-			$.each(settings.FilterSettings[type].value, function (i, line) {
+			$.each(settings.FilterSettings[type].value, function(i, line){
 				if (i) {
 					settingsHTML += '\n';
 				}
@@ -3662,9 +3667,9 @@ function generateFilterHTML() {
 	return settingsHTML;
 }
 
-function generateSubOptionHTML(input, path) {
+function generateSubOptionHTML(input, path){
 	var settingsHTML = '';
-	$.each(input, function (key, value) {
+	$.each(input, function(key, value){
 		if (value.name !== undefined) {
 			var checked = '';
 			var subOpsHidden = '';
@@ -3677,7 +3682,7 @@ function generateSubOptionHTML(input, path) {
 				var parentPath = objpath(settings.UserSettings, path.substring(0, path.length - '.suboptions.'.length));
 				var pattTest = new RegExp(parentPath.value.value);
 				var ifMet = false;
-				$.each(value.if, function (i, v) {
+				$.each(value.if, function(i, v){
 					if (pattTest.test(v)) {
 						ifMet = true;
 						return false;
@@ -3712,7 +3717,7 @@ function generateSubOptionHTML(input, path) {
 					break;
 				case "select":
 					settingsHTML += '<select name="' + value.name + '" key="' + key + '" path="' + path + key + '">';
-					$.each(value.value.options, function (i, v) {
+					$.each(value.value.options, function(i, v){
 						settingsHTML += '<option';
 						if (v == value.value.value) {
 							settingsHTML += ' selected';
@@ -3732,9 +3737,9 @@ function generateSubOptionHTML(input, path) {
 	return settingsHTML;
 }
 
-function settingsStrip(input) {
+function settingsStrip(input){
 	var obj = {};
-	$.each(input, function (key, value) {
+	$.each(input, function(key, value){
 		obj[key] = {};
 		obj[key].value = value.value;
 		if (value.suboptions !== undefined) {
@@ -3744,52 +3749,52 @@ function settingsStrip(input) {
 	return obj;
 }
 
-$(function () {
-	shortcut.add("ctrl+s", function () {
+$(function(){
+	shortcut.add("ctrl+s", function(){
 		executeShortcut("spoiler");
 	});
-	shortcut.add("ctrl+i", function () {
+	shortcut.add("ctrl+i", function(){
 		executeShortcut("i");
 	});
-	shortcut.add("ctrl+b", function () {
+	shortcut.add("ctrl+b", function(){
 		executeShortcut("b");
 	});
-	shortcut.add("ctrl+u", function () {
+	shortcut.add("ctrl+u", function(){
 		executeShortcut("u");
 	});
-	shortcut.add("q", function () {
+	shortcut.add("q", function(){
 		quickReply();
 	}, {"disable_in_input": true});
-	shortcut.add("ctrl+q", function () {
+	shortcut.add("ctrl+q", function(){
 		quickReplyOptions();
 	}, {"disable_in_input": false});
-	shortcut.add("f", function () {
+	shortcut.add("f", function(){
 		if (settings.UserSettings.favicon.value) {
 			canfav();
 		}
 	}, {"disable_in_input": true});
-	shortcut.add("g", function () {
+	shortcut.add("g", function(){
 		if (settings.UserSettings.gallery.value) {
 			galleryToggle();
 		}
 	}, {"disable_in_input": true});
-	shortcut.add("left", function () {
+	shortcut.add("left", function(){
 		if (settings.UserSettings.gallery.value) {
 			galleryChange("left");
 		}
 	}, {"disable_in_input": true});
-	shortcut.add("right", function () {
+	shortcut.add("right", function(){
 		if (settings.UserSettings.gallery.value) {
 			galleryChange("right");
 		}
 	}, {"disable_in_input": true});
-	shortcut.add("o", function () {
+	shortcut.add("o", function(){
 		populateSettingsMenu();
 	}, {"disable_in_input": true});
 	if (Page.is('thread')) {
 		seenPosts();
 		ThreadUpdate();
-		window.setInterval(function () {
+		window.setInterval(function(){
 			ThreadUpdate();
 		}, 250);
 	}
