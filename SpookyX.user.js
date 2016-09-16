@@ -14,8 +14,6 @@
 // @include       https://desustorage.org/*
 // @include       http://cuckchan.org/*
 // @include       https://cuckchan.org/*
-// @include       http://desuarchive.org/*
-// @include       https://desuarchive.org/*
 // @include       http://4ch.be/*
 // @include       https://4ch.be/*
 // @include       http://arch.b4k.co/*
@@ -1579,7 +1577,7 @@ var embedImages = function(posts){
 							$currentArticle.find(".post_wrapper").prepend('<blockquote class="imgur-embed-pub" lang="en" data-id="a/' + imgurLinkFragments[4] + '" data-context="false"><a href="//imgur.com/a/' + imgurLinkFragments[4] + '"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>');
 						}
 						removeLink(currentLink);
-					} else if (imgurLinkFragments[3] !== "gallery") {
+					} else if (imgurLinkFragments[3] !== "gallery" && !isOP) { // I can't be bothered making this work properly for OPs, so let's just ignore it and pretend it doesn't exist, yes?
 						var link = pattImgGal.exec(currentLink.href);
 						var individualImages = link[0].match(/[A-z0-9]{7}/g);
 						var allDisplayed = true; // Track whether all of the linked images get inserted so that if not the link can be kept
