@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.48:** *(2016-09-16)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.48/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.48/README.md)
+- fixed a bug that occurred when certain imgur links were present in the OP
+
 **v32.47:** *(2016-06-26)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.47/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.47/README.md)
 - added desuarchive.org to the list
 
