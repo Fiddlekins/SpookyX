@@ -14,8 +14,6 @@
 // @include       https://desustorage.org/*
 // @include       http://cuckchan.org/*
 // @include       https://cuckchan.org/*
-// @include       http://desuarchive.org/*
-// @include       https://desuarchive.org/*
 // @include       http://4ch.be/*
 // @include       https://4ch.be/*
 // @include       http://arch.b4k.co/*
