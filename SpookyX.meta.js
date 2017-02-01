@@ -30,6 +30,8 @@
 // @include       https://thebarchive.com/*
 // @include       http://archive.whatisthisimnotgoodwithcomputers.com/*
 // @include       https://archive.whatisthisimnotgoodwithcomputers.com/*
+// @include       http://magyarchan.net/*
+// @include       https://magyarchan.net/*
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
 // @require       https://raw.githubusercontent.com/carloscabo/colz/master/public/js/colz.class.min.js
