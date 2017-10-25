@@ -2,7 +2,7 @@
 // @name          SpookyX
 // @description   Enhances functionality of FoolFuuka boards. Developed further for more comfortable ghost-posting on the moe archives.
 // @author        Fiddlekins
-// @version       32.49
+// @version       32.50
 // @namespace     https://github.com/Fiddlekins/SpookyX
 // @include       http://archive.4plebs.org/*
 // @include       https://archive.4plebs.org/*
@@ -36,11 +36,11 @@
 // @grant         none
 // @updateURL     https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.meta.js
 // @downloadURL   https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js
-// @icon          http://i.imgur.com/LaYyYRl.png
+// @icon          https://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
 
 if (GM_info === undefined) {
-	var GM_info = {script: {version: '32.49'}};
+	var GM_info = {script: {version: '32.50'}};
 }
 
 var settings = {
@@ -521,7 +521,7 @@ var settings = {
 					"name": "Word-break",
 					"description": "Firefox runs into difficulties with breaking really long words, test the options available until you find something that works. On auto this attempts to detect browser and select the most appropriate setting",
 					"type": "select",
-					"value": {"value": "Auto", "options": ["Auto", "Break-all", "Normal"]}
+					"value": {"value": "Auto", "options": ["Auto", "Break-all", "Normal", "Overflow-Wrap"]}
 				}
 			}
 		},
@@ -2463,6 +2463,8 @@ function postFlow(){
 			}
 		} else if (wordBreak === 'Break-all') {
 			$('#SpookyX-css-word-break').html('.text{word-break:break-all}');
+		} else if (wordBreak === 'Overflow-Wrap') {
+				$('#SpookyX-css-word-break').html('.text{overflow-wrap: break-word}');
 		} else { // wordBreak == Normal
 			$('#SpookyX-css-word-break').html('.text{word-break:normal}');
 		}
