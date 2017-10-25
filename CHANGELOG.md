@@ -2,6 +2,9 @@ The changelog becomes progressively more comprehensive as I became progressively
 
 The links to individual versions below are to copies of the script with the update URL removed. If you want automatic updates, install the script from the links on the [main page](https://github.com/Fiddlekins/SpookyX).
 
+**v32.50:** *(2017-10-25)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.50/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.50/README.md)
+- added the option to use overflow-wrap to break long words
+
 **v32.49:** *(2016-09-17)* - [GitHub](https://github.com/Fiddlekins/SpookyX/raw/v32.49/SpookyX-noupdate.user.js) - [Readme](https://github.com/Fiddlekins/SpookyX/blob/v32.49/README.md)
 - readdded desustorage after accidentally removing it
 
