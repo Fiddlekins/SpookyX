@@ -3595,7 +3595,7 @@ function galleryUpdate(){
 	if ($('#gallery').length) {
 		var imgList = $('.thread_image_box');
 		if ($(imgList[imgIndex]).find('img').length) {
-			$('#gallery').html('<img style="max-width:90%; max-height:90%;" src="' + $(imgList[imgIndex]).find('img')[0].src + '">');
+			$('#gallery').html('<img style="max-width:90%; max-height:90%;" src="' + $(imgList[imgIndex]).find('a.thread_image_link')[0].href + '">');
 		} else if ($(imgList[imgIndex]).find('video').length) {
 			$('#gallery').html('<video style="float:left; max-width:90%; max-height:90%;" name="media" loop muted controls ' + autoplayVid + '><source src="' + $(imgList[imgIndex]).find('video')[0].currentSrc + '" type="video/webm"></video>');
 		} else {
