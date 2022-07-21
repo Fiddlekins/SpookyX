@@ -34,6 +34,7 @@
 // @include       https://magyarchan.net/*
 // @include       http://www.tokyochronos.net/*
 // @include       https://www.tokyochronos.net/*
+// @require       https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
 // @require       https://raw.githubusercontent.com/carloscabo/colz/master/public/js/colz.class.min.js
@@ -3594,7 +3595,7 @@ function galleryUpdate(){
 	if ($('#gallery').length) {
 		var imgList = $('.thread_image_box');
 		if ($(imgList[imgIndex]).find('img').length) {
-			$('#gallery').html('<img style="max-width:90%; max-height:90%;" src="' + $(imgList[imgIndex]).find('img')[0].src + '">');
+			$('#gallery').html('<img style="max-width:90%; max-height:90%;" src="' + $(imgList[imgIndex]).find('a.thread_image_link')[0].href + '">');
 		} else if ($(imgList[imgIndex]).find('video').length) {
 			$('#gallery').html('<video style="float:left; max-width:90%; max-height:90%;" name="media" loop muted controls ' + autoplayVid + '><source src="' + $(imgList[imgIndex]).find('video')[0].currentSrc + '" type="video/webm"></video>');
 		} else {
