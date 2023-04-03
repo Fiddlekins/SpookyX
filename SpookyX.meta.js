@@ -16,10 +16,8 @@
 // @include       https://boards.fireden.net/*
 // @include       http://desuarchive.org/*
 // @include       https://desuarchive.org/*
-// @include       https://eientei.xyz/*
 // @include       https://thebarchive.com/*
 // @include       http://thebarchive.com/*
-// @include       https://warosu.org/*
 // @include       https://www.tokyochronos.net/*
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
