@@ -37,7 +37,9 @@
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
 // @require       https://raw.githubusercontent.com/carloscabo/colz/master/public/js/colz.class.min.js
-// @grant         none
+// @grant         GM_getValue
+// @grant         GM_setValue
+// @grant         GM_listValues
 // @icon          https://i.imgur.com/LaYyYRl.png
 // ==/UserScript==
 
@@ -773,9 +775,23 @@ var defaultMascots = [
 	"https://i.imgur.com/xdcWW4m.png"
 ];
 
-if (localStorage.SpookyXsettings !== undefined) {
+
+function loadSettings() {
+  if (GM_listValues().find(item => item == "SpookyXsettings") !== undefined) {
+  $.extend(true, settings, JSON.parse(GM_getValue("SpookyXsettings")));
+  }
+  // Transitions the settings to GM_value (This only happens once)
+  else if(localStorage.SpookyXsettings !== undefined) {
 	$.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
-}
+  saveSettings(); // Saves the local storage settings in GM Values
+  /* The old local storage settings could be deleted, but I leave them as a backup in case the user downgrades. They're never loaded or altered by this version of the script.
+   * localStorage.removeItem("SpookyXsettings")
+  */
+  };
+};
+
+loadSettings();
+
 
 var newPostCount = 0;
 var notLoadedPostCount = 0;
@@ -2758,7 +2774,7 @@ function saveSettings(){
 	settingsStore = {};
 	settingsStore.UserSettings = settingsStrip(settings.UserSettings);
 	settingsStore.FilterSettings = settingsStrip(settings.FilterSettings);
-	localStorage.SpookyXsettings = JSON.stringify(settingsStore); // Save the settings
+  GM_setValue("SpookyXsettings", JSON.stringify(settingsStore)); // Save the settings
 }
 
 var hoveredTextColourPicker;
@@ -3607,9 +3623,7 @@ function populateSettingsMenu(){
 	if ($('#settingsMenu').is(":visible")) {
 		$('#settingsMenu').hide();
 	} else {
-		if (localStorage.SpookyXsettings !== undefined) {
-			$.extend(true, settings, JSON.parse(localStorage.SpookyXsettings));
-		}
+		loadSettings();
 		var settingsHTML = '<div id="Main">' + generateSubOptionHTML(settings.UserSettings, '') + '</div>';
 		settingsHTML += '<div id="Filter">' + generateFilterHTML() + '</div>';
 		$('#settingsContent').html(settingsHTML);
