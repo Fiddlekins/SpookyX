@@ -22,9 +22,6 @@
 // @require       https://cdn.rawgit.com/madapaja/jquery.selection/master/src/jquery.selection.js
 // @require       https://raw.githubusercontent.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js
 // @require       https://raw.githubusercontent.com/carloscabo/colz/master/public/js/colz.class.min.js
-// @grant         GM_getValue
-// @grant         GM_setValue
-// @grant         GM_listValues
 // @updateURL     https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.meta.js
 // @downloadURL   https://github.com/Fiddlekins/SpookyX/raw/master/SpookyX.user.js
 // @icon          https://i.imgur.com/LaYyYRl.png
